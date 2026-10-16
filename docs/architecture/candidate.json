@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Travel agent on Temporal: session, sandbox, approvals and policy",
+    "output": "docs/architecture/governance-architecture.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Client"
+        },
+        "cloud": {
+          "label": "Temporal"
+        },
+        "database": {
+          "label": "Workflow code"
+        },
+        "backend": {
+          "label": "Activity"
+        },
+        "security": {
+          "label": "Policy service"
+        },
+        "external": {
+          "label": "External service"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "console",
+      "type": "frontend",
+      "label": "Console",
+      "sublabel": "harness web UI",
+      "pos": [
+        40,
+        320
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "temporal",
+      "type": "cloud",
+      "label": "Temporal Server",
+      "sublabel": "history \u00b7 task queue travel-agent",
+      "pos": [
+        455,
+        320
+      ],
+      "size": [
+        200,
+        60
+      ],
+      "icon": "neutral"
+    },
+    {
+      "id": "session",
+      "type": "database",
+      "label": "TravelAgent workflow",
+      "sublabel": "one per session \u00b7 approval posture",
+      "pos": [
+        780,
+        320
+      ],
+      "size": [
+        210,
+        60
+      ],
+      "tag": "workflow",
+      "icon": "backend"
+    },
+    {
+      "id": "monty",
+      "type": "database",
+      "label": "Monty sandbox",
+      "sublabel": "runs the model's script",
+      "pos": [
+        1125,
+        320
+      ],
+      "size": [
+        190,
+        60
+      ],
+      "tag": "in workflow",
+      "icon": "security"
+    },
+    {
+      "id": "travel",
+      "type": "backend",
+      "label": "Travel activities",
+      "sublabel": "search \u00b7 book flights and hotels",
+      "pos": [
+        1525,
+        320
+      ],
+      "size": [
+        190,
+        60
+      ],
+      "tag": "activity"
+    },
+    {
+      "id": "callllm",
+      "type": "backend",
+      "label": "call_llm",
+      "sublabel": "streams the reply to the console",
+      "pos": [
+        785,
+        520
+      ],
+      "size": [
+        200,
+        60
+      ],
+      "tag": "activity"
+    },
+    {
+      "id": "model",
+      "type": "external",
+      "label": "Model",
+      "sublabel": "Gemini or vLLM \u00b7 OpenAI API",
+      "pos": [
+        785,
+        720
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "verifier",
+      "type": "security",
+      "label": "Dogwood verifier",
+      "sublabel": "policies/travel.dw \u00b7 session history",
+      "pos": [
+        780,
+        100
+      ],
+      "size": [
+        210,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "travel-worker: polls task queue travel-agent",
+      "wraps": [
+        "session",
+        "monty",
+        "travel",
+        "callllm"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "client-calls",
+      "from": "console",
+      "to": "temporal",
+      "label": "start \u00b7 ask \u00b7 approve \u00b7 form \u00b7 query",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tasks",
+      "from": "temporal",
+      "to": "session",
+      "label": "workflow tasks"
+    },
+    {
+      "id": "script",
+      "from": "session",
+      "to": "monty",
+      "label": "run_travel_code"
+    },
+    {
+      "id": "host-calls",
+      "from": "monty",
+      "to": "travel",
+      "label": "host calls, gated by posture",
+      "variant": "emphasis"
+    },
+    {
+      "id": "model-turn",
+      "from": "session",
+      "to": "callllm",
+      "label": "each model turn"
+    },
+    {
+      "id": "chat",
+      "from": "callllm",
+      "to": "model",
+      "label": "chat + tool calls"
+    },
+    {
+      "id": "policy",
+      "from": "session",
+      "to": "verifier",
+      "label": "Nexus \u00b7 auto mode only",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Approval postures",
+      "items": [
+        "dangerously_skip_all: every call runs",
+        "human_approval_only: every call asks you",
+        "approve_bookings: only bookings wait for you",
+        "auto_mode: the Dogwood policy decides"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Talking to a session",
+      "items": [
+        "Updates: ask, tool_approval (validated), trip form results",
+        "Query: agent_status",
+        "Stream: replies, tool calls, policy verdicts"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Dogwood auto mode",
+      "items": [
+        "Records your messages, the trip form, tool results",
+        "Permits a booking only if a trip form named it",
+        "Verifier down: calls come to you, never allowed"
+      ]
+    }
+  ]
+}

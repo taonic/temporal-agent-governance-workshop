@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.env
+
+# Built by scripts/setup_dogwood.sh: the CLI, the verifier, its source and its store
+.dogwood/
+# travel-stack: process ids, the dev server's database, logs
+.stack/
+.logs/
+# The bookings ledger
+.data/
+# scripts/switch.py backups of your edits
+.learner-backup/

@@ -1,0 +1,12 @@
+# The agents the console can start. `travel-stack up` serves this file.
+
+[[agents]]
+key = "travel-agent"
+workflow_type = "TravelAgent"
+agent = "travel_agent.agent.workflow:TravelAgentWorkflow"
+task_queue = "travel-agent"
+label = "Travel agent"
+description = """
+A durable travel agent on Temporal. It writes Python scripts that Monty runs in a sandbox, where
+each search and booking is a Temporal activity. Choose an approval posture when you start: no
+approvals, approve everything, approve bookings, or auto mode, where a Dogwood policy decides."""
