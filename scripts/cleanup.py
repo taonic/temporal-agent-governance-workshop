@@ -14,7 +14,7 @@ import asyncio
 from travel_agent.config import ROOT, settings
 from travel_agent.worker import connect
 
-QUERY = "ExecutionStatus = 'Running' AND WorkflowType IN ('TravelAgent', 'HelloTripWorkflow')"
+QUERY = "ExecutionStatus = 'Running' AND WorkflowType IN ('TravelAgent', 'HelloTripWorkflow', 'BoardingWorkflow')"
 
 
 async def main() -> None:

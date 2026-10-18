@@ -1,20 +1,10 @@
 """The travel tools: simulated flight and hotel search and booking.
 
-Copied from the harness's Monty example (examples/monty/activities.py). The agent never calls
-these directly: it writes a Python script, Monty runs the script in a sandbox, and each call the
-script makes to `search_flights(...)` or `book_flight(...)` comes here, through the harness, as
-a Temporal activity. So every search and booking is a durable step in the session's history,
-retried if it fails, and never repeated once it has succeeded.
+The agent's script calls `search_flights(...)`, `book_flight(...)`… in its Monty sandbox, and
+each call runs here as a Temporal activity: retried until it succeeds, never repeated after.
+Search data is seeded (``inventory.py``); bookings go to a JSON ledger that survives restarts.
 
-Each one is an ``@agent.activity_tool_defn``: the decorated object is the in-workflow dispatcher,
-and the worker registers each one's activity body by handing ``ALL_TOOLS`` to
-``AgentHarnessPlugin(tools=...)``.
-
-The data comes from ``inventory.py`` (seeded, so the same search always finds the same flights)
-and bookings are kept in a small JSON ledger, so they survive a worker restart.
-
-No ``from __future__ import annotations``, for consistency with the rest of the agent's
-Temporal-facing modules (stringized annotations trip the pydantic converter).
+No ``from __future__ import annotations``: stringized annotations trip the pydantic converter.
 """
 
 import asyncio

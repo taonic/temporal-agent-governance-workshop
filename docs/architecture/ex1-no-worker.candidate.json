@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Exercise 1: a workflow is recorded before any worker runs it",
+    "output": "docs/architecture/ex1-no-worker.html",
+    "viewBox": [
+      1080,
+      600
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "emphasis": {
+          "label": "recorded in the history"
+        },
+        "default": {
+          "label": "handed over"
+        },
+        "return": {
+          "label": "back to the starter"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "starter",
+      "type": "frontend",
+      "label": "Starter",
+      "sublabel": "hello-start SEA LHR"
+    },
+    {
+      "id": "history",
+      "type": "database",
+      "label": "History",
+      "sublabel": "Temporal server"
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "Task queue",
+      "sublabel": "\"hello\""
+    },
+    {
+      "id": "worker",
+      "type": "backend",
+      "label": "Worker",
+      "sublabel": "hello-worker"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 250,
+      "label": "1. Start: recorded first"
+    },
+    {
+      "from": 260,
+      "to": 330,
+      "label": "2. No worker: the task waits"
+    },
+    {
+      "from": 340,
+      "to": 470,
+      "label": "3. A worker starts and runs it"
+    }
+  ],
+  "messages": [
+    {
+      "id": "start",
+      "from": "starter",
+      "to": "history",
+      "y": 170,
+      "label": "start workflow: recorded",
+      "variant": "emphasis"
+    },
+    {
+      "id": "schedule",
+      "from": "history",
+      "to": "queue",
+      "y": 200,
+      "label": "schedule a task",
+      "variant": "default"
+    },
+    {
+      "id": "started",
+      "from": "history",
+      "to": "starter",
+      "y": 230,
+      "label": "id: wait for the result",
+      "variant": "return"
+    },
+    {
+      "id": "poll",
+      "from": "worker",
+      "to": "queue",
+      "y": 360,
+      "label": "poll for work",
+      "variant": "emphasis"
+    },
+    {
+      "id": "task",
+      "from": "queue",
+      "to": "worker",
+      "y": 390,
+      "label": "the waiting task",
+      "variant": "default"
+    },
+    {
+      "id": "record",
+      "from": "worker",
+      "to": "history",
+      "y": 420,
+      "label": "lookups + result: recorded",
+      "variant": "emphasis"
+    },
+    {
+      "id": "result",
+      "from": "history",
+      "to": "starter",
+      "y": 450,
+      "label": "Your trip: Seattle to London",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "history",
+      "from": 165,
+      "to": 456,
+      "type": "database"
+    },
+    {
+      "participant": "queue",
+      "from": 195,
+      "to": 396,
+      "type": "messagebus"
+    },
+    {
+      "participant": "worker",
+      "from": 355,
+      "to": 426,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Durable before it runs",
+      "items": [
+        "Starting a workflow only records it in the history",
+        "Its task waits on the queue until a worker polls",
+        "Stopped workers lose nothing: the next one picks it up"
+      ]
+    }
+  ]
+}

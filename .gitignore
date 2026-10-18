@@ -13,3 +13,14 @@ __pycache__/
 .data/
 # scripts/switch.py backups of your edits
 .learner-backup/
+# Exercise checks that passed (challenges/lib.sh), read by the browser course
+.course/
+# The browser course site
+course/node_modules/
+# A local runner's session secret (course/runner/config.mjs)
+course/.session-secret
+course/web/dist/
+course/web/src/generated/
+course/web/public/content/
+# Archify working folders (the finished diagrams live in docs/architecture/)
+.archify/

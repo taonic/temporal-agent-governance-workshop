@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Exercise 4: before each gated call, a Dogwood policy decides",
+    "output": "docs/architecture/ex4-auto-mode.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "You" },
+        "database": { "label": "Workflow code" },
+        "backend": { "label": "Activity" },
+        "messagebus": { "label": "Nexus endpoint" },
+        "security": { "label": "Dogwood" },
+        "cloud": { "label": "Verifier's store" }
+      }
+    }
+  },
+  "components": [
+    { "id": "you", "type": "frontend", "label": "You", "sublabel": "in the console", "pos": [40, 120], "size": [140, 60] },
+    {
+      "id": "workflow",
+      "type": "database",
+      "label": "TravelAgent workflow",
+      "sublabel": "posture: auto_mode",
+      "tag": "workflow",
+      "icon": "backend",
+      "pos": [260, 120],
+      "size": [210, 60]
+    },
+    {
+      "id": "gate",
+      "type": "database",
+      "label": "Approval gate",
+      "sublabel": "before each gated call",
+      "tag": "in workflow",
+      "icon": "security",
+      "pos": [600, 120],
+      "size": [200, 60]
+    },
+    {
+      "id": "call",
+      "type": "backend",
+      "label": "The tool call",
+      "sublabel": "book_flight, search_hotels…",
+      "tag": "activity",
+      "pos": [1010, 120],
+      "size": [200, 60]
+    },
+    {
+      "id": "endpoint",
+      "type": "messagebus",
+      "label": "tool-verifier",
+      "sublabel": "Nexus endpoint",
+      "tag": "Temporal",
+      "pos": [600, 290],
+      "size": [200, 60]
+    },
+    {
+      "id": "verifier",
+      "type": "security",
+      "label": "Dogwood verifier",
+      "sublabel": "a separate service",
+      "pos": [1010, 290],
+      "size": [200, 60]
+    },
+    {
+      "id": "policy",
+      "type": "security",
+      "label": "policies/travel.dw",
+      "sublabel": "permit · forbid · escalate",
+      "tag": "policy",
+      "pos": [890, 460],
+      "size": [200, 60]
+    },
+    {
+      "id": "store",
+      "type": "cloud",
+      "label": ".dogwood/travel.redb",
+      "sublabel": "each session's history",
+      "icon": "database",
+      "pos": [1130, 460],
+      "size": [200, 60]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "travel-worker", "wraps": ["workflow", "gate", "call"] },
+    { "kind": "region", "label": "Temporal server", "wraps": ["endpoint"] },
+    { "kind": "security-group", "label": "travel-stack: the verifier", "wraps": ["verifier", "policy", "store"] }
+  ],
+  "connections": [
+    { "id": "ask", "from": "you", "to": "workflow", "label": "ask", "variant": "emphasis" },
+    { "id": "gated", "from": "workflow", "to": "gate", "label": "each tool call" },
+    { "id": "permit", "from": "gate", "to": "call", "label": "permit: runs unattended", "variant": "emphasis" },
+    { "id": "nexus", "from": "gate", "to": "endpoint", "label": "RecordInputEvents · VerifyToolCalls", "variant": "security" },
+    { "id": "queue", "from": "endpoint", "to": "verifier", "label": "tool-verifier task queue" },
+    { "id": "rules", "from": "verifier", "to": "policy", "label": "loads" },
+    { "id": "history", "from": "verifier", "to": "store", "label": "records" },
+    {
+      "id": "escalate",
+      "from": "gate",
+      "to": "you",
+      "label": "escalate: comes to you",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "The policy's three answers",
+      "items": [
+        "permit: the call runs unattended",
+        "forbid, or no permit: refused, and the model is told which policy",
+        "forbid marked @decision(\"escalate\"): it comes to you, as in exercise 3"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "No verifier, no allow",
+      "items": [
+        "If the verifier doesn't answer, auto mode escalates to you",
+        "It never falls back to allowing the call"
+      ]
+    }
+  ]
+}

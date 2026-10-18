@@ -17,8 +17,8 @@ By the end, participants understand how Temporal makes agent sessions durable, h
 | 0:00-0:10 | Opening | Instructor | Frame the problem: agents need durability, approvals, audit, and safe autonomy |
 | 0:10-0:45 | **Exercise 1: Hello Temporal** | Hands-on | Build/run a tiny workflow, activity, worker, client |
 | 0:45-0:55 | Temporal Debrief | Instructor | Explain history, retries, timers, workers, signals/updates/queries |
-| 0:55-1:10 | Introduce Monty | Instructor/demo | “Monty is the agent-shaped harness on top of Temporal” |
-| 1:10-1:45 | **Exercise 2: Durable Travel Agent Session** | Hands-on | Run a Monty travel agent session and inspect it in Temporal |
+| 0:55-1:00 | Introduce Monty | Instructor | “Monty is the agent-shaped harness on top of Temporal” |
+| 1:00-1:45 | **Exercise 2: Durable Travel Agent Session** | Hands-on | Run a script in the Monty sandbox (Code Mode), then a Monty travel agent session, and inspect it in Temporal |
 | 1:45-1:55 | Break |  |  |
 | 1:55-2:10 | Human Approval Pattern | Instructor/demo | Explain why safe-but-manual approval does not scale |
 | 2:10-2:45 | **Exercise 3: Human Approval Mode** | Hands-on | Add/trigger approval for risky bookings |
@@ -60,6 +60,7 @@ Short explanation before the lab:
 
 Learners do:
 
+- Meet Code Mode first: run a script in the Monty sandbox (`uv run code-mode`) and watch it stop at each tool call for the host to answer.
 - Start the Monty travel agent worker.
 - Start a travel session.
 - Send: “I need a flight from SFO to JFK next month.”
@@ -70,6 +71,7 @@ Learners do:
 
 Concepts covered:
 
+- Code Mode: the model writes a script; each tool call is a stop the host (the workflow) answers.
 - Agent session as a workflow.
 - User messages as durable inputs.
 - Tool calls as controlled side effects.

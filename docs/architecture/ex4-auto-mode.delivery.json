@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "db8fe9d4-91b3-4d0a-9a84-048ab3ab56bc",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/.archify/architecture-ex4-auto-mode-20261017-232057/candidate.json",
+  "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
+  "specification": {
+    "sha256": "c3663abf37006ebd3382892d333b662eb767bf97d1e064f45e16de72e213e2ed",
+    "bytes": 3987
+  },
+  "artifact": {
+    "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
+    "bytes": 763033
+  }
+}

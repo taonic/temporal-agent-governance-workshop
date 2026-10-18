@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Exercise 2: every step a session takes is an activity",
+    "output": "docs/architecture/ex2-session.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "You"
+        },
+        "database": {
+          "label": "Workflow code"
+        },
+        "backend": {
+          "label": "Activity"
+        },
+        "external": {
+          "label": "External service"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "you",
+      "type": "frontend",
+      "label": "You",
+      "sublabel": "in the console",
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        130,
+        60
+      ]
+    },
+    {
+      "id": "workflow",
+      "type": "database",
+      "label": "TravelAgent workflow",
+      "sublabel": "one per session",
+      "tag": "workflow",
+      "icon": "backend",
+      "pos": [
+        310,
+        100
+      ],
+      "size": [
+        210,
+        60
+      ]
+    },
+    {
+      "id": "callllm",
+      "type": "backend",
+      "label": "call_llm",
+      "sublabel": "one per model turn",
+      "tag": "activity",
+      "pos": [
+        680,
+        100
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "model",
+      "type": "external",
+      "label": "The model",
+      "sublabel": "Gemini · OpenAI API",
+      "pos": [
+        1010,
+        100
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "monty",
+      "type": "database",
+      "label": "Monty sandbox",
+      "sublabel": "runs the model's script",
+      "tag": "in workflow",
+      "icon": "security",
+      "pos": [
+        320,
+        300
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "search",
+      "type": "backend",
+      "label": "search_flights",
+      "sublabel": "a step in the history",
+      "tag": "activity",
+      "pos": [
+        680,
+        230
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "book",
+      "type": "backend",
+      "label": "book_flight",
+      "sublabel": "retried, never repeated",
+      "tag": "activity",
+      "pos": [
+        680,
+        370
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "api",
+      "type": "external",
+      "label": "Travel API",
+      "sublabel": "simulated flights",
+      "pos": [
+        1010,
+        300
+      ],
+      "size": [
+        170,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "travel-worker",
+      "wraps": [
+        "workflow",
+        "callllm",
+        "monty",
+        "search",
+        "book"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ask",
+      "from": "you",
+      "to": "workflow",
+      "label": "ask",
+      "variant": "emphasis"
+    },
+    {
+      "id": "turn",
+      "from": "workflow",
+      "to": "callllm",
+      "label": "each model turn"
+    },
+    {
+      "id": "chat",
+      "from": "callllm",
+      "to": "model",
+      "label": "chat + tool calls"
+    },
+    {
+      "id": "script",
+      "from": "workflow",
+      "to": "monty",
+      "label": "run this script"
+    },
+    {
+      "id": "search-call",
+      "from": "monty",
+      "to": "search",
+      "label": "search_flights(...)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "book-call",
+      "from": "monty",
+      "to": "book",
+      "label": "book_flight(...)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "search-api",
+      "from": "search",
+      "to": "api"
+    },
+    {
+      "id": "book-api",
+      "from": "book",
+      "to": "api"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Each call the script makes is an activity",
+      "items": [
+        "Recorded in the session's history",
+        "Retried until it succeeds",
+        "Never run again once it has"
+      ]
+    }
+  ]
+}

@@ -37,6 +37,10 @@ LOGS = ROOT / ".logs"
 STORE = ROOT / ".dogwood" / "travel.redb"
 BIN = Path(sys.executable).parent
 CONSOLE_PORT = int(os.environ.get("CONSOLE_PORT", "8000"))
+CONSOLE_URL = os.environ.get("CONSOLE_URL", f"http://localhost:{CONSOLE_PORT}")
+# Where the Temporal dev server and its UI listen. Localhost unless set: the browser course
+# sets 0.0.0.0 so its sandbox's preview proxy can reach them.
+BIND = os.environ.get("TRAVEL_STACK_BIND", "")
 ENDPOINT = "tool-verifier"
 
 
@@ -98,6 +102,7 @@ def temporal() -> None:
     _spawn("temporal", [
         "temporal", "server", "start-dev",
         "--port", str(port), "--ui-port", "8233",
+        *(["--ip", BIND, "--ui-ip", BIND] if BIND else []),
         # Sessions survive `travel-stack down`/`up`.
         "--db-filename", str(STACK / "temporal.db"),
         # A workflow task that failed (a bug you're fixing) is retried within seconds, not minutes.
@@ -155,7 +160,7 @@ def session_manager() -> None:
 
 def console() -> None:
     if _pid("console"):
-        print(f"  console: already running on http://localhost:{CONSOLE_PORT}")
+        print(f"  console: already running on {CONSOLE_URL}")
         return
     _spawn("console", [sys.executable, "-m", "travel_agent.console", "--port", str(CONSOLE_PORT)],
            env={"TEMPORAL_ADDRESS": settings.temporal_address})
@@ -197,7 +202,7 @@ def status() -> None:
         else:
             state = f"running, pid {pid}" if pid else "stopped"
         print(f"  {name:16} {state}")
-    print(f"\n  console      http://localhost:{CONSOLE_PORT}\n  Temporal UI  {settings.temporal_ui_url}")
+    print(f"\n  console      {CONSOLE_URL}\n  Temporal UI  {settings.temporal_ui_url}")
 
 
 def main(argv: list[str]) -> None:

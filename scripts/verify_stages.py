@@ -27,7 +27,7 @@ CHECKS = {
     "ch04": ("tests/test_ch04_policy.py", 4),
     "walk": ("tests/test_walkthroughs.py", 2),
 }
-COPY = ["travel_agent", "hello", "tests", "policies"]
+COPY = ["travel_agent", "hello", "codemode", "tests", "policies"]
 
 
 def build(stage: int) -> Path:

@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Exercise 1: the count is rebuilt from the history, not saved",
+    "output": "docs/architecture/ex1-boarding.html",
+    "viewBox": [
+      1080,
+      620
+    ],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "emphasis": {
+          "label": "recorded in the history"
+        },
+        "default": {
+          "label": "asked"
+        },
+        "return": {
+          "label": "answered"
+        },
+        "dashed": {
+          "label": "no answer"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Temporal UI",
+      "sublabel": "Queries tab"
+    },
+    {
+      "id": "server",
+      "type": "database",
+      "label": "History",
+      "sublabel": "Temporal server"
+    },
+    {
+      "id": "first",
+      "type": "backend",
+      "label": "Worker",
+      "sublabel": "on_board = 7, in memory"
+    },
+    {
+      "id": "second",
+      "type": "backend",
+      "label": "New worker",
+      "sublabel": "started after"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 260,
+      "label": "1. Boarding: one passenger every 2s"
+    },
+    {
+      "from": 270,
+      "to": 345,
+      "label": "2. Worker stopped: nothing holds the count"
+    },
+    {
+      "from": 355,
+      "to": 520,
+      "label": "3. A new worker replays the history"
+    }
+  ],
+  "messages": [
+    {
+      "id": "next",
+      "from": "first",
+      "to": "server",
+      "y": 175,
+      "label": "timer fired: on_board = 7",
+      "variant": "emphasis"
+    },
+    {
+      "id": "query-1",
+      "from": "ui",
+      "to": "server",
+      "y": 205,
+      "label": "query boarded",
+      "variant": "default"
+    },
+    {
+      "id": "answer-1",
+      "from": "first",
+      "to": "ui",
+      "y": 240,
+      "label": "boarded: 7",
+      "variant": "return"
+    },
+    {
+      "id": "query-2",
+      "from": "ui",
+      "to": "server",
+      "y": 290,
+      "label": "query boarded",
+      "variant": "default"
+    },
+    {
+      "id": "timeout",
+      "from": "server",
+      "to": "ui",
+      "y": 325,
+      "label": "timed out: no worker",
+      "variant": "dashed"
+    },
+    {
+      "id": "poll",
+      "from": "second",
+      "to": "server",
+      "y": 375,
+      "label": "poll for work",
+      "variant": "default"
+    },
+    {
+      "id": "replay",
+      "from": "server",
+      "to": "second",
+      "y": 405,
+      "label": "history: start + 7 timers",
+      "variant": "default"
+    },
+    {
+      "id": "resume",
+      "from": "second",
+      "to": "server",
+      "y": 440,
+      "label": "replayed: on_board = 7, next timer",
+      "variant": "emphasis"
+    },
+    {
+      "id": "query-3",
+      "from": "ui",
+      "to": "server",
+      "y": 470,
+      "label": "query boarded",
+      "variant": "default"
+    },
+    {
+      "id": "answer-3",
+      "from": "second",
+      "to": "ui",
+      "y": 505,
+      "label": "boarded: 7, then 8…",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "server",
+      "from": 170,
+      "to": 475,
+      "type": "database"
+    },
+    {
+      "participant": "first",
+      "from": 170,
+      "to": 245,
+      "type": "backend"
+    },
+    {
+      "participant": "second",
+      "from": 370,
+      "to": 510,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Rebuilt, not saved",
+      "items": [
+        "on_board lives only in a worker's memory",
+        "The history records the start and every timer that fired",
+        "A new worker replays them and gets the same count back"
+      ]
+    }
+  ]
+}

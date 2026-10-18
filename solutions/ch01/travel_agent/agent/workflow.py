@@ -1,22 +1,16 @@
-"""The travel agent: a durable agent session on the Temporal Agent Harness.
+"""The travel agent: one durable session on the Temporal Agent Harness, one workflow.
 
-Adapted from the harness's Dogwood example (examples/auto_mode_dogwood). A session is one
-workflow. You chat with it (`ask`), and the model replies or acts: it writes a Python script
-and runs it with `run_travel_code`, and Monty runs that script in a sandbox, where every call to
-`search_flights(...)`, `book_flight(...)` and so on becomes a Temporal activity, judged first by
-the session's approval posture. The model can also ask you for the trip on a form
-(`ask_trip_details`).
-
-The approval posture decides which tool calls run without asking:
+The model replies, asks for the trip on a form (`ask_trip_details`), or writes a script that
+`run_travel_code` runs in a Monty sandbox, where each `search_flights(...)`, `book_flight(...)`…
+is a Temporal activity, judged first by the session's approval posture:
 
     dangerously_skip_all   everything runs (exercise 2)
     human_approval_only    every call asks you first
     approve_bookings       searches run; bookings wait for you (exercise 3)
     auto_mode              a Dogwood policy decides each call (exercise 4)
 
-You pick it when you start a session, and can change it with `set_approval_policy`.
-
-The model is any OpenAI-compatible endpoint, called from the `call_llm` activity.
+Chosen when the session starts; `set_approval_policy` changes it. The model is called from the
+`call_llm` activity.
 """
 
 from __future__ import annotations

@@ -1,0 +1,53 @@
+# Deploying the course site
+
+One [Fly.io](https://fly.io) app, `temporal-agent-governance-workshop`, runs the site and its runner in one Node process: the site and `/api` on port 443 (8080 inside), and the Temporal UI proxy on port 8081. Learners' sandboxes run on Daytona; Fly only proxies to them, so the machine stays small.
+
+## What it needs
+
+| Secret | What it's for |
+|---|---|
+| `DAYTONA_API_KEY` | creating, starting and deleting learners' sandboxes |
+| `GEMINI_API_KEY` | the model, for the sandboxes' agents and for Ask Temporal. It stays on Fly: sandboxes get a key that only works on the runner's `/llm/v1` |
+| `ACCESS_CODE` | the event's code. Without it the browser runtime is off (reading still works). A runner listening on localhost needs none: it opens to that machine only |
+| `SESSION_SECRET` | signs session cookies and the sandboxes' model keys. Changing it signs everyone out and breaks running sandboxes' model keys until they restart |
+| `INSTRUCTOR_CODE` | `GET /api/admin/sandboxes` with header `x-instructor-code` |
+| `KAPA_API_KEY` | optional. An API key for Temporal's Kapa project: Ask Temporal searches the docs with it for everyone, and nobody has to verify with GitHub or Google. Without it, each learner connects their own (free) Kapa sign-in once |
+
+Settings in `fly.toml` (`[env]`): `PUBLIC_URL` (where sandboxes reach the model passthrough), `MAX_SANDBOXES` (40), `LLM_MODEL`. Others, with their defaults, are in `runner/config.mjs`: `SANDBOX_AUTO_STOP_MINUTES` (30), `SANDBOX_TTL_MINUTES` (1440), `LLM_RATE_PER_SANDBOX` (20 a minute), `LLM_RATE_GLOBAL` (300 a minute), `SANDBOX_SNAPSHOT` (to pin one).
+
+Ask Temporal's, also in `runner/config.mjs`: `HELPER_MODEL` (defaults to `LLM_MODEL`), `HELPER_REASONING_EFFORT` (`low`; empty to leave it out), `HELPER_RATE_PER_LEARNER` (6 questions a minute), `HELPER_RATE_GLOBAL` (120 a minute), `KAPA_RATE_GLOBAL` (50 searches a minute: Kapa allows 60 a minute across all its users, and 600 a day per user), `KAPA_MCP_URL` (`https://temporal.mcp.kapa.ai/`). The helper needs `GEMINI_API_KEY` and a session (the access code), not Daytona, so learners working locally can use it too.
+
+## First deploy
+
+```bash
+# 1. The sandbox snapshot, once per dependency change (compiles Dogwood: a few minutes).
+#    After the first, CI builds it on merges to main (.github/workflows/sandbox-snapshot.yml).
+cd course && npm install && npm run snapshot
+
+# 2. The app and its secrets
+fly apps create temporal-agent-governance-workshop
+fly secrets set --app temporal-agent-governance-workshop \
+  DAYTONA_API_KEY=... GEMINI_API_KEY=... \
+  ACCESS_CODE=... INSTRUCTOR_CODE=... SESSION_SECRET="$(openssl rand -hex 32)"
+
+# 3. Deploy, from course/ (it builds from the repo root)
+npm run deploy
+```
+
+`npm run deploy` is `fly deploy . --config course/fly.toml --dockerfile course/Dockerfile --ignorefile course/.dockerignore --ha=false`, run from the repo root. Keep it to **one machine** (`--ha=false`; `fly scale count 1` if a second appears): the runner keeps each sandbox's terminal connections and the rate limits in memory. Nothing that matters is lost on a restart, because sandboxes are found again by their Daytona labels, but two machines would each hold half the terminals.
+
+Then open `https://temporal-agent-governance-workshop.fly.dev`, enter the code, and start a sandbox. `GET /api/health` reports whether the runtime is on.
+
+## Before an event
+
+- **Daytona quota.** 40 sandboxes × 2 vCPU × 4 GB is 80 vCPU and 160 GB at peak. Check the org's limits (the GPU endpoint, if it's up, shares them), and lower `MAX_SANDBOXES` in `fly.toml` if needed (then deploy).
+- **Gemini spend.** Set a budget cap on the Google project that owns `GEMINI_API_KEY`, and check it has credit (an empty prepaid balance answers 402, and both the agents and Ask Temporal stop). The runner's rate limits slow a runaway loop; the cap stops it.
+- **Ask Temporal.** Open the site, press ⌘K, connect the docs (or set `KAPA_API_KEY`), and ask one question: it should search, cite and link. With a room of learners on their own Kapa sign-ins, the 60-a-minute team limit is the one to watch; a busy search says so in the answer instead of failing it.
+- **A fresh code.** `fly secrets set ACCESS_CODE=...` per event. Learners already signed in stay signed in.
+- **The snapshot is current.** `node course/snapshot/build.mjs --name` should name a snapshot that exists. The **Sandbox snapshot** workflow builds it on merges to `main` that change its inputs (it needs the repository secret `DAYTONA_API_KEY`); `npm run snapshot` says whether it exists, or builds it. A deploy whose snapshot is missing fails at "Creating your sandbox" with that name in the error.
+- **Warm it.** `min_machines_running = 0` lets Fly stop the machine when nobody's using it; the first visitor waits a few seconds for it to start. For the event, `fly scale count 1` and set `min_machines_running = 1`.
+- **Who's in.** `curl -H "x-instructor-code: $INSTRUCTOR_CODE" https://temporal-agent-governance-workshop.fly.dev/api/admin/sandboxes` lists sandboxes, their state and the exercise each learner last had open.
+
+## After
+
+Sandboxes stop after 30 idle minutes and are deleted 24 hours after they were created. To delete them all at once: Daytona's dashboard, filtered by label `app=governance-course`.

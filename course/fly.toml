@@ -1,0 +1,57 @@
+# The course site, its /api and the sandboxes' model passthrough on 8080, and the Temporal UI
+# proxy on 8081 (it needs an origin of its own; same host, so the session cookie reaches it).
+# Deploy from the repo root (it's the build context: the image carries the workshop's files):
+#
+#   fly deploy . --config course/fly.toml --dockerfile course/Dockerfile \
+#     --ignorefile course/.dockerignore --ha=false
+#
+# or `npm run deploy` in course/.
+# One machine: the runner keeps the terminals' connections and the rate limits in memory.
+# Secrets and the first deploy: course/DEPLOY.md.
+
+app = "temporal-agent-governance-workshop"
+primary_region = "sjc"
+
+[env]
+  HOST = "0.0.0.0"
+  PORT = "8080"
+  PUBLIC_URL = "https://temporal-agent-governance-workshop.fly.dev"
+  MAX_SANDBOXES = "40"
+  LLM_MODEL = "gemini-3.8-flash"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 400
+    hard_limit = 600
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/api/health"
+
+[[services]]
+  internal_port = 8081
+  protocol = "tcp"
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 8081
+    handlers = ["tls", "http"]
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 2
+  memory_mb = 1024

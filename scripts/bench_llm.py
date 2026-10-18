@@ -4,6 +4,8 @@ Plays each walkthrough against a running worker with the real model (LLM_MODE=op
 the trip form when asked, and checks what the model did, not what it said:
 
     search      "Find flights..."                     ran search_flights, named a real flight
+    vague       "I need a flight from SFO to JFK      asked for the trip form before searching
+                 next month." (exercise 2)            (no day given, so no guessing one)
     form        "I need a flight to New York"         asked for the trip form
     book        ...then "Book the cheapest one"        booked the cheapest flight, for the form's
                                                        traveler, on the form's date, claims correct
@@ -56,11 +58,23 @@ def booking_errors(session: Session, since: int = 0) -> list[str]:
     return [e.message for e in session.events[since:] if e.type == E.TOOL_ERROR and e.tool_name == "book_flight"]
 
 
+async def asks_before_searching(session: Session, text: str, timeout: float) -> bool:
+    """Whether the model's first move is the trip form, not a search on a guessed date."""
+    mark = len(session.events)
+    await turn(session, text, timeout)
+    first = next((e for e in session.events[mark:] if e.type == E.CALLBACK_REQUESTED
+                  or (e.type == E.TOOL_START and e.tool_name == "search_flights")), None)
+    return first is not None and first.type == E.CALLBACK_REQUESTED
+
+
 async def conversation(client, timeout: float) -> dict[str, bool]:
     results = {}
     s = await Session.start(client)
     reply = await turn(s, "Find flights from SFO to JFK on 2026-11-01", timeout)
     results["search"] = bool(s.tool_calls("search_flights")) and "FL-SFOJFK" in reply
+
+    s = await Session.start(client)
+    results["vague"] = await asks_before_searching(s, "I need a flight from SFO to JFK next month.", timeout)
 
     s = await Session.start(client)
     mark = len(s.events)
@@ -112,7 +126,7 @@ async def main() -> None:
         for name, ok in results.items():
             passed[name] += ok
     print(f"\n{args.runs} run(s) of every walkthrough:")
-    for name in ["search", "form", "book", "other", "injection"]:
+    for name in ["search", "vague", "form", "book", "other", "injection"]:
         print(f"  {name:10} {passed[name]}/{args.runs}")
     print(f"  median run time {statistics.median(t for _, t in runs):.0f}s")
 

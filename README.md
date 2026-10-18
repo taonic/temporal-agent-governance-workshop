@@ -1,4 +1,4 @@
-# Governed Agents With Temporal, Monty, And Dogwood
+# Build Reliable AI Agents With Temporal
 
 A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://temporal.io). You build up one travel agent: first as raw Temporal, then as a durable agent session on [Monty](https://github.com/pydantic/monty) and the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), then with human approval, and finally with a [Dogwood](https://github.com/dogwood-policy/dogwood) policy that lets it act on its own only when an action matches what you already asked for. Then you attack it with a prompt injection.
 
@@ -6,11 +6,13 @@ A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://te
 
 | # | Exercise | What you see | What you write |
 |---|---|---|---|
-| 1 | [Hello Temporal](challenges/01-hello-temporal/assignment.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries | Call an activity with a timeout and a retry policy |
-| 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | The agent writes scripts whose tool calls are activities; kill the worker and the conversation carries on | The `search_flights` tool |
-| 3 | [Human approval mode](challenges/03-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; stale clicks are rejected; it gets noisy | The `approve_bookings` approval posture |
+| 1 | [Hello Temporal](challenges/01-hello-temporal/assignment.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries; a count nobody saved survives a restart | Call an activity with a timeout and a retry policy |
+| 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | A script in the Monty sandbox stops at every tool call; in the agent those calls are activities; kill the worker and the conversation carries on | The `search_flights` tool |
+| 3 | [Human approval mode](challenges/03-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
 | 4 | [Dogwood auto mode](challenges/04-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others are refused | The `flights-on-the-trip-form` policy rule, plus one rule of your choice |
 | ★ | [Attack the agent](challenges/05-attack-the-agent/assignment.md) | A planted to-do item fools the model; the policy refuses the booking | Nothing |
+
+**In your browser:** the [course site](course/README.md) has every exercise, and with your event's access code, a cloud sandbox with all of this installed and running: an editor, two terminals, the console and the Temporal UI. Nothing to set up.
 
 Instructors: [instructor/README.md](instructor/README.md) has the run of show and talking points. Why it's built this way: [DESIGN.md](DESIGN.md).
 
@@ -44,6 +46,16 @@ During a live session, the instructor gives you `LLM_BASE_URL` and `LLM_MODEL` f
 - **Ollama:** `LLM_BASE_URL=http://localhost:11434/v1`, `LLM_MODEL=qwen3.5:9b`, `LLM_REASONING_EFFORT=none`. The agent's prompt alone is about 3k tokens, so raise Ollama's context: `OLLAMA_CONTEXT_LENGTH=16384 ollama serve`. On a laptop CPU it's very slow.
 - **No model at all:** `LLM_MODE=scripted`. The scripted agent plays every walkthrough in the assignments.
 
+### Questions about Temporal
+
+On the [course site](course/README.md), **Ask Temporal** (⌘K / Ctrl+K) answers from Temporal's docs, with links, and knows which exercise you're on. To ask the same docs from your own coding agent, add Temporal's docs MCP server; it asks you to verify with GitHub or Google the first time:
+
+```bash
+claude mcp add --transport http temporal-docs https://temporal.mcp.kapa.ai
+```
+
+Cursor and VS Code take the same URL as an HTTP MCP server.
+
 ## Run it
 
 ```bash
@@ -66,12 +78,13 @@ uv run python scripts/switch.py solution   # back to the finished workshop
 uv run python scripts/switch.py status
 ```
 
-Each exercise has a check (`./challenges/NN-*/check.sh`) and a solve (`solve.sh`, which applies the official solution).
+Each exercise has a check (`./challenges/NN-*/check.sh`), a solve (`solve.sh`, which applies the official solution) and a start over (`reset.sh`, which puts the exercise's code back as it starts, saving your edits in `.learner-backup/` first, and ends the running sessions).
 
 ## Repository map
 
 ```
 hello/                 exercise 1: a tiny workflow, activity, worker and starter
+codemode/              exercise 2's warm-up: run a script in the Monty sandbox (uv run code-mode)
 travel_agent/
   agent/               TravelAgent workflow, call_llm, scripted model, prompts, trip form, travel notes
   travel/              travel tools (activities), seeded inventory, trip board
@@ -98,6 +111,8 @@ Four files contain TODOs: `hello/workflow.py`, `travel_agent/travel/activities.p
 # @@end
 ```
 
+The assignments also feed the [browser course](course/README.md#writing-for-both-modes): browser-only text goes in `<!-- browser … -->` comments, which GitHub and Instruqt don't show.
+
 After editing a master:
 
 ```bash
@@ -120,4 +135,5 @@ After changing the agent's tools or messages, regenerate the policy schema with 
 
 - Start the GPU endpoint (`uv run --group gpu python scripts/gpu_endpoint.py up --hours 4.5`, needs `DAYTONA_API_KEY`) and benchmark it with `scripts/bench_llm.py`.
 - Learners should finish `scripts/setup_dogwood.sh` before the day: the first build takes several minutes.
+- For the browser course: a current sandbox snapshot, a fresh access code, and the Daytona and Gemini limits ([course/DEPLOY.md](course/DEPLOY.md#before-an-event)).
 - After the session: `scripts/gpu_endpoint.py down`.

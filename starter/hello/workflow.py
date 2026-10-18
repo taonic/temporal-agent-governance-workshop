@@ -26,5 +26,6 @@ class HelloTripWorkflow:
     async def airport(self, code: str) -> Airport:
         # TODO(ch01): run the lookup_airport activity for `code` and return its result:
         #   await workflow.execute_activity(lookup_airport, code, start_to_close_timeout=..., retry_policy=...)
-        # Give each attempt 10 seconds, and retry with a RetryPolicy whose maximum_interval is 5 seconds.
+        # Give each attempt 10 seconds, and retry with a RetryPolicy: 2s initial_interval, backoff_coefficient 2,
+        # maximum_interval 6 seconds.
         raise NotImplementedError("TODO(ch01): call the lookup_airport activity")

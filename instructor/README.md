@@ -9,8 +9,8 @@ Talking points and demo scripts for the instructor blocks of the 4-hour workshop
 | 0:00 | Opening | Frame the problem | |
 | 0:10 | Exercise 1: Hello Temporal | Float | `challenges/01-hello-temporal` |
 | 0:45 | Temporal debrief | Explain history, retries, timers, workers, messages | |
-| 0:55 | Introduce Monty | Map raw Temporal to the agent; live demo | |
-| 1:10 | Exercise 2: Durable session | Float | `challenges/02-durable-session` |
+| 0:55 | Introduce Monty | Map raw Temporal to the agent | |
+| 1:00 | Exercise 2: Durable session | Float; it opens with Code Mode, hands-on | `challenges/02-durable-session` |
 | 1:45 | Break | | |
 | 1:55 | The human approval pattern | Why safe-but-manual doesn't scale | |
 | 2:10 | Exercise 3: Human approval | Float | `challenges/03-human-approval` |
@@ -28,6 +28,7 @@ The arc to keep repeating: **make it run, make it durable, make it safe, then ma
 - **Benchmark it** with a worker pointed at it: `uv run python scripts/bench_llm.py --runs 3 --concurrency 10`. You want `search`, `form` and `book` at 3/3, and `injection` at 2/3 or better.
 - **Fallback:** if the endpoint dies, learners set `LLM_MODE=scripted` in `.env` and restart the worker. The scripted agent plays every walkthrough in the assignments, including the injection.
 - Have the finished workshop in a second checkout for demos (`scripts/switch.py solution`).
+- **Browser course:** if learners use the hosted site instead of local setup, deploy it and set a fresh access code the day before: [DEPLOY.md](DEPLOY.md).
 
 ---
 
@@ -50,6 +51,7 @@ Draw the history of the hello workflow on the board, event by event. Points to l
 - **Why determinism:** replay re-runs your workflow code, so it must make the same decisions. Anything non-deterministic (I/O, randomness, the clock) goes in an activity, or uses Temporal's versions (`workflow.now()`, `workflow.uuid4()`).
 - **Retries are policy, not code.** The `RetryPolicy` replaced the retry loop you didn't write.
 - **Timers are durable.** `workflow.sleep(days=3)` survives restarts and costs nothing while it waits.
+- **State is rebuilt, not saved.** The boarding count is a plain `int` with no activity behind it. With no worker, a query has no one to answer it; a new worker replays the timers and has the count again. Nothing but the history was stored.
 - **Talking to a running workflow:**
 
   | | Changes state? | Returns a result? | Can be rejected first? |
@@ -60,7 +62,7 @@ Draw the history of the hello workflow on the board, event by event. Points to l
 
   Each comes back in the next exercise: messages and approvals are Updates, and the agent's status is a Query.
 
-## Introduce Monty (5:10)
+## Introduce Monty (5)
 
 > "You just wrote raw Temporal. Monty packages the same ideas into an agent harness: a long-running session, messages, tool calls, state and streaming output."
 
@@ -80,12 +82,9 @@ Under the hood, Monty here means the [Temporal Agent Harness](https://github.com
 
 **Code Mode.** The model doesn't get `search_flights` and `book_flight` as tools. It gets one tool, `run_travel_code`, and writes a script. The sandbox runs it, and each travel function the script calls becomes a durable, approval-gated activity. Why: one model call can do a search, a choice and a booking with real control flow, and every side effect is still its own step in history.
 
-**Demo (finished code, real model):**
+Then hand over: exercise 2 opens with **Meet Code Mode** (section 1, about 10 minutes, nothing running, no model). Learners run a script in the sandbox with `uv run code-mode` (`codemode/run.py` stands in for the workflow as the host) and watch it stop at every travel call; batch two searches with `asyncio.gather`; try imports, files and an endless loop; make the type check catch a bad key; see a booking refused; and print the `run_travel_code` tool the model gets.
 
-1. `uv run travel-worker`; in the console, start a session (`dangerously_skip_all`).
-2. "I need a flight from SFO to JFK next month." Fill in the form. Show the reply streaming.
-3. Open a tool card: the script the model wrote. Open the Temporal UI on the same session: the `send_agent_message` Update, `call_llm`, `search_flights`.
-4. Ctrl-C the worker mid-turn, restart it. The session carries on.
+While you float, the point to land with each table: **a script can't do anything the host doesn't do for it.** In the agent the host is the workflow, so every stop is where the approval posture, an activity and the history come in. Exercises 3 and 4 put a person, then a policy, at exactly that point.
 
 ## The human approval pattern (10)
 

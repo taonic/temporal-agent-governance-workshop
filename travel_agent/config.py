@@ -6,6 +6,8 @@ what the original run saw.
 """
 
 import os
+import re
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -68,3 +70,16 @@ class Settings:
 
 
 settings = Settings()
+
+
+def session_id() -> str:
+    """A new session's workflow id, named for the exercise you're on, so it's easy to find in the
+    Temporal UI: ``ex3-human-approval-1a2b3c4d``. The exercise is in .course/exercise (the browser
+    course and the exercises' setup scripts write it); without one, ``travel-1a2b3c4d``."""
+    try:
+        exercise = (ROOT / ".course" / "exercise").read_text().strip()
+    except OSError:
+        exercise = ""
+    match = re.fullmatch(r"0*(\d+)-([a-z0-9-]+)", exercise)
+    prefix = f"ex{match[1]}-{match[2]}" if match else "travel"
+    return f"{prefix}-{uuid.uuid4().hex[:8]}"

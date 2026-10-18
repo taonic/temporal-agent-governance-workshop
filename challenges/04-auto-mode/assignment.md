@@ -12,14 +12,7 @@ Human approval asks "should I approve this one action?" every time. [Dogwood](ht
 
 Dogwood is a policy language: [Cedar](https://www.cedarpolicy.com/) plus **temporal conditions** that look back over what happened earlier. A policy can say "permit a flight booking when, earlier in this session, the user submitted a trip form naming this passenger and this date". The trip form is structured intent: who's traveling, where, and when. Each booking is checked against it.
 
-```
-TravelAgent workflow ── before each gated call ──▶ Nexus endpoint "tool-verifier"
-  (auto_mode posture)    RecordInputEvents: your messages, the trip form, tool results
-                         VerifyToolCalls:   this call, allow / deny / escalate?
-                                                 │
-                                                 ▼
-                                Dogwood verifier: policies/travel.dw over the session's history
-```
+[![Before each gated call, the TravelAgent workflow (auto_mode posture) asks the tool-verifier Nexus endpoint: RecordInputEvents sends what the session received (your messages, the trip form, tool results), and VerifyToolCalls asks about this call. The Dogwood verifier, a separate service, judges it with policies/travel.dw over the session's history, which it keeps in its own store. Permit: the call runs unattended. Forbid, or no permit: it's refused, and the model is told which policy. A forbid marked escalate: it comes to you, as in exercise 3. If the verifier doesn't answer, the call comes to you; it's never allowed.](../../docs/architecture/ex4-auto-mode.png)](../../docs/architecture/ex4-auto-mode.html)
 
 The verifier is a separate service (`travel-stack up` started it) with its own durable store of each session's history. The agent can't edit the policy, and neither can the model.
 
@@ -28,6 +21,8 @@ Three outcomes:
 - **permit**: the call runs unattended;
 - **forbid** (or no permit at all): the call is refused, and the model is told which policy refused it;
 - **forbid** marked `@decision("escalate")`: the call comes to you, as in exercise 3.
+
+<!-- local -->Starting here, without exercises 1 to 3 done? Run `./challenges/04-auto-mode/setup.sh` first: it solves each of them you haven't, and leaves the ones you did alone. Then restart the worker.<!-- /local -->
 
 ## 1. Read the policy
 
@@ -43,11 +38,13 @@ Something's missing: there's no rule for the flight **there**.
 
 ## 2. Watch it refuse
 
-Check the verifier is running (`uv run travel-stack status`) and the worker too. Start a new session with the posture **`auto_mode`**:
+Check the verifier is running (`uv run travel-stack status`), and start the worker if it isn't running (`uv run travel-worker`): a session is a workflow, and without a worker nothing runs it. Then start a new session with the posture **`auto_mode`**<!-- browser
+ <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="auto_mode" title="Open the Travel agent's start form in the Agent UI, with auto_mode chosen">New session ▸</button>
+-->:
 
 > I need a flight to New York.
 
-Fill in the trip form (say Ada Lovelace, SFO → JFK, 2026-11-01, back 2026-11-05). Then:
+Submit the trip form: it starts filled in with Ada Lovelace, SFO → JFK, 2026-11-01, back 2026-11-05. Then:
 
 > Book the cheapest one.
 
@@ -59,10 +56,15 @@ Find `TODO(ch04)` in `policies/travel.dw` and write `flights-on-the-trip-form`. 
 
 ```text
 @id("flights-on-the-trip-form")
+// Permit this call (a flight booking), checked before it runs...
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
+// ...when the session's history has a matching event: a temporal condition.
 when temporal {
+  // At some point in the last 30 days, a trip form result was received...
   formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+    // ...whose traveler is this booking's passenger...
     input.arg0.traveler_name: context.input.arg0.request.passenger_name,
+    // ...and whose departure date is this booking's date.
     input.arg0.departure_date: context.input.arg0.request.date
   }
 };
@@ -81,52 +83,98 @@ The verifier keeps its history across restarts, so your session's trip form is s
 
 ## 4. Try it
 
-In the same session:
+In the same session, send these one at a time:
 
-1. **"Book the cheapest one."** Runs without asking: `flights-on-the-trip-form`.
-2. **"Actually, book it for Grace Hopper instead."** Refused by `flights-only-as-on-the-trip-form`: Grace isn't on any form. The agent tells you, and may offer a new form. Fill one in for Grace, and her booking goes through.
-3. **"Move Ada to December 24th."** Refused the same way: that date isn't on a form.
-4. **"Book Ada a hotel in New York for those nights."** Runs: `hotels-for-the-trip-form-traveler`.
+> Book the cheapest one.
+
+Runs without asking: `flights-on-the-trip-form`.
+
+> Actually, book it for Grace Hopper instead.
+
+Refused by `flights-only-as-on-the-trip-form`: Grace isn't on any form. The agent tells you, and may offer a new form. Submit one for Grace (change the traveler's name), and her booking goes through.
+
+> Move Ada to December 24th.
+
+Refused the same way: that date isn't on a form.
+
+> Book Ada a hotel in New York for those nights.
+
+Runs: `hotels-for-the-trip-form-traveler`.
 
 You approved nothing, yet nothing ran that you hadn't asked for. **The model decides what to try. The policy decides what is allowed.**
 
 ## 5. Edit one rule
 
-Pick one of these and write it. Each has a test that fails until your rule works:
+Pick one of these and add it to `policies/travel.dw`. Each has a test that fails until the rule is in, so run it before and after.
 
-| Rule | Test |
-|---|---|
-| Refuse flights over $1,000 (`price_cents > 100000`) | `uv run pytest -m menu -k price` |
-| Allow nonstop flights only | `uv run pytest -m menu -k nonstop` |
-| A hotel for someone not on the form comes to you instead of being refused | `uv run pytest -m menu -k escalate` |
-
-The policy can judge a booking's price and stops because `book_flight` says what it's buying (`price_cents`, `nonstop`), and the booking tool refuses one whose claims don't match the real flight. The policy decides on the claims, and the tool keeps them honest.
-
-<details>
-<summary>Hints</summary>
-
-A `forbid` that applies to every booking over $1,000:
+**Refuse flights over $1,000.** A `forbid` wins over every `permit`, so not even a booking on the trip form gets through:
 
 ```text
 @id("no-flights-over-1000")
+// A forbid wins over every permit: no booking over $1,000 runs, whatever the trip form says.
 forbid (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
 when {
+  // Check each field is there before reading it: Cedar has no nulls.
   context.input has arg0 && context.input.arg0 has request &&
   context.input.arg0.request has price_cents &&
+  // Money is integer cents, because Cedar has no floats.
   context.input.arg0.request.price_cents > 100000
 };
 ```
 
-Nonstop only is a `forbid ... unless { ... context.input.arg0.request.nonstop }`.
+```bash
+uv run pytest -m menu -k price
+```
 
-To escalate, add `@decision("escalate")` above the rule that refuses the hotel, `hotels-only-for-the-trip-form-traveler`.
-</details>
+**Allow nonstop flights only.** The same shape, with `unless`: refuse every booking, unless it's nonstop.
 
-Restart the verifier and try it live: every route's search has a business-class nonstop over $1,000, and its cheapest flight has a stop.
+```text
+@id("nonstop-flights-only")
+// Refuse a flight with a stop, whatever the trip form says.
+forbid (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
+unless {
+  // A booking that doesn't say whether it's nonstop is refused too.
+  context.input has arg0 && context.input.arg0 has request &&
+  context.input.arg0.request has nonstop &&
+  context.input.arg0.request.nonstop
+};
+```
+
+```bash
+uv run pytest -m menu -k nonstop
+```
+
+**A hotel for someone not on the form comes to you instead of being refused.** No new rule: mark the one that refuses it, `hotels-only-for-the-trip-form-traveler`, with `@decision("escalate")`. This replaces it:
+
+```text
+// A hotel for someone no trip form named comes to you, instead of being refused.
+@id("hotels-only-for-the-trip-form-traveler")
+@decision("escalate")
+forbid (principal, action == Temporal::Action::"travel-agent/book_hotel", resource)
+unless temporal {
+  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+    input.arg0.traveler_name: context.input.arg0.request.guest_name
+  }
+};
+```
+
+```bash
+uv run pytest -m menu -k escalate
+```
+
+The policy can judge a booking's price and stops because `book_flight` says what it's buying (`price_cents`, `nonstop`), and the booking tool refuses one whose claims don't match the real flight. The policy decides on the claims, and the tool keeps them honest.
+
+Load your rule into the verifier, and try it live: every route's search has a business-class nonstop over $1,000, and its cheapest flight has a stop.
+
+```bash
+uv run travel-stack restart verifier
+```
 
 ## 6. Look under the hood
 
-- `uv run travel-stack logs verifier` shows each decision as JSON: the action, the context the policy saw, the session's history, and the verdict.
+- `uv run travel-stack logs verifier` shows each decision as JSON<!-- browser
+ (Ctrl-C stops following it)
+-->: the action, the context the policy saw, the session's history, and the verdict.
 - **Stop the verifier** (`uv run travel-stack stop verifier`) and ask for a booking: it comes to you instead. With no policy service to answer, auto mode falls back to a human, never to "allow". Start it again with `uv run travel-stack up`.
 
 ## Check

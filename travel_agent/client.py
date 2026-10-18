@@ -5,7 +5,6 @@ the harness's ``AgentClient``.
 """
 
 import asyncio
-import uuid
 from datetime import timedelta
 from typing import Any
 
@@ -21,7 +20,7 @@ from temporal_agent_harness.harness.agent_protocol import (
 )
 
 from .agent.workflow import Posture, TravelAgentWorkflow, TravelSession
-from .config import settings
+from .config import session_id, settings
 
 
 class Session:
@@ -38,7 +37,7 @@ class Session:
     async def start(
         cls, client: Client, posture: Posture = "dangerously_skip_all", *, task_queue: str = settings.task_queue
     ) -> "Session":
-        workflow_id = f"travel-{uuid.uuid4().hex[:8]}"
+        workflow_id = session_id()
         await client.start_workflow(
             TravelAgentWorkflow.run,
             args=[AgentConfig(), TravelSession(posture=posture)],

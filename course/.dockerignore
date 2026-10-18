@@ -1,0 +1,19 @@
+# The build context is the repo root (see course/Dockerfile). Keep out anything local.
+.git
+.venv
+.dogwood
+.data
+.logs
+.stack
+.course
+.learner-backup
+.env
+.pytest_cache
+.ruff_cache
+**/__pycache__
+**/.DS_Store
+course/node_modules
+course/.session-secret
+course/web/dist
+course/web/src/generated
+course/web/public/content

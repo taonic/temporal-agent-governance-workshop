@@ -6,8 +6,8 @@ The decisions behind this workshop, as agreed during planning (2026-10-14/15). R
 
 - **Who:** AI engineers who are new to Temporal. Policy content stays concrete: edit one rule, not policy theory.
 - **How long:** 4 hours with an instructor: 4 exercises of 35–40 minutes plus a 15-minute capstone (see the agenda). It must also work self-paced, so each assignment carries the explanation the instructor blocks give; `instructor/` has talking points and demo scripts.
-- **Style:** one graded TODO per exercise. The extra time goes to guided run / observe / break steps and ungraded stretch tasks, so it never becomes a race.
-- **Platform:** local for now. The lifecycle scripts (`challenges/*/{setup,check,solve,cleanup}.sh`) keep the Instruqt shape so a track can be added later; there is no `instruqt/` yet.
+- **Style:** one graded TODO per exercise. The extra time goes to guided run / observe / break steps, so it never becomes a race.
+- **Platform:** local, or in the browser: the [course site](course/DESIGN.md) runs each learner in a Daytona sandbox, generated from these same assignments. The lifecycle scripts (`challenges/*/{setup,check,solve,cleanup}.sh`) keep the Instruqt shape so a track can be added later; there is no `instruqt/` yet.
 - **Naming:** "Monty" is the workshop's umbrella name for the agent stack, as in the agenda. In code: the Temporal Agent Harness, running a Code Mode agent whose scripts run in the pydantic-monty sandbox.
 
 ## The arc
@@ -54,11 +54,15 @@ The posture is chosen on the session's start form (`@agent.init` data) and can b
 
 | # | Graded TODO | Check |
 |---|---|---|
-| 1 | `hello/workflow.py`: `execute_activity` with a 10 s timeout and a `RetryPolicy` (5 s max interval). Travel-flavored (`lookup_airport`); `FAIL_ONCE=1` shows a retry without editing code. | pytest on a local dev server: result, retries, the scheduled timeout and policy |
+| 1 | `hello/workflow.py`: `execute_activity` with a 10 s timeout and a `RetryPolicy` (2 s initial, ×2, 6 s max interval: about 40 s for a `FLAKY` trip, long enough to watch the attempts climb on the Pending Activities tab). Travel-flavored (`lookup_airport`); `FLAKY=1` fails attempts 1 to 4 of every lookup (80%, fixed rather than random, so the check and the timing are predictable) and shows retries without editing code. Ungraded, ready-made: `hello/board.py`, a boarding counter that is only an `int` in the workflow (no activities), read through a `boarded` query in the UI's Queries tab; it shows a worker rebuilding state from history, and a query failing while no worker runs. | pytest on a local dev server: result, retries, the scheduled timeout and policy; the boarding count survives a worker restart |
 | 2 | `search_flights`. In the starter it raises, so the session waits on the activity's retries; fixing it resumes the same conversation. | pytest, scripted model: the search, and a session surviving a worker replacement |
 | 3 | The `approve_bookings` posture: `ToolApprovalPolicy.allow_tools([...])`. The harness already has the approval Update and its validator; there's no approval timeout. | pytest, scripted model: lookups unattended, booking waits, approve runs it once, a duplicate is rejected, a rejection books nothing |
 | 4 | The `flights-on-the-trip-form` rule (the return-flight rule is given). Optional menu: price limit, nonstop only, escalate hotels, each with a `-m menu` test that fails until written. | `dogwood replay` against trace fixtures (Ada on the form → allow; Grace, another date, before any form, another session's form → deny) |
 | 5 | None. `DEMO_INJECTION_SUSCEPTIBILITY` stays on, called out in code and in the assignment: the model is gullible on purpose, and it doesn't matter. | none |
+
+**Exercise 2 opens with Code Mode, hands-on** (section 1, ungraded, about 10 minutes). `uv run code-mode` (`codemode/run.py`) runs a script in Monty against the same type-check stubs as `run_travel_code` and plays the host the workflow plays: it prints each stop, answers searches from the inventory and refuses everything else. It's part of exercise 2 rather than an exercise of its own because the course derives chapter numbers from the challenge directories; it took 10 of the 15 minutes the instructor's Monty demo had. It reads the inventory directly, so it works before `search_flights` is written, and needs neither Temporal nor a model. `codemode/trip.py` is a **scratch** file in the browser course: editable, with no solution.
+
+**No exercise depends on having done the earlier ones.** A learner who skips ahead, or whose sandbox starts over from its snapshot (every TODO open), shouldn't have to redo anything. `switch.py catch-up N` gives each earlier exercise whose `TODO(chNN)` is still open its solution, backs up an attempt that was started, and leaves finished work alone (a file without its TODO is the learner's). The browser course runs it from the runner's poll whenever the exercise on the page changes, including the first poll of a fresh sandbox, and restarts a running worker. Locally, `setup.sh` and `reset.sh` run it; `setup.sh` then falls back to the official solutions if the earlier checks still fail.
 
 ## Verified facts (2026-10-15)
 

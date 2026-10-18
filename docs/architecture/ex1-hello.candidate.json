@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Exercise 1: the history is the state, the worker is replaceable",
+    "output": "docs/architecture/ex1-hello.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "You" },
+        "messagebus": { "label": "Temporal" },
+        "database": { "label": "Workflow code" },
+        "backend": { "label": "Activity" }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "starter",
+      "type": "frontend",
+      "label": "Starter",
+      "sublabel": "hello-start · hello-board",
+      "pos": [40, 100],
+      "size": [180, 60]
+    },
+    {
+      "id": "server",
+      "type": "messagebus",
+      "label": "Temporal server",
+      "sublabel": "keeps every workflow's history",
+      "icon": "database",
+      "pos": [360, 100],
+      "size": [200, 60]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Temporal UI",
+      "sublabel": "Event History · Queries tab",
+      "pos": [360, 300],
+      "size": [200, 60]
+    },
+    {
+      "id": "trip",
+      "type": "database",
+      "label": "HelloTripWorkflow",
+      "sublabel": "looks up two airports",
+      "tag": "workflow",
+      "icon": "backend",
+      "pos": [710, 100],
+      "size": [210, 60]
+    },
+    {
+      "id": "lookup",
+      "type": "backend",
+      "label": "lookup_airport",
+      "sublabel": "FLAKY=1: attempts 1-4 fail",
+      "tag": "activity",
+      "pos": [1070, 100],
+      "size": [200, 60]
+    },
+    {
+      "id": "board",
+      "type": "database",
+      "label": "BoardingWorkflow",
+      "sublabel": "on_board += 1 every 2s",
+      "tag": "workflow",
+      "icon": "clock",
+      "pos": [710, 300],
+      "size": [210, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "hello-worker",
+      "wraps": ["trip", "lookup", "board"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "start",
+      "from": "starter",
+      "to": "server",
+      "label": "start workflow",
+      "variant": "emphasis"
+    },
+    {
+      "id": "run-trip",
+      "from": "server",
+      "to": "trip",
+      "label": "tasks · replay"
+    },
+    {
+      "id": "call",
+      "from": "trip",
+      "to": "lookup",
+      "label": "execute_activity",
+      "variant": "emphasis"
+    },
+    {
+      "id": "run-board",
+      "from": "server",
+      "to": "board",
+      "label": "timers · queries"
+    },
+    {
+      "id": "read",
+      "from": "ui",
+      "to": "server",
+      "label": "query boarded"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Retries are policy, not code",
+      "items": [
+        "FLAKY=1 fails 4 of every 5 attempts",
+        "RetryPolicy waits 2s, ×2, at most 6s",
+        "Attempt 5 gets through: about 40s a trip"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "The count is rebuilt, not saved",
+      "items": [
+        "The server records every step and timer",
+        "A new worker replays them to rebuild on_board",
+        "No worker: queries time out, work waits"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+# Builds the learner sandbox snapshot on Daytona when its inputs change on main, so a course
+# deploy never asks for a snapshot that doesn't exist. The snapshot's name is a hash of
+# SNAPSHOT_INPUTS in course/runner/repo-files.mjs; keep the paths below in step with it.
+# build.mjs does nothing when a snapshot of that name already exists.
+#
+# Needs the repository secret DAYTONA_API_KEY.
+
+name: Sandbox snapshot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - pyproject.toml
+      - uv.lock
+      - scripts/setup_dogwood.sh
+      - course/snapshot/**
+      - course/runner/repo-files.mjs
+      - .github/workflows/sandbox-snapshot.yml
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even if a snapshot with this name exists
+        type: boolean
+        default: false
+
+# One build per snapshot name at a time; a second push with the same inputs waits, then finds
+# the snapshot already built.
+concurrency:
+  group: sandbox-snapshot-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: course
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: course/package-lock.json
+
+      # build.mjs needs only the Daytona SDK, a runtime dependency.
+      - run: npm ci --omit=dev
+
+      - name: Snapshot name
+        id: name
+        run: echo "name=$(node snapshot/build.mjs --name)" >> "$GITHUB_OUTPUT"
+
+      - name: Build on Daytona
+        env:
+          DAYTONA_API_KEY: ${{ secrets.DAYTONA_API_KEY }}
+        run: node snapshot/build.mjs ${{ inputs.force && '--force' || '' }}
+
+      - name: Summary
+        run: echo "Snapshot \`${{ steps.name.outputs.name }}\` is ready on Daytona." >> "$GITHUB_STEP_SUMMARY"

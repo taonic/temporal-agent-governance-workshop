@@ -12,6 +12,7 @@ import logging
 
 from temporalio.client import Client
 from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
 
 from temporal_agent_harness.plugin import AgentHarnessPlugin
 
@@ -31,8 +32,22 @@ async def connect(s: Settings = settings) -> Client:
     )
 
 
+# Workflow code is loaded once, when the worker starts, as it is in production. Left to itself,
+# the SDK's sandbox re-imports a workflow's module from disk whenever it rebuilds the workflow
+# (after a failed task, say), so a stuck workflow would pick up an edit (half-typed, from an
+# editor that saves as you type) without the restart the exercises are about. Passing the
+# workshop's own modules through costs the sandbox's checks on them: keep workflow code
+# deterministic by hand.
+# (annotated_types: pydantic's, which the SDK passes through, imports it later.)
+RUNNER = SandboxedWorkflowRunner(
+    restrictions=SandboxRestrictions.default.with_passthrough_modules("travel_agent", "annotated_types")
+)
+
+
 def build_worker(client: Client, task_queue: str = settings.task_queue) -> Worker:
-    return Worker(client, task_queue=task_queue, workflows=[TravelAgentWorkflow], activities=[call_llm])
+    return Worker(
+        client, task_queue=task_queue, workflows=[TravelAgentWorkflow], activities=[call_llm], workflow_runner=RUNNER
+    )
 
 
 class _QuietUnusedEvaluator(logging.Filter):

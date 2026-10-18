@@ -18,9 +18,13 @@ The harness already handles the hard parts:
 
 Your job is the policy: what needs approval.
 
+<!-- local -->Starting here, without exercises 1 and 2 done? Run `./challenges/03-human-approval/setup.sh` first: it solves each of them you haven't, and leaves the ones you did alone. Then restart the worker.<!-- /local -->
+
 ## 1. Approve everything
 
-Start the worker if it isn't running (`uv run travel-worker`). In the console, start a new session with the posture **`human_approval_only`**, and ask:
+Start the worker if it isn't running (`uv run travel-worker`). In the console, start a new session with the posture **`human_approval_only`**<!-- browser
+ <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="human_approval_only" title="Open the Travel agent's start form in the Agent UI, with human_approval_only chosen">New session ▸</button>
+-->, and ask:
 
 > Book the cheapest flight from SFO to JFK on 2026-11-01 for Ada Lovelace.
 
@@ -31,11 +35,13 @@ Count the approvals. The agent's script needs approving. So does the search insi
 Open `travel_agent/agent/workflow.py` and find `TODO(ch03)` in `approval_policy()`, under the `approve_bookings` posture. Make it allow the calls that can't change anything in the world, by name, so only bookings wait for you:
 
 ```python
+# An allow list: these calls run without asking. Anything else (the bookings) waits for a
+# person, who answers with the tool_approval Update.
 return ToolApprovalPolicy.allow_tools(
     [
         *PRE_APPROVED_TOOLS,       # the trip board, the notes, the trip form
         CODE_MODE_TOOL_NAME,       # the script itself: each call it makes is still judged on its own
-        "search_flights",
+        "search_flights",          # lookups: they can't change anything in the world
         "search_hotels",
         "get_trip_summary",
     ]
@@ -48,7 +54,9 @@ Restart the worker.
 
 ## 3. Approve one, reject one
 
-Start a new session with the posture **`approve_bookings`** (or, in an existing session, send the `set_approval_policy` message with `approve_bookings`) and ask the same thing.
+Start a new session with the posture **`approve_bookings`**<!-- browser
+ <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="approve_bookings" title="Open the Travel agent's start form in the Agent UI, with approve_bookings chosen">New session ▸</button>
+--> (or, in an existing session, send the `set_approval_policy` message with `approve_bookings`) and ask the same thing.
 
 The search runs unattended, and the booking pauses with an approval card. **Approve** it: the booking runs, and the agent confirms.
 
@@ -56,34 +64,23 @@ Now ask for a hotel:
 
 > Book Ada a hotel in New York from 2026-11-01 to 2026-11-05.
 
-**Reject** it, with a reason. The agent tells you it didn't book, and why: your reason reached the model as the tool's error.
+**Reject** it, with a reason. The agent tells you it didn't book, and why: your reason reached the model as the tool's error. In the harness, the approval gate [waits for your decision, then raises `ToolApprovalDenied` with your reason](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_workflow.py#L615-L635), and [that exception's message](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_workflow.py#L331-L335) is the error the model sees.
 
-## 4. Stale clicks
+## 4. Wait as long as it takes
 
-Approvals are Updates, so you can send one from the terminal too. Find the `tool_id` of the booking you already approved (in the Temporal UI, the `tool_approval` Update's input, or the console's approval card), and approve it again:
+Ask for another booking:
 
-```bash
-temporal workflow update execute --workflow-id <session-workflow-id> --name tool_approval \
-  --input '{"tool_id": "<tool-id>", "approved": true}'
-```
+> Book the cheapest flight back from JFK to SFO on 2026-11-05 for Ada Lovelace.
 
-It's rejected: `ToolApprovalAlreadyResolved`. Look at the history: the rejected Update left **no event**. A validator decides before anything is recorded, so a duplicate or late click can't change a settled decision.
-
-## 5. Wait as long as it takes
-
-Ask for another booking, and when the approval card appears, **stop the worker**. Wait a minute. Click **Approve**: the console waits, because an Update needs a worker to run its validator. Start the worker, and the approval goes through and the booking runs.
+When the approval card appears, **stop the worker**. Wait a minute. Click **Approve**: the console waits, because an Update needs a worker to run its validator. Start the worker, and the approval goes through and the booking runs.
 
 The session sat waiting with no process running at all. While a workflow waits it costs nothing; it could wait days.
 
-## 6. Read the audit trail
+## 5. Read the audit trail
 
-In the Temporal UI, the session's history shows each `tool_approval` Update and what was decided: the approval, and the rejection with its reason. Approval is part of the history, next to the booking it allowed.
-
-## Stretch (not graded)
-
-- Read the harness's validator: `_validate_tool_approval` in `.venv/lib/python3*/site-packages/temporal_agent_harness/harness/agent_workflow.py`. What would go wrong without it?
-- Approve a booking and choose to **remember** it: the agent stops asking about that tool for the rest of the session. Where does that live? (Hint: `agent_status`.)
-- This agent waits forever for an answer. How would you give up after an hour? (Temporal: `workflow.wait_condition(..., timeout=...)`.)
+The session's history<!-- browser
+ <button class="pane-button" type="button" data-session-tab="history?category=update">Updates ▸</button>
+--><!-- local --> in the Temporal UI<!-- /local --> shows each `tool_approval` Update and what was decided: the approval, and the rejection with its reason. Approval is part of the history, next to the booking it allowed.
 
 ## The catch
 

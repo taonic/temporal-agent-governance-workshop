@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "5a4ed4b0-c6bb-42f5-a594-125f2310f4d1",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-boarding.candidate.json",
+  "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-boarding.html",
+  "specification": {
+    "sha256": "db23a50cc34e1495ecf53cb966a38eb3653ddf115ed77773f133cdde705e8504",
+    "bytes": 3717
+  },
+  "artifact": {
+    "sha256": "b413449bf385fc53d6cc2e20ed3af0f10e76222275b044c0b16ddb7480ee8cae",
+    "bytes": 754582
+  }
+}

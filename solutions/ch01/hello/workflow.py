@@ -29,6 +29,8 @@ class HelloTripWorkflow:
             code,
             # How long one attempt may take before Temporal gives up on it and tries again.
             start_to_close_timeout=timedelta(seconds=10),
-            # Retry failures, backing off from 1s up to 5s between attempts.
-            retry_policy=RetryPolicy(initial_interval=timedelta(seconds=1), maximum_interval=timedelta(seconds=5)),
+            # Retry failures, waiting 2s, then twice as long each time, up to 6s between attempts.
+            retry_policy=RetryPolicy(
+                initial_interval=timedelta(seconds=2), backoff_coefficient=2, maximum_interval=timedelta(seconds=6)
+            ),
         )
