@@ -34,7 +34,10 @@ def main() -> None:
     try:
         result = run(script)
     except monty.MontyTypingError as e:
-        print(f"Refused before it ran: the type check failed.\n\n{e.display()}")
+        # The full report, then its first error on one line, last, where it's easy to see.
+        report = e.display()
+        first = next((line for line in report.splitlines() if line.startswith("error")), "")
+        print(f"{report}\nRefused before it ran, by the type check: {first.split(': ', 1)[-1]}")
         return
     except monty.MontyError as e:
         print(f"The script raised {e.display('type-msg')}")
