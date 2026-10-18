@@ -26,7 +26,7 @@ First, see what happens when everything does.
 
 ## 1. Approve everything
 
-Start the worker if it isn't running (`uv run travel-worker`). In the console, start a new session with the posture **`human_approval_only`**<!-- browser
+Start the worker. The posture **`human_approval_only`** [allows nothing on its own](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L600-L620): every call the agent makes waits for you. Start a new session with it<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="human_approval_only" title="Open the Travel agent's start form in the Agent UI, with human_approval_only chosen">New session ▸</button>
 -->, and ask:
 
