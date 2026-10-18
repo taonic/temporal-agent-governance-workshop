@@ -40,7 +40,7 @@ Something's missing: there's no rule for the flight **there**. See what that doe
 
 ## 2. Watch it refuse
 
-Check the verifier is running (`uv run travel-stack status`), and start the worker if it isn't running (`uv run travel-worker`): a session is a workflow, and without a worker nothing runs it. Then start a new session with the posture **`auto_mode`**<!-- browser
+Start a new session with the posture **`auto_mode`**<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="auto_mode" title="Open the Travel agent's start form in the Agent UI, with auto_mode chosen">New session ▸</button>
 -->:
 
@@ -74,12 +74,7 @@ when temporal {
 
 Read it as: permit `book_flight` when, at some point in the last 30 days of **this session's** history, a trip form result was received whose `traveler_name` equals this booking's `passenger_name` and whose `departure_date` equals its `date`.
 
-Check it, then load it into the verifier:
-
-```bash
-./challenges/04-auto-mode/check.sh
-uv run travel-stack restart verifier
-```
+Save it, and the verifier loads it within a few seconds. (A policy that doesn't validate isn't loaded: the last one that did keeps serving.)
 
 A new rule starts with an empty history: it sees only what happens after it's loaded, not the trip form you already filled in. So try it in a new session.
 
@@ -172,11 +167,7 @@ uv run pytest -m menu -k escalate
 
 The policy can judge a booking's price and stops because `book_flight` says what it's buying (`price_cents`, `nonstop`), and the booking tool refuses one whose claims don't match the real flight. The policy decides on the claims, and the tool keeps them honest.
 
-Load your rule into the verifier, and try it live: every route's search has a business-class nonstop over $1,000, and its cheapest flight has a stop.
-
-```bash
-uv run travel-stack restart verifier
-```
+Save, and try your rule live: every route's search has a business-class nonstop over $1,000, and its cheapest flight has a stop.
 
 Last, a look at the verifier itself.
 

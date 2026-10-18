@@ -14,6 +14,8 @@ import { expect } from "@playwright/test";
 import { MINUTE, SAMPLE_TRAVELER, SECOND, approve, reject, submitForm } from "./learner.mjs";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+// How long the verifier takes to load a saved policy (travel_agent/stack.py watch-verifier).
+const RELOAD = 5 * SECOND;
 
 const flights = (bookings, passenger) => bookings.filter((b) => b.type === "flight" && (!passenger || b.passenger_name === passenger));
 const hotels = (bookings, guest) => bookings.filter((b) => b.type === "hotel" && (!guest || b.guest_name === guest));
@@ -248,9 +250,7 @@ export const WALKTHROUGHS = {
     await l.step("Write the rule");
     await l.openFile("policies/travel.dw");
     await l.insert();
-    expect(await l.runButton("./challenges/04-auto-mode/check.sh"), "the check, or restarting the verifier, failed").toBe(0);
-    // The block's exit status is the verifier restart's: the check's own result is in its output.
-    expect(l.flatOutput, "the check didn't pass with the rule in").toContain("Check passed");
+    await sleep(RELOAD); // the verifier loads the saved policy on its own
 
     await l.step("Try it");
     // In a new session: a rule just loaded starts with an empty history, so it never saw the
@@ -276,7 +276,7 @@ export const WALKTHROUGHS = {
     await l.step("Edit one rule");
     await l.insert(0); // refuse flights over $1,000
     expect(await l.runButton("uv run pytest -m menu -k price"), "the price rule's test failed").toBe(0);
-    expect(await l.runButton("uv run travel-stack restart verifier")).toBe(0);
+    await sleep(RELOAD);
 
     await l.step("Look under the hood");
     await l.runButton("uv run travel-stack logs verifier", { wait: false });

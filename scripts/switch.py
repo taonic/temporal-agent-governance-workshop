@@ -127,7 +127,7 @@ def main() -> None:
     for path, content in files.items():
         path.write_text(content)
     print(f"The exercise files are now {describe(target)}.")
-    print("Restart your workers, and `uv run travel-stack restart verifier` for the policy.")
+    print("Restart your workers. The verifier loads the policy on its own.")
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@
 // "travel-agent/ask_trip_details/result") and each chat message as "update/ask", all
 // `received` events of this session only. schema.cedarschema declares every action's input.
 //
-// After editing, restart the verifier (`uv run travel-stack restart verifier`) to load it.
+// After editing, save: the verifier loads the policy within a few seconds, once it validates.
 
 // ---------------------------------------------------------------- the script tool
 

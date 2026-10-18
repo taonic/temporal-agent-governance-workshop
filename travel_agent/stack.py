@@ -2,7 +2,7 @@
 
     uv run travel-stack up                  # start what isn't running
     uv run travel-stack status
-    uv run travel-stack restart verifier    # e.g. after editing policies/travel.dw
+    uv run travel-stack restart verifier
     uv run travel-stack stop verifier
     uv run travel-stack logs verifier       # follow one service's log
     uv run travel-stack down                # stop everything travel-stack started
@@ -12,7 +12,7 @@ The services, in start order:
 
     temporal          the Temporal dev server            UI on http://localhost:8233
     endpoint          the `tool-verifier` Nexus endpoint (created once, nothing to run)
-    verifier          the Dogwood verifier, serving policies/travel.dw
+    verifier          the Dogwood verifier, serving policies/travel.dw (reloaded when you save it)
     session-manager   the harness worker that tracks sessions for the console
     console           the harness's web console          http://localhost:8000
 
@@ -134,8 +134,47 @@ def verifier() -> None:
         print("  verifier: NOT BUILT. Run scripts/setup_dogwood.sh. Until then, auto mode sends every call to you.")
         return
     STORE.parent.mkdir(parents=True, exist_ok=True)
+    _spawn("verifier", [sys.executable, "-m", "travel_agent.stack", "watch-verifier"])
+    time.sleep(1.5)
+    if not _pid("verifier"):
+        sys.exit("the verifier stopped right away; see .logs/verifier.log (a policy that doesn't validate?)")
+
+
+# The verifier reads the policies once, when it starts. `watch-verifier` (what the verifier
+# service runs) starts it again whenever they change to a set that validates, so saving
+# policies/travel.dw is all it takes; a half-written rule keeps the last good policy serving.
+POLICY_FILES = ("travel.dw", "schema.cedarschema", "events.dwschema")
+
+
+def _policy_stamp() -> tuple[tuple[int, int] | None, ...]:
+    def stamp(path: Path) -> tuple[int, int] | None:
+        try:
+            info = path.stat()
+            return info.st_mtime_ns, info.st_size
+        except FileNotFoundError:
+            return None
+
+    return tuple(stamp(settings.policy_dir / name) for name in POLICY_FILES)
+
+
+def _policy_problem() -> str | None:
+    """Why the policies don't validate, or None. Without the dogwood CLI, the verifier judges."""
+    if not settings.dogwood_cli.exists():
+        return None
     policies = settings.policy_dir
-    _spawn("verifier", [str(settings.dogwood_verifier)], env={
+    result = subprocess.run(
+        [str(settings.dogwood_cli), "validate", str(policies / "travel.dw"),
+         "--policy-schema", str(policies / "schema.cedarschema"),
+         "--event-schema", str(policies / "events.dwschema")],
+        capture_output=True, text=True,
+    )
+    return None if result.returncode == 0 else (result.stdout + result.stderr).strip()
+
+
+def watch_verifier() -> None:
+    policies = settings.policy_dir
+    env = {
+        **os.environ,
         "TEMPORAL_ADDRESS": "http://" + settings.temporal_address.removeprefix("http://"),
         "TEMPORAL_NAMESPACE": settings.temporal_namespace,
         "DOGWOOD_POLICY_FILE": str(policies / "travel.dw"),
@@ -143,10 +182,33 @@ def verifier() -> None:
         "DOGWOOD_EVENT_SCHEMA_FILE": str(policies / "events.dwschema"),
         "DOGWOOD_STORE": str(STORE),
         "RUST_LOG": os.environ.get("RUST_LOG", "info,dogwood_request=debug"),
-    })
-    time.sleep(1.5)
-    if not _pid("verifier"):
-        sys.exit("the verifier stopped right away; see .logs/verifier.log (a policy that doesn't validate?)")
+    }
+    # In travel-stack's process group, so `stop verifier` stops it too.
+    child = subprocess.Popen([str(settings.dogwood_verifier)], env=env)
+    stamp = _policy_stamp()
+    while child.poll() is None:
+        time.sleep(1)
+        now = _policy_stamp()
+        if now == stamp:
+            continue
+        time.sleep(0.5)  # a save still being written
+        if _policy_stamp() != now:
+            continue
+        stamp = now
+        if problem := _policy_problem():
+            print(f"--- {time.strftime('%H:%M:%S')} policies/ changed, but they don't validate: "
+                  f"still serving the last policies that did.\n{problem}", flush=True)
+            continue
+        print(f"--- {time.strftime('%H:%M:%S')} policies/ changed: restarting the verifier to load them",
+              flush=True)
+        child.terminate()
+        try:
+            child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait()
+        child = subprocess.Popen([str(settings.dogwood_verifier)], env=env)
+    sys.exit(f"the verifier exited ({child.returncode})")
 
 
 def session_manager() -> None:
@@ -227,6 +289,8 @@ def main(argv: list[str]) -> None:
         SERVICES[argv[1]]()
     elif command == "logs" and len(argv) == 2:
         os.execvp("tail", ["tail", "-n", "40", "-f", str(LOGS / f"{argv[1]}.log")])
+    elif command == "watch-verifier":
+        watch_verifier()
     elif command == "reset-store":
         if _pid("verifier"):
             sys.exit("stop the verifier first: uv run travel-stack down")

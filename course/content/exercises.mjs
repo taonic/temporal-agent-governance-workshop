@@ -247,7 +247,7 @@ export const EXERCISES = {
       {
         file: "policies/travel.dw",
         from: "// Tool policy for the travel agent in auto mode.",
-        to: "// After editing, restart the verifier",
+        to: "// After editing,",
         title: "How the policy decides",
         body: "`permit` says what runs unattended. A `forbid` refuses, or, marked `@decision(\"escalate\")`, asks you. Calls arrive as `travel-agent/<tool>`, with this session's history to look back on.",
       },

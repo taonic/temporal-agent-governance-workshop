@@ -66,7 +66,7 @@ uv run travel-worker                 # the agent's worker: in its own terminal, 
 - Console: http://localhost:8000
 - Temporal UI: http://localhost:8233
 
-`travel-stack status | restart <service> | stop <service> | logs <service> | down`. If a Temporal server is already listening on `TEMPORAL_ADDRESS`, the stack uses it rather than starting its own.
+`travel-stack status | restart <service> | stop <service> | logs <service> | down`. The verifier reloads `policies/travel.dw` whenever you save a version that validates. If a Temporal server is already listening on `TEMPORAL_ADDRESS`, the stack uses it rather than starting its own.
 
 ### Starter or solution
 
