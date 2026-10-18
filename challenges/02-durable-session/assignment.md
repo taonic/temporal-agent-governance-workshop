@@ -270,7 +270,7 @@ In the console, open the side panels:
 - **Agent state**: the trip board, the agent's running to-do list for the trip;
 - the tool call cards: click one to see **the script the model wrote**.
 
-All of it lives in the session's history, not in the worker or the console.
+All of it lives in the session's history on the Temporal side, not in the worker, the Agent UI or any external database.
 
 ## 6. Test Temporal's resiliency
 
@@ -301,7 +301,7 @@ Send:
 
 > Book the cheapest one.
 
-It books it. No question asked: the posture is `dangerously_skip_all`, which [turns the approval gate off entirely](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L666-L673). The booking lands on the trip board, and in the bookings ledger: `cat .data/bookings.json` shows it. An agent that can spend money in your name, unattended, on its own judgment. Exercise 3 adds a human to the loop.
+It books it. No question asked: the posture is `dangerously_skip_all`, and [the harness's approval check](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L507-L520) returns before anything else: every call goes through, unasked. The booking lands on the trip board, and in the bookings ledger: `cat .data/bookings.json` shows it. An agent that can spend money in your name, unattended, on its own judgment. Exercise 3 adds a human to the loop.
 
 ## Check
 

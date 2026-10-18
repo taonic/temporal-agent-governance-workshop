@@ -102,7 +102,10 @@ async function toggleModel() {
 
 function confirmReset() {
   menuOpen.value = false;
-  if (window.confirm("Delete your sandbox? Your edits, sessions and bookings in it are lost. You can start a new one straight away.")) resetSandbox();
+  // Deleted and a new one started, in one go: starting over isn't done until there's a sandbox.
+  if (window.confirm("Start over with a new sandbox? The current one is deleted, with your edits, sessions and bookings in it, and a new one starts right away (about a minute).")) {
+    resetSandbox({ restart: true });
+  }
 }
 
 const tourSteps = [

@@ -1956,7 +1956,7 @@ body.is-resizing iframe {
 
 /* Where an inserted snippet went: its lines glow, and the editor's frame pulses once. */
 .cm-editor .cm-inserted {
-  animation: cm-inserted 2.6s ease-out;
+  animation: cm-inserted 4.5s ease-out;
 }
 
 /* The lines a snippet is about to replace: marked for a moment before it goes in. */
@@ -1974,7 +1974,8 @@ body.is-resizing iframe {
 }
 
 @keyframes cm-inserted {
-  0%, 35% {
+  /* About 3 s at full strength, so there's time to read what went in, then a fade. */
+  0%, 65% {
     box-shadow: inset 4px 0 0 #a5b4fc, inset 0 0 0 999px rgba(129, 140, 248, 0.42);
   }
   100% {
@@ -1997,7 +1998,7 @@ body.is-resizing iframe {
 
 @media (prefers-reduced-motion: reduce) {
   .cm-editor .cm-inserted {
-    animation-duration: 4s;
+    animation-duration: 4.5s;
   }
 }
 

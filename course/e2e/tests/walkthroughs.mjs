@@ -141,7 +141,14 @@ export const WALKTHROUGHS = {
 
     await l.step("Test Temporal's resiliency");
     await l.send("What about JFK to SFO for the way back?");
-    await expect.poll(() => l.busy(), { message: "the agent never started working", timeout: 30 * SECOND }).toBe(true);
+    // Mid-turn, if there's a turn to catch: with the return date on the trip form, the model may
+    // already have the flights back and answer at once. Either way the worker goes, and the
+    // session must carry on when it's back.
+    const working = await expect
+      .poll(() => l.busy(), { timeout: 20 * SECOND })
+      .toBe(true)
+      .then(() => true, () => false);
+    if (!working) l.note('"Test Temporal\'s resiliency": the agent answered before the worker could be stopped mid-turn');
     await l.worker("stopped");
     await sleep(5 * SECOND);
     await l.worker("running");

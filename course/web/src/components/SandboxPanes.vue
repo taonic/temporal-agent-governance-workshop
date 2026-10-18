@@ -118,6 +118,7 @@ async function send(text) {
 // startSession(): the Agent UI forward with an agent's start form open, as a person gets there
 // (Session Manager, New session, the agent), and the posture chosen. Starting it is still the
 // learner's click. The console lists an agent as disabled until its worker answers.
+let startRequest = 0;
 async function startSession(agent, posture) {
   open("console");
   const doc = await waitFor(consoleDocument);
@@ -130,11 +131,29 @@ async function startSession(agent, posture) {
   const ready = await waitFor(() => (row()?.getAttribute("aria-disabled") === "true" ? null : row()), 4000);
   if (!ready) return toast(`Start the worker first: the ${agent} needs it running`, 4200);
   ready.click();
-  if (!posture) return;
-  const select = await waitFor(() => doc.querySelector("dialog.start-sheet[open] select"));
-  if (!select || ![...select.options].some((o) => o.value === posture)) return;
-  select.value = posture;
-  select.dispatchEvent(new Event("change", { bubbles: true }));
+  if (posture) {
+    const select = await waitFor(() => doc.querySelector("dialog.start-sheet[open] select"));
+    if (select && [...select.options].some((o) => o.value === posture)) {
+      select.value = posture;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+  }
+  // Once the learner starts the session (the form's Start session, not Cancel), the session
+  // list closes and gives the conversation its room back. Only the latest New session ▸ does
+  // it: two closing the list would open it again.
+  const mine = ++startRequest;
+  if (!(await waitFor(() => doc.querySelector("dialog.start-sheet[open]")))) return;
+  let started = false;
+  const onClick = (event) => {
+    const button = event.target.closest?.("dialog.start-sheet button");
+    if (button && /start session/i.test(button.textContent)) started = true;
+  };
+  doc.addEventListener("click", onClick, true);
+  await waitFor(() => !doc.querySelector("dialog.start-sheet[open]"), 10 * 60_000);
+  doc.removeEventListener("click", onClick, true);
+  if (!started || mine !== startRequest) return;
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  if (doc.querySelector(".app.has-session-drawer")) doc.querySelector("button.session-drawer-trigger")?.click();
 }
 
 // The Agent UI as the course shows it: without State flow's minimap (the console has no

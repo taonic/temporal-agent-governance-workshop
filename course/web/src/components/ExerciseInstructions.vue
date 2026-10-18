@@ -174,12 +174,15 @@ function advance({ codeTour = offersCodeTour.value } = {}) {
 // --- Passed ------------------------------------------------------------------------------------
 
 // The check step, once it passed: a big 🎉, the way on to the next exercise, and the check.
-// When it passes now (ExercisePage celebrates it), the guide goes there.
+// When it passes now (ExercisePage celebrates it), the guide goes there, once the learner has
+// reached the last step: a step can run the check itself (exercise 4's "Write the rule"), and
+// jumping from there would skip the steps after it.
 const showPassed = computed(() => beat.value.kind === "check" && passed.value);
 watch(
   () => store.celebrated.includes(props.exercise.id),
   (now, before) => {
-    if (now && before === false) goTo(beats.value.findIndex((b) => b.kind === "check"));
+    const lastStep = beats.value.findLastIndex((b) => b.kind === "step");
+    if (now && before === false && at.value >= lastStep) goTo(beats.value.findIndex((b) => b.kind === "check"));
   },
 );
 
