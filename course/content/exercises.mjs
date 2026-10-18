@@ -259,7 +259,7 @@ export const EXERCISES = {
       },
       {
         file: "policies/travel.dw",
-        from: '@id("no-bulk-flight-booking")',
+        from: "// Never book in a loop, concurrently, or more than once per script.",
         title: "Judging code before it runs",
         body: "Dogwood reads the script first: a booking in a loop, run concurrently, or called from more than one place is refused before anything runs.",
       },
