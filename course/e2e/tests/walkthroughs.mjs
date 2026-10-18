@@ -252,6 +252,8 @@ export const WALKTHROUGHS = {
     await l.openFile("policies/travel.dw");
     await l.insert();
     expect(await l.runButton("./challenges/04-auto-mode/check.sh"), "the check, or restarting the verifier, failed").toBe(0);
+    // The block's exit status is the verifier restart's: the check's own result is in its output.
+    expect(l.flatOutput, "the check didn't pass with the rule in").toContain("Check passed");
 
     await l.step("Try it");
     // In the same session as the refusal: the model may not try again until it's told the policy

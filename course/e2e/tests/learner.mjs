@@ -282,12 +282,19 @@ export class Learner {
     const code = await button.evaluate((b) => b.closest(".snippet")?.querySelector("pre")?.innerText ?? "");
     await button.click();
     await expect(button, `the snippet didn't go into ${path}`).toHaveClass(/\bis-inserted\b/, { timeout: 15 * SECOND });
-    // A line of code from the snippet, not a comment: in the file the sandbox has.
-    const line = code
+    // Every line of code in the snippet, not just the first, in the file the sandbox has: the
+    // snippet types itself in, and the file is saved as it goes, so a first line can be there
+    // long before the last.
+    const lines = code
       .split("\n")
       .map((l) => l.trim())
-      .find((l) => l && !l.startsWith("#") && !l.startsWith("//"));
-    await expect.poll(() => this.readFile(path), { message: `${path} wasn't saved to the sandbox`, timeout: 30 * SECOND }).toContain(line);
+      .filter((l) => l && !l.startsWith("#") && !l.startsWith("//"));
+    await expect
+      .poll(async () => {
+        const text = await this.readFile(path);
+        return lines.filter((l) => !text.includes(l));
+      }, { message: `${path} wasn't saved to the sandbox`, timeout: 30 * SECOND })
+      .toEqual([]);
     return path;
   }
 
@@ -490,7 +497,7 @@ export class Learner {
         const status = await this.agentStatus();
         console.log(
           `turn over: session ${await this.sessionId()}, turn ${status?.current_turn} active ${status?.turn_active}, ` +
-            `approvals ${happened.approvals.join(", ") || "none"}, forms ${happened.forms}; reply: ${happened.reply.slice(0, 160).replace(/\s+/g, " ")}`,
+            `approvals ${happened.approvals.join(", ") || "none"}, forms ${happened.forms}; reply: ${happened.reply.slice(0, 800).replace(/\s+/g, " ")}`,
         );
         return happened;
       }

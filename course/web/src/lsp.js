@@ -27,10 +27,14 @@ import {
 
 const ROOT = "file:///workshop";
 
-// When the handshake times out, the client's queued notifications (didOpen…) each reject with
-// it, unhandled: they wait on it with no handler of their own. createLsp reconnects for it.
+// The language client's own rejections, which no caller handles: when the handshake times out,
+// its queued notifications (didOpen…) each reject with it (createLsp reconnects for it); and a
+// request the server declines (cancelled, the document changed) rejects with the server's
+// JSON-RPC error object, { code, message }, not an Error.
 window.addEventListener("unhandledrejection", (event) => {
-  if (event.reason?.message === "Request timed out") event.preventDefault();
+  const reason = event.reason;
+  const jsonRpcError = reason && !(reason instanceof Error) && typeof reason.code === "number" && typeof reason.message === "string";
+  if (reason?.message === "Request timed out" || jsonRpcError) event.preventDefault();
 });
 
 export const fileUri = (path) => `${ROOT}/${path}`;

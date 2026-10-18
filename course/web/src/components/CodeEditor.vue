@@ -419,14 +419,16 @@ function scrollToSlowly(from, to = from) {
 
 // Puts `insert` in place of `from`..`to` as if typed, fast: the old text goes, then the new
 // comes a few characters a frame, 0.3 s for a short snippet and at most 1.2 s for a long one,
-// the view following the cursor. One undo takes it all back (CodeMirror groups typing). With
-// reduced motion too, as the guide's messages stream: it's text arriving, not movement.
+// the view following the cursor. One undo takes it all back: adjacent changes with no user event
+// join one history group. Not marked as typing ("input.type"), which would start the language
+// server's completion on every chunk. With reduced motion too, as the guide's messages stream:
+// it's text arriving, not movement.
 async function typeIn(from, to, insert) {
   if (!insert) {
     editor.dispatch({ changes: { from, to, insert }, selection: { anchor: from + insert.length } });
     return;
   }
-  editor.dispatch({ changes: { from, to, insert: "" }, selection: { anchor: from }, userEvent: "input.type" });
+  editor.dispatch({ changes: { from, to, insert: "" }, selection: { anchor: from } });
   const perFrame = Math.max(1, Math.ceil(insert.length / (Math.min(1200, Math.max(300, insert.length * 2.5)) / 16)));
   for (let at = 0; at < insert.length; ) {
     await new Promise((resolve) => requestAnimationFrame(resolve));
@@ -436,7 +438,6 @@ async function typeIn(from, to, insert) {
       changes: { from: from + at, insert: piece },
       selection: { anchor: from + at + piece.length },
       scrollIntoView: true,
-      userEvent: "input.type",
     });
     at += piece.length;
   }
@@ -527,6 +528,9 @@ async function insertSnippet(path, code, mode, { retried = false } = {}) {
   const lead = insert.match(/^\n*/)[0].length;
   await typeIn(from, to, insert);
   if (!editor) return `Inserted into ${name}.`;
+  // In the sandbox as soon as it's typed, not after the edit debounce: a step's next command
+  // (a check, a restart) can run straight away.
+  saveNow();
   const start = from + lead;
   const end = from + insert.replace(/\n+$/, "").length;
   highlight(start, end, { scroll: false });
