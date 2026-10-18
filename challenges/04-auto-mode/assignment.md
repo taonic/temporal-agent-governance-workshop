@@ -56,7 +56,7 @@ Refused. In the console's **Approval decisions** panel, the evaluation card show
 
 Find `TODO(ch04)` in `policies/travel.dw` and write `flights-on-the-trip-form`. It's `return-flights-on-the-trip-form` with the departure date:
 
-```text
+```dogwood
 @id("flights-on-the-trip-form")
 // Permit this call (a flight booking), checked before it runs...
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
@@ -112,7 +112,7 @@ Pick one of these and add it to `policies/travel.dw`. Each has a test that fails
 
 **Refuse flights over $1,000.** A `forbid` wins over every `permit`, so not even a booking on the trip form gets through:
 
-```text
+```dogwood
 @id("no-flights-over-1000")
 // A forbid wins over every permit: no booking over $1,000 runs, whatever the trip form says.
 forbid (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
@@ -131,7 +131,7 @@ uv run pytest -m menu -k price
 
 **Allow nonstop flights only.** The same shape, with `unless`: refuse every booking, unless it's nonstop.
 
-```text
+```dogwood
 @id("nonstop-flights-only")
 // Refuse a flight with a stop, whatever the trip form says.
 forbid (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
@@ -149,7 +149,7 @@ uv run pytest -m menu -k nonstop
 
 **A hotel for someone not on the form comes to you instead of being refused.** No new rule: mark the one that refuses it, `hotels-only-for-the-trip-form-traveler`, with `@decision("escalate")`. This replaces it:
 
-```text
+```dogwood
 // A hotel for someone no trip form named comes to you, instead of being refused.
 @id("hotels-only-for-the-trip-form-traveler")
 @decision("escalate")

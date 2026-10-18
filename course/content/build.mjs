@@ -34,6 +34,22 @@ import { EXERCISES, WORKER_COMMAND } from "./exercises.mjs";
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("json", json);
+// Dogwood (Cedar plus temporal conditions), colored as the editor colors a .dw file
+// (CodeEditor.vue's StreamLanguage).
+hljs.registerLanguage("dogwood", () => ({
+  name: "Dogwood",
+  keywords: {
+    keyword: "permit forbid when unless temporal formerly within has like in is if then else principal action resource context",
+    literal: "true false",
+  },
+  contains: [
+    hljs.C_LINE_COMMENT_MODE,
+    hljs.QUOTE_STRING_MODE,
+    { scope: "meta", match: /@\w+/ },
+    { scope: "number", match: /\b\d+[dhms]?\b/ },
+    { scope: "title", match: /\b[A-Z]\w*(?=::)/ },
+  ],
+}));
 
 const courseDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(courseDir, "..");
@@ -559,7 +575,7 @@ export function todoBlocks(masterText, chapter) {
     .map((b) => ({ starter: `${b.starter.join("\n")}\n`, solution: `${b.solution.join("\n")}\n` }));
 }
 
-const SNIPPET_FILES = { python: ".py", text: ".dw" };
+const SNIPPET_FILES = { python: ".py", dogwood: ".dw" };
 
 // How a snippet goes into its file: "todo" replaces the TODO block (it's the solution);
 // "replace" swaps a Dogwood rule the file already has (same @id) for the snippet; "append"
