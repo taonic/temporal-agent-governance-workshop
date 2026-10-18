@@ -22,10 +22,23 @@ function courseContent() {
     configureServer(server) {
       const inputs = new Set(contentInputs());
       server.watcher.add([...inputs]);
+      // One rebuild for a burst of changes (render.py rewrites every stage at once). A build that
+      // fails (a half-made edit, or another build, a test run's, writing public/content at the
+      // same moment) is logged and tried once more, and the server keeps serving the last content.
+      let timer = null;
+      const rebuild = (retry = true) => {
+        try {
+          writeCourse();
+          server.ws.send({ type: "full-reload" });
+        } catch (err) {
+          server.config.logger.error(`course content: ${err.message}${retry ? " (trying again)" : ""}`);
+          if (retry) timer = setTimeout(() => rebuild(false), 1000);
+        }
+      };
       server.watcher.on("change", (file) => {
         if (!inputs.has(path.resolve(file))) return;
-        writeCourse();
-        server.ws.send({ type: "full-reload" });
+        clearTimeout(timer);
+        timer = setTimeout(rebuild, 200);
       });
     },
   };
