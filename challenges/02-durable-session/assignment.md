@@ -301,7 +301,7 @@ Send:
 
 > Book the cheapest one.
 
-It books it. No question asked: the posture is `dangerously_skip_all`. The booking lands on the trip board, and in the bookings ledger (`.data/bookings.json`<!-- browser
+It books it. No question asked: the posture is `dangerously_skip_all`, which [turns the approval gate off entirely](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L666-L673). The booking lands on the trip board, and in the bookings ledger (`.data/bookings.json`<!-- browser
 : `cat .data/bookings.json` in the commands terminal
 -->). An agent that can spend money in your name, unattended, on its own judgment. Exercise 3 adds a human to the loop.
 
