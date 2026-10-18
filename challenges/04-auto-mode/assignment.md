@@ -44,6 +44,8 @@ Runs without asking: `flights-for-ada`.
 
 Runs too, and that's the problem. You asked for November 1st; nobody asked for December 24th. **Ada now holds two flights, and you're paying for both.** In auto mode no one was asked: the policy was the only check, and it said yes. The date could have come from a misread message, a model's mistake, or an instruction slipped into a file the agent read, and the result would be the same: money spent on a trip nobody wanted. The rule can't tell, because it checks who the booking is for, not whether it matches what you asked. That answer is in the session's past.
 
+What if the rule could look there?
+
 ## 3. Look back in time
 
 Replace `flights-for-ada` (at `TODO(ch04)` in `policies/travel.dw`) with a rule that looks back at the trip form:
