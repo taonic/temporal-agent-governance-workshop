@@ -16,7 +16,11 @@ The harness already handles the hard parts:
 - A **validator** runs before anything is written to history, and rejects a decision for a call that isn't pending, or was already decided.
 - The agent **waits durably**: a workflow blocked on an approval costs nothing, and survives restarts.
 
-Your job is the policy: what needs approval. First, see what happens when everything does.
+Your job is the policy: what needs approval.
+
+[![How human approval works. You ask the agent session, a Temporal workflow running with the approve_bookings posture. Each turn the model decides the next call, and its tool calls go through the approval gate, approval_policy(), which you write. Allowed calls (the searches, the script, the trip board) run straight away as tool calls to the travel API. A booking waits, durably, and shows you an approval card in the Agent UI. Your approve or reject is a tool_approval Update: validated, then recorded in the history, and its decision goes back to the gate.](../../docs/architecture/ex3-approval.png)](../../docs/architecture/ex3-approval.html)
+
+First, see what happens when everything does.
 
 <!-- local -->Starting here, without exercises 1 and 2 done? Run `./challenges/03-human-approval/setup.sh` first: it solves each of them you haven't, and leaves the ones you did alone. Then restart the worker.<!-- /local -->
 
