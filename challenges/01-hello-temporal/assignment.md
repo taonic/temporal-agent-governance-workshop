@@ -28,6 +28,8 @@ Take a minute with this diagram before you start. Follow a trip from the starter
 
 [![The starter (hello-start or hello-board) asks the Temporal server to start a workflow, and the server keeps that workflow's history. The hello-worker runs HelloTripWorkflow, which calls the lookup_airport activity; with FLAKY=1 its attempts 1 to 4 fail, and the RetryPolicy (2s, ×2, at most 6s) retries until attempt 5 gets through. The worker also runs BoardingWorkflow, which adds 1 to on_board every 2 seconds. The Temporal UI shows the history and queries the boarded count. The count is never saved: a new worker replays the history to rebuild it, and with no worker, queries time out and the work waits.](../../docs/architecture/ex1-hello.png)](../../docs/architecture/ex1-hello.html)
 
+First, somewhere for all of it to run.
+
 ## 0. Start your sandbox
 
 <!-- browser
@@ -46,6 +48,8 @@ uv run travel-stack up
 
 Open the **Temporal UI** at http://localhost:8233.
 <!-- /local -->
+
+Next, give it something to run.
 
 ## 1. Run it, and see it stop
 
@@ -67,7 +71,7 @@ It prints a link and then waits. Open the link. The workflow is **Running**, but
 NotImplementedError: TODO(ch01): call the lookup_airport activity
 ```
 
-That's your TODO. Notice what Temporal does with a bug in workflow code: it doesn't fail the workflow. It **pauses** it, and retries the step until the code is fixed. Leave the starter waiting.
+That's your TODO. Notice what Temporal does with a bug in workflow code: it doesn't fail the workflow. It **pauses** it, and retries the step until the code is fixed. Leave the starter waiting: next, you fix the code it's waiting on.
 
 ## 2. Call the activity
 
@@ -92,6 +96,8 @@ return await workflow.execute_activity(
 - `retry_policy`: how to retry. By default Temporal retries forever, backing off between attempts. Here it waits 2 seconds, then twice as long each time (4s, then 6s), and never more than 6 seconds.
 
 Workflow code never calls `lookup_airport()` directly. It asks Temporal to run it, and Temporal records the result in the history.
+
+Your fix is saved, but the running worker still has the old code.
 
 ## 3. Restart the worker, and watch it finish
 
@@ -127,6 +133,8 @@ Step 3 showed the history outliving a bug. Now look at what's in it.
 
 That's everything a worker needs to pick the workflow up again. If this worker died and the workflow had more steps, a new worker would replay the history: run the workflow code again from the top, and take each lookup's result from its **Activity Task Completed** row instead of calling `lookup_airport` again. Completed activities never run twice.
 
+Those lookups succeeded the first time. What about one that keeps failing?
+
 ## 5. Break it on purpose
 
 Make the airport database flaky. Restart the worker with `FLAKY=1`, so four of every five attempts fail: each lookup fails on attempts 1 to 4 and gets through on attempt 5.
@@ -146,6 +154,8 @@ It takes about 40 seconds, and it still finishes. While you wait,<!-- local --> 
 --><!-- local --> **Pending Activities** tab<!-- /local --> shows the lookup's attempt count climbing and its last error, and the worker's log shows each `503`. When it's done, each **Activity Task Started** in its<!-- browser
  [**Event History**](#trip/LAX-ORD/history)
 --><!-- local --> **Event History**<!-- /local --> shows **Attempt** 5: only the attempt that got through is recorded. You wrote no retry loop: the `RetryPolicy` did it, waiting a little longer after each failure.
+
+So far a worker was always running. What if none is?
 
 ## 6. No worker? No problem
 

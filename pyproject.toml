@@ -54,8 +54,6 @@ known-first-party = ["travel_agent", "hello", "codemode", "temporal_agent_harnes
 # The starter imports what learners will need for their TODOs.
 "starter/**" = ["F401"]
 "solutions/**" = ["F401"]
-# Runs in the Monty sandbox, where the travel functions are already in scope.
-"codemode/trip.py" = ["F821"]
 
 [project.scripts]
 hello-worker = "hello.worker:run"
@@ -63,4 +61,4 @@ hello-start = "hello.starter:run"
 hello-board = "hello.starter:run_board"
 travel-worker = "travel_agent.worker:run"
 travel-stack = "travel_agent.stack:run"
-code-mode = "codemode.run:main"
+code-mode = "codemode.sandbox:main"

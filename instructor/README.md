@@ -82,7 +82,7 @@ Under the hood, Monty here means the [Temporal Agent Harness](https://github.com
 
 **Code Mode.** The model doesn't get `search_flights` and `book_flight` as tools. It gets one tool, `run_travel_code`, and writes a script. The sandbox runs it, and each travel function the script calls becomes a durable, approval-gated activity. Why: one model call can do a search, a choice and a booking with real control flow, and every side effect is still its own step in history.
 
-Then hand over: exercise 2 opens with **Meet Code Mode** (section 1, about 10 minutes, nothing running, no model). Learners run a script in the sandbox with `uv run code-mode` (`codemode/run.py` stands in for the workflow as the host) and watch it stop at every travel call; batch two searches with `asyncio.gather`; try imports, files and an endless loop; make the type check catch a bad key; see a booking refused; and print the `run_travel_code` tool the model gets.
+Then hand over: exercise 2 opens with **Run a script in Monty** (section 1, about 5 minutes, nothing running, no model). In `codemode/sandbox.py`, learners add the model's script as a string (`MODEL_SCRIPT`, marked as the code an LLM writes; they play the model), write the few lines of Monty that run it, see it refused with no host functions, then add `search_flights`, defined on the host and called from the sandbox; run it with `uv run code-mode` and see the search run on the host.
 
 While you float, the point to land with each table: **a script can't do anything the host doesn't do for it.** In the agent the host is the workflow, so every stop is where the approval posture, an activity and the history come in. Exercises 3 and 4 put a person, then a policy, at exactly that point.
 

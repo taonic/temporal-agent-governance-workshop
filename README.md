@@ -7,7 +7,7 @@ A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://te
 | # | Exercise | What you see | What you write |
 |---|---|---|---|
 | 1 | [Hello Temporal](challenges/01-hello-temporal/assignment.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries; a count nobody saved survives a restart | Call an activity with a timeout and a retry policy |
-| 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | A script in the Monty sandbox stops at every tool call; in the agent those calls are activities; kill the worker and the conversation carries on | The `search_flights` tool |
+| 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | A script in the Monty sandbox stops at every tool call; in the agent those calls are activities; kill the worker and the conversation carries on | Running the script in Monty, and the `search_flights` tool |
 | 3 | [Human approval mode](challenges/03-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
 | 4 | [Dogwood auto mode](challenges/04-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others are refused | The `flights-on-the-trip-form` policy rule, plus one rule of your choice |
 | ★ | [Attack the agent](challenges/05-attack-the-agent/assignment.md) | A planted to-do item fools the model; the policy refuses the booking | Nothing |
@@ -84,7 +84,7 @@ Each exercise has a check (`./challenges/NN-*/check.sh`), a solve (`solve.sh`, w
 
 ```
 hello/                 exercise 1: a tiny workflow, activity, worker and starter
-codemode/              exercise 2's warm-up: run a script in the Monty sandbox (uv run code-mode)
+codemode/              exercise 2's warm-up: sandbox.py runs a model's script in Monty (uv run code-mode)
 travel_agent/
   agent/               TravelAgent workflow, call_llm, scripted model, prompts, trip form, travel notes
   travel/              travel tools (activities), seeded inventory, trip board

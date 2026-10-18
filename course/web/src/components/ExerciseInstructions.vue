@@ -8,7 +8,7 @@
 //
 // The first time, the guide starts with getting started: Ask Temporal's setup (with only the
 // guide on the page), then the workspace and its tour. The exercise's code tour comes at the end
-// of its briefing, just before step 1.
+// of its briefing, just before step 1, or after the beat its `tourAfter` names.
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { closeCodeTour, startCodeTour } from "../codeTour.js";
@@ -54,7 +54,7 @@ const props = defineProps({
   exercise: { type: Object, required: true },
   live: { type: Boolean, default: false },
 });
-const emit = defineEmits(["check", "setup", "solve", "reset"]);
+const emit = defineEmits(["check", "solve", "reset"]);
 
 const mode = computed(() => effectiveMode());
 const page = computed(() => props.exercise.modes[mode.value]);
@@ -99,6 +99,7 @@ function restore() {
 }
 const at = ref(restore());
 const beat = computed(() => beats.value[Math.min(at.value, beats.value.length - 1)]);
+watch(() => beat.value?.id, (id) => (store.guideBeat = id ?? null), { immediate: true });
 const isLast = computed(() => at.value >= beats.value.length - 1);
 
 watch(
@@ -146,8 +147,12 @@ function startOver() {
 }
 
 // The last beat of the briefing (the intro and any background before step 1) offers the code
-// tour, over the editor; step 1 is waiting behind it.
-const offersCodeTour = computed(() => props.exercise.tour?.length > 0 && beat.value.kind !== "step" && beats.value[at.value + 1] === steps.value[0]);
+// tour, over the editor; step 1 is waiting behind it. An exercise's `tourAfter` names another beat.
+const offersCodeTour = computed(() => {
+  if (!props.exercise.tour?.length) return false;
+  if (props.exercise.tourAfter) return beat.value.id === props.exercise.tourAfter;
+  return beat.value.kind !== "step" && beats.value[at.value + 1] === steps.value[0];
+});
 
 function advance({ codeTour = offersCodeTour.value } = {}) {
   if (beat.value.kind === "step") tick(beat.value.id);
@@ -232,10 +237,10 @@ watch(
 const ACTION_VIEWS = [
   [/^data-(?:worker-toggle|trip|run)\b/, "code"], // the terminals, under Code
   [/^data-pane="(console|temporal)"/, null],
-  [/^data-(?:send|new-session)\b/, "console"],
+  [/^data-(?:send|new-session|agent-tour)\b/, "console"],
   [/^data-(?:session-tab|workflow-open)\b/, "temporal"],
 ];
-const ACTION = /data-(?:worker-toggle|trip|run|send|new-session|session-tab|workflow-open)\b|data-pane="(?:console|temporal)"/;
+const ACTION = /data-(?:worker-toggle|trip|run|send|new-session|agent-tour|session-tab|workflow-open)\b|data-pane="(?:console|temporal)"/;
 function firstAction(html) {
   const found = html.match(ACTION)?.[0];
   if (!found) return null;
@@ -300,7 +305,7 @@ const nextLabel = computed(() => {
   const following = beats.value[at.value + 1];
   if (b.id === "start-ask") return askReady.value ? "Next →" : "Skip for now →";
   if (b.id === "start-workspace") return "Skip the tour →";
-  if (offersCodeTour.value) return "✦ Take the code tour →";
+  if (offersCodeTour.value) return b.kind === "step" ? "Done · ✦ take the code tour →" : "✦ Take the code tour →";
   if (b.kind === "intro") return following?.kind === "step" ? "Let's start →" : "Next →";
   if (b.kind === "step") return following?.kind === "step" ? "Done, next step →" : "Done →";
   if (b.kind === "stretch") return "Continue →";
@@ -509,6 +514,9 @@ function onClick(event) {
   } else if (target.matches("button[data-session-tab]")) {
     if (!props.live) return toast("Start your sandbox to open the Temporal UI.");
     openSessionTab(target.dataset.sessionTab);
+  } else if (target.matches("button[data-agent-tour]")) {
+    if (!props.live) return toast("Start your sandbox to open the Agent UI.");
+    store.agentTourRequest++;
   } else if (target.matches("button[data-new-session]")) {
     if (!props.live) return toast("Start your sandbox to open the Agent UI.");
     startAgentSession(target.dataset.newSession, target.dataset.posture);
@@ -596,11 +604,6 @@ function onClick(event) {
           <p v-if="beat.kind === 'intro' && exercise.teaser" class="exercise-meta">{{ exercise.teaser }}</p>
           <div class="guide-body markdown" v-html="beat.html" />
           <AskSetupCard v-if="beat.id === 'start-ask'" class="guide-body" />
-          <!-- Not on exercise 1: there's nothing earlier to catch up on, and the first one is worth doing by hand. -->
-          <div v-if="beat.kind === 'intro' && mode === 'browser' && exercise.number > 1" class="instruction-actions" data-tour="exercise-actions">
-            <button v-if="exercise.scripts.setup && mode === 'browser'" class="button" type="button" :disabled="!live" title="Catch up on earlier exercises and start fresh sessions" @click="emit('setup')">Set up this exercise</button>
-            <button v-if="exercise.scripts.solve && mode === 'browser'" class="button" type="button" :disabled="!live" title="Apply the official solution" @click="emit('solve')">Solve it for me</button>
-          </div>
           <div v-if="beat.kind === 'check' && mode === 'browser'" class="instruction-actions">
             <button class="button button-primary" type="button" :disabled="!live" @click="emit('check')">✓ Run the check</button>
             <button v-if="exercise.scripts.solve && !passed" class="button" type="button" :disabled="!live" title="Apply the official solution" @click="emit('solve')">Stuck? Solve it for me</button>

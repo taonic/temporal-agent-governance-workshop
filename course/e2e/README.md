@@ -6,7 +6,7 @@ Playwright tests of the deployed course site, as a learner uses it: the live Fly
 |---|---|---|---|
 | `@public` | nothing | the `/api` signed out, every page in the picker, the access form, Ask Temporal's panel, theme | ~20 s |
 | `@auth` | `E2E_ACCESS_CODE` | a fresh learner's session, without a sandbox; Ask Temporal answers (only if the app has `KAPA_API_KEY`); `/api/admin/sandboxes` (with `E2E_INSTRUCTOR_CODE`) | ~10 s |
-| `@sandbox` | `E2E_ACCESS_CODE` | a real Daytona sandbox: start it from the page, both terminals, the Temporal UI and Agent UI panes, then `solve.sh` and ✓ Check for every exercise with a check. Deletes the sandbox at the end | ~10–25 min |
+| `@sandbox` | `E2E_ACCESS_CODE` | a real Daytona sandbox: start it from the page, both terminals, the Temporal UI and Agent UI panes, then every exercise the way its instructions say, step by step through the page with the real model, ending with its ✓ Check (`tests/walkthroughs.mjs`). Deletes the sandbox at the end | ~20–30 min |
 
 A tier without its secret skips.
 
@@ -31,7 +31,7 @@ npm run summary                              # reports/summary.md (and reports/e
 | `E2E_INSTRUCTOR_CODE` | the app's `INSTRUCTOR_CODE`, for the admin test |
 | `E2E_SKIP_SANDBOX` | `1` keeps the sandbox tier off |
 
-Failures keep a trace, a screenshot and a video (`test-results/`); the sandbox tier also attaches both terminals' text. `npx playwright show-trace test-results/<test>/trace.zip` replays one.
+Failures keep a trace, a screenshot and a video (`test-results/`); the sandbox tier also attaches both terminals' text and the Agent UI's chat. A step whose instructions the page can't follow as written is noted in the report (an `instructions` annotation) without failing the run. `npx playwright show-trace test-results/<test>/trace.zip` replays one.
 
 ## Every day, by email
 

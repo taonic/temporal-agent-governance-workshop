@@ -81,6 +81,10 @@ export const store = reactive({
   // for the page tour (App) by bumping pageTourRequest.
   guideOnly: false,
   pageTourRequest: 0,
+  // Bumped to ask the exercise page for the Agent UI's tour (a step's ✦ Take a tour button).
+  agentTourRequest: 0,
+  // The guide's beat on show (its id): the editor shows the files that beat uses.
+  guideBeat: null,
 
 
   // Exercise ids whose check passed (from the sandbox), and the ones already celebrated.

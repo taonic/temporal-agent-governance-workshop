@@ -20,7 +20,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 
 import { helper, openHelper } from "../helper.js";
 import { createLsp } from "../lsp.js";
-import { dedent, findSnippet, indentLines, ruleBlock, ruleId, shape } from "../snippets.js";
+import { dedent, findSnippet, indentLines, ruleBlock, ruleId, shape, todoFor } from "../snippets.js";
 import { codeTour, currentStop, startCodeTour } from "../codeTour.js";
 import { api, registerHook, store, toast } from "../store.js";
 import { tourRange } from "../tourRange.js";
@@ -42,7 +42,13 @@ const emit = defineEmits(["update:maximized"]);
 // are read-only, from the sandbox, until you close them.
 const extra = ref([]);
 const files = computed(() => [...props.exercise.files, ...extra.value]);
-const active = ref(files.value[0]?.path ?? "");
+// A file whose config names beats (`beats`) has a tab only on those beats of the guide, so a
+// step shows the files it uses; the file that's open always has one (a link or the code tour
+// can open any of them).
+const onBeat = (file) => !file.beats || !store.guideBeat || file.beats.includes(store.guideBeat);
+const firstOnBeat = () => (files.value.find(onBeat) ?? files.value[0])?.path ?? "";
+const tabs = computed(() => files.value.filter((file) => onBeat(file) || file.path === active.value));
+const active = ref(firstOnBeat());
 // "mine": your copy (the sandbox's, or the starter while it isn't ready); "solution".
 const view = ref("mine");
 const docs = reactive({}); // path -> { text, saved, stamp, loading, saving, conflict }
@@ -328,6 +334,14 @@ watch(
 
 // A stop in another file opens it (your copy); showCurrent then spotlights it. The tour needs
 // the editor, so it brings the Code tab forward.
+watch(
+  () => store.guideBeat,
+  () => {
+    const file = files.value.find((f) => f.path === active.value);
+    if (file && !onBeat(file) && !touring.value) select(firstOnBeat());
+  },
+);
+
 watch([tourStop, touring], ([stop]) => {
   if (stop) store.workspaceView = "code";
   if (stop && (stop.file !== active.value || view.value !== "mine")) select(stop.file);
@@ -394,8 +408,9 @@ async function insertSnippet(path, code, mode) {
   let to;
   let insert;
   let where;
-  const todo = file.todo;
-  const todoAt = mode === "todo" && todo ? text.indexOf(todo.starter) : -1;
+  // The TODO block this snippet solves (a file can have several), or the first still open.
+  const todo = mode === "todo" ? (todoFor(file.todos, code) ?? file.todos?.find((t) => text.includes(t.starter))) : null;
+  const todoAt = todo ? text.indexOf(todo.starter) : -1;
   const marker = `TODO(ch${String(props.exercise.number).padStart(2, "0")})`;
   if (todoAt >= 0) {
     from = todoAt;
@@ -454,10 +469,11 @@ async function revertSnippet(path, code, mode) {
   const found = findSnippet(text, code);
   if (!found) return `It isn't in ${name} as inserted any more, so there's nothing to revert.`;
 
-  const marker = `TODO(ch${String(props.exercise.number).padStart(2, "0")})`;
   const outside = text.slice(0, found.start) + text.slice(found.end);
-  if (mode === "todo" && file.todo && !outside.includes(marker)) {
-    const restore = file.todo.starter.replace(/\n$/, "");
+  // Its TODO comes back, unless it's still there (the snippet went in above an edited TODO).
+  const todo = mode === "todo" ? todoFor(file.todos, code) : null;
+  if (todo && !outside.includes(todo.starter.trim().split("\n")[0].trim())) {
+    const restore = todo.starter.replace(/\n$/, "");
     editor.dispatch({ changes: { from: found.start, to: found.end, insert: restore }, selection: { anchor: found.start } });
     highlight(found.start, found.start + restore.length);
     const [a, b] = lineRange(found.start, found.start + restore.length);
@@ -635,7 +651,7 @@ watch(
   () => {
     saveNow();
     forgetHistory();
-    active.value = files.value[0]?.path ?? "";
+    active.value = firstOnBeat();
     view.value = "mine";
     if (props.live) for (const file of files.value) loadFile(file.path);
     showCurrent();
@@ -688,7 +704,7 @@ onBeforeUnmount(() => {
   <div class="code-editor" data-tour="editor">
     <div class="file-tabs" role="tablist" aria-label="Exercise files">
       <button
-        v-for="file in files"
+        v-for="file in tabs"
         :key="file.path"
         class="file-tab"
         :class="{ active: file.path === active, dirty: dirty(file.path), locked: !file.editable }"

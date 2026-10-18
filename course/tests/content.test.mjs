@@ -71,29 +71,35 @@ test("in the browser, localhost links open panes and command snippets get a run 
   assert.ok(!local.includes("data-run"), "local snippets only copy");
 });
 
-test("a master's TODO block is the exact starter and solution lines for its chapter", async () => {
-  const { todoBlock } = await import("../content/build.mjs");
+test("a master's TODO blocks are the exact starter and solution lines for its chapter", async () => {
+  const { todoBlocks } = await import("../content/build.mjs");
   const master = "a\n    # @@solution ch02\n    return 2\n    # @@starter\n    # TODO(ch02)\n    raise X\n    # @@end\n    # @@solution ch03\n    three\n    # @@starter\n    todo3\n    # @@end\nb";
-  assert.deepEqual(todoBlock(master, 2), { starter: "    # TODO(ch02)\n    raise X\n", solution: "    return 2\n" });
-  assert.equal(todoBlock(master, 1), null);
+  assert.deepEqual(todoBlocks(master, 2), [{ starter: "    # TODO(ch02)\n    raise X\n", solution: "    return 2\n" }]);
+  assert.deepEqual(todoBlocks(master, 1), []);
+  // Two in one file: each its own block.
+  const two = "# @@solution ch02\nA = 1\n# @@starter\nA = 0\n# @@end\nx\n# @@solution ch02\nB = 1\n# @@starter\nB = 0\n# @@end\n";
+  assert.deepEqual(todoBlocks(two, 2), [{ starter: "A = 0\n", solution: "A = 1\n" }, { starter: "B = 0\n", solution: "B = 1\n" }]);
 });
 
 test("every exercise's TODO block is in its starter, and its snippet replaces it", async () => {
   const { insertMode } = await import("../content/build.mjs");
   for (const exercise of buildCourse().exercises) {
-    for (const file of exercise.files.filter((f) => f.todo)) {
-      assert.ok(file.starter.includes(file.todo.starter), `${exercise.id}: the TODO block isn't in the starter`);
-      assert.ok(file.solution.includes(file.todo.solution), `${exercise.id}: the solution block isn't in the solution`);
+    for (const file of exercise.files) {
+      for (const todo of file.todos) {
+        assert.ok(file.starter.includes(todo.starter), `${exercise.id}: a TODO block isn't in the starter of ${file.path}`);
+        assert.ok(file.solution.includes(todo.solution), `${exercise.id}: a solution block isn't in the solution of ${file.path}`);
+      }
+      if (!file.todos.length) continue;
       const html = exercise.modes.browser.sections.map((s) => s.html).join("\n");
       assert.match(html, new RegExp(`data-insert="${file.path}" data-insert-mode="todo"`), `${exercise.id}: no snippet replaces the TODO`);
     }
   }
-  assert.equal(insertMode("permit (x);", { solution: "forbid (y);" }, "policies/travel.dw"), "append");
+  assert.equal(insertMode("permit (x);", [{ solution: "forbid (y);" }], "policies/travel.dw"), "append");
   assert.equal(insertMode("x = 1", null, "a.py"), "cursor");
   const policy = 'permit (a);\n\n// why\n@id("hotels")\nforbid (x)\nunless {\n  y\n};\n';
   assert.equal(insertMode('@id("hotels")\n@decision("escalate")\nforbid (x);', null, "policies/travel.dw", policy), "replace");
   assert.equal(insertMode('@id("new-rule")\nforbid (z);', null, "policies/travel.dw", policy), "append");
-  assert.equal(insertMode("return f(a)  # why", { solution: "    # because\n    return f(a)\n" }, "a.py"), "todo");
+  assert.equal(insertMode("return f(a)  # why", [{ solution: "    # because\n    return f(a)\n" }], "a.py"), "todo");
 });
 
 test("local pages have no insert buttons", () => {
@@ -142,13 +148,13 @@ test("in the browser, every new session the instructions ask for is a button wit
   assert.match(all("local"), /Start a new <strong>Travel agent<\/strong> session\. The start form/);
 });
 
-test("in the browser, the Agent UI opens from a button; locally, from its URL", () => {
+test("in the browser, the Agent UI comes with a tour, from a button; locally, from its URL", () => {
   const session = buildCourse().exercises.find((e) => e.id.startsWith("02"));
   const html = session.modes.browser.sections.map((s) => s.html).join("\n");
-  assert.match(html, /<button class="pane-button" type="button" data-pane="console">Open the Agent UI<\/button>/);
+  assert.match(html, /<button class="pane-button" type="button" data-agent-tour>✦ Take a tour of the Agent UI<\/button>/);
   assert.ok(!html.includes("localhost:8000"), "no localhost URL in the browser");
   const local = session.modes.local.sections.map((s) => s.html).join("\n");
-  assert.match(local, /Open the <strong>console<\/strong> at <a href="http:\/\/localhost:8000"/);
+  assert.match(local, /Open it at <a href="http:\/\/localhost:8000"/);
   assert.ok(!local.includes("pane-button"), "no pane button locally");
 });
 

@@ -1,13 +1,41 @@
-"""Exercise 2 check: search_flights works, and a session survives its worker restarting."""
+"""Exercise 2 check: the sandbox runs a model's script, search_flights works, and a session survives
+its worker restarting."""
 
 import asyncio
 import uuid
 
+import pydantic_monty as monty
 import pytest
 
+from codemode.sandbox import MODEL_SCRIPT
+from codemode.sandbox import run as run_script
 from temporal_agent_harness.harness.agent_protocol import AgentEventType as E
 from travel_agent.client import Session
 from travel_agent.worker import build_worker
+
+
+def test_code_mode_runs_the_model_script(capsys):
+    # TODO(ch02) in codemode/sandbox.py: run() raises until it's written.
+    assert run_script(MODEL_SCRIPT) == {"flight_id": "FL-2", "price_cents": 24900, "stops": 0}
+    out = capsys.readouterr().out
+    assert "host     search_flights('SFO', 'JFK', '2026-11-20')" in out, "the search runs on the host"
+    assert "sandbox  3 flights, 2 nonstop" in out, "the script's print comes out of the sandbox"
+
+
+@pytest.mark.parametrize(
+    "script, error",
+    [
+        ('import os\nos.listdir("/")', monty.MontyRuntimeError),
+        ("import socket", monty.MontyTypingError),
+        ('book_flight("FL-2")', monty.MontyTypingError),
+        ("while True: pass", monty.MontyRuntimeError),
+        ('search_flights("SFO", "JFK")', monty.MontyTypingError),
+    ],
+)
+def test_code_mode_runner_refuses(script, error):
+    with pytest.raises(error):
+        run_script(script)
+
 
 TODO_HINT = "The search never finished. Is TODO(ch02) in travel_agent/travel/activities.py done?"
 

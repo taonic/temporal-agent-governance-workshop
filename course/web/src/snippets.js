@@ -74,3 +74,19 @@ export function ruleBlock(text, id) {
   while (first > 0 && lines[first - 1].trim().startsWith("//")) first--;
   return { start: offsets[first], end: offsets[last] + lines[last].length };
 }
+
+// Code compared without comments or whitespace, to tell a snippet that solves a TODO from one
+// that adds something else.
+export function codeShape(code) {
+  return code
+    .split("\n")
+    .map((line) => line.replace(/\s+(#|\/\/)\s.*$/, ""))
+    .filter((line) => !/^\s*(#|\/\/)/.test(line))
+    .join("")
+    .replace(/\s+/g, "");
+}
+
+// Which of a file's TODO blocks a snippet solves, or null.
+export function todoFor(todos, code) {
+  return (todos ?? []).find((todo) => codeShape(todo.solution) === codeShape(code)) ?? null;
+}

@@ -22,6 +22,8 @@ Three outcomes:
 - **forbid** (or no permit at all): the call is refused, and the model is told which policy refused it;
 - **forbid** marked `@decision("escalate")`: the call comes to you, as in exercise 3.
 
+First, read the policy the agent runs under.
+
 <!-- local -->Starting here, without exercises 1 to 3 done? Run `./challenges/04-auto-mode/setup.sh` first: it solves each of them you haven't, and leaves the ones you did alone. Then restart the worker.<!-- /local -->
 
 ## 1. Read the policy
@@ -34,7 +36,7 @@ Open `policies/travel.dw`. Rule by rule:
 - `flights-only-as-on-the-trip-form`: a flight for anyone or any day no trip form named is refused.
 - the hotel rules: a hotel only for the form's traveler.
 
-Something's missing: there's no rule for the flight **there**.
+Something's missing: there's no rule for the flight **there**. See what that does to a booking.
 
 ## 2. Watch it refuse
 
@@ -48,7 +50,7 @@ Submit the trip form: it starts filled in with Ada Lovelace, SFO → JFK, 2026-1
 
 > Book the cheapest one.
 
-Refused. In the console's **Approval decisions** panel, the evaluation card shows the action (`travel-agent/book_flight`), the exact input the policy saw, and the verdict: "tool travel-agent/book_flight not permitted by any Dogwood policy". Dogwood denies by default.
+Refused. In the console's **Approval decisions** panel, the evaluation card shows the action (`travel-agent/book_flight`), the exact input the policy saw, and the verdict: "tool travel-agent/book_flight not permitted by any Dogwood policy". Dogwood denies by default. Time to write the missing rule.
 
 ## 3. Write the rule
 
@@ -79,7 +81,7 @@ Check it, then load it into the verifier:
 uv run travel-stack restart verifier
 ```
 
-The verifier keeps its history across restarts, so your session's trip form is still there.
+The verifier keeps its history across restarts, so your session's trip form is still there: try the rule in the same session.
 
 ## 4. Try it
 
@@ -101,7 +103,7 @@ Refused the same way: that date isn't on a form.
 
 Runs: `hotels-for-the-trip-form-traveler`.
 
-You approved nothing, yet nothing ran that you hadn't asked for. **The model decides what to try. The policy decides what is allowed.**
+You approved nothing, yet nothing ran that you hadn't asked for. **The model decides what to try. The policy decides what is allowed.** Now make the policy yours.
 
 ## 5. Edit one rule
 
@@ -169,6 +171,8 @@ Load your rule into the verifier, and try it live: every route's search has a bu
 ```bash
 uv run travel-stack restart verifier
 ```
+
+Last, a look at the verifier itself.
 
 ## 6. Look under the hood
 

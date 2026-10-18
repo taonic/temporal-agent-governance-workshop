@@ -57,6 +57,16 @@ const panes = ref(null);
 // into the Agent UI's frame; a step whose target isn't there (no session yet) is skipped.
 const AGENT_UI = "iframe[title='The Agent UI']";
 const agentTourOpen = ref(false);
+// A step's ✦ Take a tour of the Agent UI: the Agent UI, over the whole screen, and its tour.
+watch(
+  () => store.agentTourRequest,
+  () => {
+    if (!live.value || !exercise.value.agentUi) return;
+    store.workspaceView = "console";
+    codeMaximized.value = true;
+    agentTourOpen.value = true;
+  },
+);
 const agentTourSteps = [
   {
     title: "The Agent UI",
@@ -231,15 +241,6 @@ watch(
 
 // --- Exercise actions -----------------------------------------------------------------------
 
-function setup() {
-  const n = exercise.value.number;
-  const warning =
-    n > 1
-      ? `This runs ${exercise.value.scripts.setup}.\n\nIf the checks for exercises 1-${n - 1} don't pass, it copies in their official solutions, replacing your edits to those files. It also ends every running agent session.\n\nThen restart the worker.`
-      : `This runs ${exercise.value.scripts.setup}, which ends every running session.`;
-  if (window.confirm(warning)) runInTerminal("commands", [exercise.value.scripts.setup], { interrupt: true });
-}
-
 function solve() {
   // The files the solve script replaces: scratch files have no solution.
   const editable = exercise.value.files.filter((f) => f.editable && !f.scratch).map((f) => f.path).join(", ");
@@ -350,7 +351,7 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="col-resizer" role="separator" aria-orientation="vertical" aria-label="Resize panels" @pointerdown="resizeCode" />
-    <ExerciseInstructions :exercise="exercise" :live="live" @check="check" @setup="setup" @solve="solve" @reset="reset" />
+    <ExerciseInstructions :exercise="exercise" :live="live" @check="check" @solve="solve" @reset="reset" />
     <Tour v-if="agentTourOpen" :steps="agentTourSteps" @finish="agentTourOpen = false" />
   </main>
 </template>

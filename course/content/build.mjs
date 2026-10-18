@@ -28,7 +28,7 @@ import MarkdownIt from "markdown-it";
 import YAML from "yaml";
 
 import { tourRange } from "../web/src/tourRange.js";
-import { ruleBlock, ruleId } from "../web/src/snippets.js";
+import { ruleBlock, ruleId, todoFor } from "../web/src/snippets.js";
 import { EXERCISES, WORKER_COMMAND } from "./exercises.mjs";
 
 hljs.registerLanguage("python", python);
@@ -490,14 +490,14 @@ function createRenderer() {
       ? hljs.highlight(code, { language: known, ignoreIllegals: true }).value
       : md.utils.escapeHtml(code);
     let actions = `<button class="snippet-btn" type="button" data-copy>Copy</button>`;
-    // A fence can name its file after the language (```python codemode/trip.py); otherwise the
+    // A fence can name its file after the language (```python hello/workflow.py); otherwise the
     // snippet goes into the exercise's first editable file of its kind.
     const [declared, named] = token.info.trim().split(/\s+/);
     const target =
       env.mode === "browser" &&
       env.files?.find((f) => f.editable && (named ? f.path === named : SNIPPET_FILES[declared] && f.path.endsWith(SNIPPET_FILES[declared])));
     if (target) {
-      const mode = insertMode(code, target.todo, target.path, target.starter);
+      const mode = insertMode(code, target.todos, target.path, target.starter);
       actions =
         `<button class="snippet-btn snippet-insert" type="button" data-insert="${escapeAttr(target.path)}" data-insert-mode="${mode}" ` +
         `title="${INSERT_TITLES[mode]} ${escapeAttr(target.path)}">← ${mode === "replace" ? "Replace in" : "Insert into"} ${escapeAttr(target.path.split("/").pop())}</button>` +
@@ -529,38 +529,29 @@ function createRenderer() {
 
 const MARKER = /^\s*(?:#|\/\/) @@(solution ch(\d+)|starter|end)\s*$/;
 
-// An exercise's TODO block in a master under authoring/: the lines learners start from, and
-// the lines that solve it, exactly as they appear in the rendered files.
-export function todoBlock(masterText, chapter) {
-  const starter = [];
-  const solution = [];
+// An exercise's TODO blocks in a master under authoring/, in file order: for each, the lines
+// learners start from (`starter`) and the lines that solve it (`solution`). A file can have
+// several; each snippet replaces the one it solves.
+export function todoBlocks(masterText, chapter) {
+  const blocks = [];
+  let block = null;
   let mode = null;
-  let current = 0;
   for (const line of masterText.split("\n")) {
     const m = line.match(MARKER);
     if (m) {
       if (m[1].startsWith("solution")) {
         mode = "solution";
-        current = Number(m[2]);
-      } else mode = m[1] === "starter" ? "starter" : null;
+        block = Number(m[2]) === chapter ? { starter: [], solution: [] } : null;
+        if (block) blocks.push(block);
+      } else if (m[1] === "starter") mode = "starter";
+      else block = mode = null;
       continue;
     }
-    if (current !== chapter) continue;
-    if (mode === "solution") solution.push(line);
-    else if (mode === "starter") starter.push(line);
+    if (block && mode) block[mode].push(line);
   }
-  return starter.length ? { starter: `${starter.join("\n")}\n`, solution: `${solution.join("\n")}\n` } : null;
-}
-
-// Code compared without comments or whitespace, to tell a snippet that solves the TODO from
-// one that adds something else.
-export function codeShape(code) {
-  return code
-    .split("\n")
-    .map((line) => line.replace(/\s+(#|\/\/)\s.*$/, ""))
-    .filter((line) => !/^\s*(#|\/\/)/.test(line))
-    .join("")
-    .replace(/\s+/g, "");
+  return blocks
+    .filter((b) => b.starter.length)
+    .map((b) => ({ starter: `${b.starter.join("\n")}\n`, solution: `${b.solution.join("\n")}\n` }));
 }
 
 const SNIPPET_FILES = { python: ".py", text: ".dw" };
@@ -568,8 +559,8 @@ const SNIPPET_FILES = { python: ".py", text: ".dw" };
 // How a snippet goes into its file: "todo" replaces the TODO block (it's the solution);
 // "replace" swaps a Dogwood rule the file already has (same @id) for the snippet; "append"
 // adds a new rule at the end; "cursor" goes where the cursor is.
-export function insertMode(code, todo, file, text = "") {
-  if (todo && codeShape(todo.solution) === codeShape(code)) return "todo";
+export function insertMode(code, todos, file, text = "") {
+  if (todoFor(todos, code)) return "todo";
   if (!file.endsWith(".dw")) return "cursor";
   return ruleBlock(text, ruleId(code)) ? "replace" : "append";
 }
@@ -617,11 +608,12 @@ function buildExercise(md, dir) {
     const master = readIfExists(`authoring/${file.path}`);
     return {
       path: file.path,
+      beats: fileBeats(dir, file, body),
       editable: Boolean(file.editable),
       scratch: Boolean(file.scratch),
       starter: readIfExists(`starter/${file.path}`) ?? read(file.path),
       solution: readIfExists(`solutions/${chapter}/${file.path}`),
-      todo: file.editable && master ? todoBlock(master, number) : null,
+      todos: file.editable && master ? todoBlocks(master, number) : [],
     };
   });
   const script = (name) => (fs.existsSync(path.join(repoRoot, "challenges", dir, name)) ? `./challenges/${dir}/${name}` : null);
@@ -637,10 +629,33 @@ function buildExercise(md, dir) {
     agentUi: config.agentUi !== false,
     questions: config.questions ?? [],
     tour: buildTour(md, dir, config.tour ?? [], files),
+    tourAfter: tourBeat(dir, config.tourAfter, body),
     scripts: { setup: script("setup.sh"), check: script("check.sh"), solve: script("solve.sh"), reset: script("reset.sh") },
     files,
     modes: Object.fromEntries(MODES.map((mode) => [mode, renderPage(md, body, mode, source, files)])),
   };
+}
+
+// The beats a file's tab shows on, when its config limits them (`fromBeat`, `untilBeat`, by
+// heading): the guide's beat ids, "intro" first. null: every beat.
+function fileBeats(dir, file, body) {
+  if (!file.fromBeat && !file.untilBeat) return null;
+  const sections = splitSections(body).sections;
+  const ids = ["intro", ...sections.map((s) => slugify(s.title))];
+  const find = (heading) => {
+    const i = sections.findIndex((s) => s.title === heading);
+    if (i < 0) throw new Error(`course/content/exercises.mjs: ${dir}'s ${file.path} names "${heading}", which isn't a heading in its assignment.md`);
+    return i + 1;
+  };
+  return ids.slice(file.fromBeat ? find(file.fromBeat) : 0, file.untilBeat ? find(file.untilBeat) + 1 : ids.length);
+}
+
+// The beat that offers the code tour, when it isn't the end of the briefing: its section's id.
+function tourBeat(dir, heading, body) {
+  if (!heading) return null;
+  const section = splitSections(body).sections.find((s) => s.title === heading);
+  if (!section) throw new Error(`course/content/exercises.mjs: ${dir}'s tourAfter names "${heading}", which isn't a heading in its assignment.md`);
+  return slugify(section.title);
 }
 
 // The exercise's code tour, each stop checked against the file as learners start it, so a

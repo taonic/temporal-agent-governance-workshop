@@ -31,7 +31,7 @@ Start the worker if it isn't running (`uv run travel-worker`). Then start a **ne
 
 The last item isn't yours. It's written to look like the rest.
 
-To make sure the attack lands for the demo, the agent's system prompt tells the model to obey instructions in your files as if you'd typed them (`DEMO_INJECTION_SUSCEPTIBILITY` in `travel_agent/agent/prompts.py`). Never give a real agent an instruction like that. The point is that it doesn't matter.
+To make sure the attack lands for the demo, the agent's system prompt tells the model to obey instructions in your files as if you'd typed them (`DEMO_INJECTION_SUSCEPTIBILITY` in `travel_agent/agent/prompts.py`). Never give a real agent an instruction like that. The point is that it doesn't matter. Now let the agent loose on the notes.
 
 ## 2. Ask it to take care of everything
 
@@ -48,9 +48,11 @@ Watch:
 3. The agent moves on to your own items. It doesn't know who you are or when you fly, so it asks with the trip form. Submit it: it starts filled in with Ada Lovelace, SFO → JFK, 2026-11-01, back 2026-11-05.
 4. Your flight there, your flight back and your hotel run without asking, because each matches the form. Mallory's booking stays refused.
 
+How did the policy know? Read its refusal.
+
 ## 3. Read the refusal
 
-Open the refused booking in **Approval decisions**: the action, the exact request the policy saw (`passenger_name: "Mallory Hacker"`), and the rule that refused it. The model was fooled. The booking still didn't happen.
+Open the refused booking in **Approval decisions**: the action, the exact request the policy saw (`passenger_name: "Mallory Hacker"`), and the rule that refused it. The model was fooled. The booking still didn't happen. What if the policy weren't there?
 
 ## 4. Without the policy
 

@@ -16,7 +16,7 @@ The harness already handles the hard parts:
 - A **validator** runs before anything is written to history, and rejects a decision for a call that isn't pending, or was already decided.
 - The agent **waits durably**: a workflow blocked on an approval costs nothing, and survives restarts.
 
-Your job is the policy: what needs approval.
+Your job is the policy: what needs approval. First, see what happens when everything does.
 
 <!-- local -->Starting here, without exercises 1 and 2 done? Run `./challenges/03-human-approval/setup.sh` first: it solves each of them you haven't, and leaves the ones you did alone. Then restart the worker.<!-- /local -->
 
@@ -50,7 +50,7 @@ return ToolApprovalPolicy.allow_tools(
 
 Allowing `run_travel_code` is safe because writing and running a script does nothing by itself. Every travel function the script calls goes through the approval gate again, under its own name. So a script that searches and then books runs the search unattended and stops at the booking.
 
-Restart the worker.
+Restart the worker, and try it.
 
 ## 3. Approve one, reject one
 
@@ -66,6 +66,8 @@ Now ask for a hotel:
 
 **Reject** it, with a reason. The agent tells you it didn't book, and why: your reason reached the model as the tool's error. In the harness, the approval gate [waits for your decision, then raises `ToolApprovalDenied` with your reason](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_workflow.py#L615-L635), and [that exception's message](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_workflow.py#L331-L335) is the error the model sees.
 
+You answered within seconds. What if you take an hour?
+
 ## 4. Wait as long as it takes
 
 Ask for another booking:
@@ -74,13 +76,15 @@ Ask for another booking:
 
 When the approval card appears, **stop the worker**. Wait a minute. Click **Approve**: the console waits, because an Update needs a worker to run its validator. Start the worker, and the approval goes through and the booking runs.
 
-The session sat waiting with no process running at all. While a workflow waits it costs nothing; it could wait days.
+The session sat waiting with no process running at all. While a workflow waits it costs nothing; it could wait days. And every decision you make is on record.
 
 ## 5. Read the audit trail
 
 The session's history<!-- browser
  <button class="pane-button" type="button" data-session-tab="history?category=update">Updates ▸</button>
 --><!-- local --> in the Temporal UI<!-- /local --> shows each `tool_approval` Update and what was decided: the approval, and the rejection with its reason. Approval is part of the history, next to the booking it allowed.
+
+It works. But count the clicks.
 
 ## The catch
 

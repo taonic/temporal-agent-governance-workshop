@@ -6,9 +6,10 @@
     uv run python scripts/switch.py restart 3  # exercise 3's file back as the exercise starts
     uv run python scripts/switch.py catch-up 4 # exercises 1-3 solved, wherever their TODO is still open
 
-Only the four files with TODOs change:
+Only the files with TODOs change:
 
     hello/workflow.py                  exercise 1
+    codemode/sandbox.py                exercise 2 (step 1)
     travel_agent/travel/activities.py  exercise 2
     travel_agent/agent/workflow.py     exercise 3
     policies/travel.dw                 exercise 4

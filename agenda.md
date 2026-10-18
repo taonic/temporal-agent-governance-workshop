@@ -60,7 +60,7 @@ Short explanation before the lab:
 
 Learners do:
 
-- Meet Code Mode first: run a script in the Monty sandbox (`uv run code-mode`) and watch it stop at each tool call for the host to answer.
+- Code Mode and Monty first: run a model's script in Monty (`uv run code-mode`), and watch it reach nothing but what the host hands it.
 - Start the Monty travel agent worker.
 - Start a travel session.
 - Send: “I need a flight from SFO to JFK next month.”

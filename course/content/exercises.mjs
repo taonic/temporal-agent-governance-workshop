@@ -11,6 +11,12 @@
 // anything else runs to the next blank line. The build checks every anchor against the
 // starter. `body` is Markdown, a sentence or three.
 //
+// The guide offers the tour at the end of the briefing, just before step 1. `tourAfter` offers
+// it on another beat instead, by its heading ("1. Run a script in Monty"): leaving that beat starts it.
+//
+// `fromBeat` and `untilBeat` on a file (headings, as `tourAfter`) show its tab only on those beats
+// of the guide and the ones between; the file open (from a link, or the code tour) always shows.
+//
 // `agentUi: false` leaves the Agent UI tab out of an exercise that has no agent yet.
 export const EXERCISES = {
   "01-hello-temporal": {
@@ -86,11 +92,14 @@ export const EXERCISES = {
   "02-durable-session": {
     worker: "uv run travel-worker",
     files: [
-      { path: "travel_agent/travel/activities.py", editable: true },
-      { path: "travel_agent/travel/inventory.py" },
-      { path: "codemode/trip.py", editable: true, scratch: true },
-      { path: "codemode/run.py" },
+      // Step 1 is about Monty alone: its tab is the only one until the agent starts.
+      { path: "codemode/sandbox.py", editable: true, untilBeat: "The agent" },
+      { path: "travel_agent/travel/activities.py", editable: true, fromBeat: "2. Start the agent's worker" },
+      { path: "travel_agent/travel/inventory.py", fromBeat: "2. Start the agent's worker" },
     ],
+    // After "The agent", not before step 1: the tour recaps the script and the host from the
+    // Monty hands-on, and ends on the agent's activities, just before the agent starts.
+    tourAfter: "The agent",
     questions: [
       "Why does the agent write a script instead of calling tools one at a time?",
       "How does a script's tool call become a durable activity?",
@@ -101,25 +110,16 @@ export const EXERCISES = {
     ],
     tour: [
       {
-        file: "codemode/trip.py",
-        from: "async def main():",
-        to: "return best",
-        title: "A script the agent might write",
-        body: "In Code Mode the model writes Python like this, and the Monty sandbox runs it. `search_flights` isn't imported: it's a **host function** the sandbox puts in scope. Run it with `uv run code-mode` and edit it as section 1 says.",
+        file: "codemode/sandbox.py",
+        from: "MODEL_SCRIPT = ",
+        title: "Code a model wrote",
+        body: "In Code Mode the model writes Python like this, and Monty runs it in its sandbox. It imports nothing: whatever it calls, the host passes in.",
       },
       {
-        file: "codemode/run.py",
-        from: "if isinstance(snap, monty.FunctionSnapshot) and not snap.is_os_function:",
-        to: 'snap = snap.resume({"future": ...})',
-        title: "A call is a stop",
-        body: "When the script calls a travel function, nothing runs. The sandbox stops and hands the call to the host, which notes it and lets the script carry on, so it can start other calls before it waits.",
-      },
-      {
-        file: "codemode/run.py",
-        from: "elif isinstance(snap, monty.FutureSnapshot):",
-        to: "snap = snap.resume(results)",
-        title: "The host answers",
-        body: "When the script awaits, the host answers the calls it's waiting on and resumes it. Here the host answers searches and refuses the rest. In the agent, the workflow is the host: it checks the approval posture and runs each call as an **activity**.",
+        file: "codemode/sandbox.py",
+        from: "def run(script: str):",
+        title: "One inside the other",
+        body: "A fresh sandbox, type-checked against `STUBS`, with a time limit. `HOST_FUNCTIONS` is everything the script can reach: functions defined on the host, called from inside the sandbox. In the agent, the workflow is the host: it runs each call as an **activity**.",
       },
       {
         file: "travel_agent/travel/activities.py",

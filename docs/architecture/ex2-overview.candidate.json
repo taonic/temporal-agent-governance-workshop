@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "How the travel agent works",
+    "output": "docs/architecture/ex2-overview.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "You"
+        },
+        "backend": {
+          "label": "Runs on Temporal"
+        },
+        "database": {
+          "label": "Temporal's record"
+        },
+        "security": {
+          "label": "Approval and policy"
+        },
+        "external": {
+          "label": "Outside services"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "you",
+      "type": "frontend",
+      "label": "You",
+      "sublabel": "chat in the Agent UI",
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "session",
+      "type": "backend",
+      "label": "Agent session",
+      "sublabel": "a Temporal workflow",
+      "pos": [
+        340,
+        100
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "backend",
+      "label": "Model call",
+      "sublabel": "decides the next step",
+      "pos": [
+        660,
+        100
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "model",
+      "type": "external",
+      "label": "The model",
+      "sublabel": "Gemini",
+      "pos": [
+        980,
+        100
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "history",
+      "type": "database",
+      "label": "Event history",
+      "sublabel": "every step, recorded",
+      "pos": [
+        340,
+        290
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "Approval gate",
+      "sublabel": "you (ex. 3) or a policy (ex. 4)",
+      "pos": [
+        660,
+        290
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "policy",
+      "type": "security",
+      "label": "Dogwood policy",
+      "sublabel": "decides on its own",
+      "pos": [
+        980,
+        290
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "tools",
+      "type": "backend",
+      "label": "Tool calls",
+      "sublabel": "search · book flights",
+      "pos": [
+        660,
+        480
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "api",
+      "type": "external",
+      "label": "Travel API",
+      "sublabel": "simulated flights",
+      "pos": [
+        980,
+        480
+      ],
+      "size": [
+        180,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Temporal: every step durable",
+      "wraps": [
+        "session",
+        "llm",
+        "history",
+        "gate",
+        "tools"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "you-session",
+      "from": "you",
+      "to": "session",
+      "label": "message",
+      "variant": "emphasis"
+    },
+    {
+      "id": "session-llm",
+      "from": "session",
+      "to": "llm",
+      "label": "each turn",
+      "variant": "emphasis"
+    },
+    {
+      "id": "llm-model",
+      "from": "llm",
+      "to": "model",
+      "label": "ask"
+    },
+    {
+      "id": "session-history",
+      "from": "session",
+      "to": "history",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "recorded",
+      "variant": "dashed"
+    },
+    {
+      "id": "llm-gate",
+      "from": "llm",
+      "to": "gate",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "tool calls",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate-policy",
+      "from": "gate",
+      "to": "policy",
+      "label": "ask the policy",
+      "variant": "dashed"
+    },
+    {
+      "id": "gate-tools",
+      "from": "gate",
+      "to": "tools",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "label": "allowed",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tools-api",
+      "from": "tools",
+      "to": "api"
+    },
+    {
+      "id": "tools-history",
+      "from": "tools",
+      "to": "history",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "label": "results",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Where Temporal fits",
+      "items": [
+        "Each conversation is a workflow: it waits, retries and survives crashes",
+        "Model calls and tool calls are activities, recorded in the history",
+        "A restart replays the history: nothing lost, nothing done twice"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Where it's going",
+      "items": [
+        "Here the gate lets every call through",
+        "Exercise 3: you approve bookings. Exercise 4: a policy decides"
+      ]
+    }
+  ]
+}

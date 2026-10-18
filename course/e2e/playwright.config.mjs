@@ -13,6 +13,7 @@ import { BASE_URL } from "./env.mjs";
 export default defineConfig({
   testDir: "./tests",
   globalSetup: "./global-setup.mjs",
+  globalTeardown: "./global-teardown.mjs",
   // The sandbox tier waits minutes for Daytona; each of its steps sets its own, longer, timeout.
   timeout: 60_000,
   expect: { timeout: 15_000 },
@@ -29,6 +30,8 @@ export default defineConfig({
   ],
   use: {
     baseURL: BASE_URL,
+    // A click on something that never settles fails instead of waiting out the test.
+    actionTimeout: 30_000,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
