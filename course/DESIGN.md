@@ -96,6 +96,7 @@ What the tests do depend on is a short contract. **A change to any of these upda
 | The access form (`#access-code`, **Start my sandbox**, `.form-error`), the sandbox pill's words (`Sandbox ready`, `No sandbox yet`, `Browser sandbox`) | `public.spec.mjs`, `session.spec.mjs`, `sandbox.spec.mjs` |
 | The terminals (`.terminal-pane[aria-label="The worker terminal"]`, `.term-dot.connected`, the workshop at `/workshop` in the sandbox) | `sandbox.spec.mjs` |
 | The workspace tabs' names, the panes' iframe titles, or the Agent UI's `button.session-drawer-trigger` | `sandbox.spec.mjs` |
+| The briefing's Diagram view (`iframe.diagram-frame`, the **Code** and **Diagram** tabs): an exercise opens on its diagram, the editor and the terminals behind it | `fixtures.mjs` `showCode`, `public.spec.mjs` |
 | An `/api` route's path, status codes or response shape; a new route a learner depends on | `public.spec.mjs` or `session.spec.mjs`: add it |
 | Something a learner does that no tier covers (a new pane, a new button that types into a terminal) | add a test in the tier it needs |
 

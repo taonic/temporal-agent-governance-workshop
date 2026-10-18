@@ -11,7 +11,7 @@
 import fs from "node:fs";
 
 import { ACCESS_CODE, LEARNER_STATE, SKIP_SANDBOX } from "../env.mjs";
-import { coursePages, expect, storageKey, test } from "./fixtures.mjs";
+import { coursePages, expect, showCode, storageKey, test } from "./fixtures.mjs";
 import { Learner, MINUTE } from "./learner.mjs";
 import { WALKTHROUGHS } from "./walkthroughs.mjs";
 
@@ -60,6 +60,7 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
   test("signs in with the access code and starts a sandbox", async () => {
     test.setTimeout(10 * MINUTE);
     await page.goto("/#/exercise/01-hello-temporal");
+    await showCode(page);
     const form = page.locator(".dock-status .access-form");
     await form.locator("#access-code").fill(ACCESS_CODE);
     await form.getByRole("button", { name: "Start my sandbox" }).click();
@@ -74,6 +75,7 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
   test("both terminals connect and run commands", async () => {
     test.setTimeout(3 * MINUTE);
     await page.goto("/#/exercise/01-hello-temporal");
+    await showCode(page);
     for (const name of ["worker", "commands"]) {
       await expect(terminal(name).locator(".term-dot.connected"), `the ${name} terminal didn't connect`).toBeVisible({ timeout: MINUTE });
     }

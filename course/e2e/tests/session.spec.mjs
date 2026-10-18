@@ -3,7 +3,7 @@
 import { request as playwrightRequest } from "@playwright/test";
 
 import { ACCESS_CODE, BASE_URL, INSTRUCTOR_CODE } from "../env.mjs";
-import { expect, test } from "./fixtures.mjs";
+import { expect, showCode, test } from "./fixtures.mjs";
 
 test.describe("a signed-in learner", { tag: "@auth" }, () => {
   test.skip(!ACCESS_CODE, "needs E2E_ACCESS_CODE");
@@ -43,6 +43,7 @@ test.describe("a signed-in learner", { tag: "@auth" }, () => {
     const page = await context.newPage();
     await page.goto("/#/exercise/01-hello-temporal");
     await expect(page.locator(".sandbox-pill")).toHaveText(/No sandbox yet/);
+    await showCode(page);
     await expect(page.locator(".dock-status").getByRole("button", { name: "Start my sandbox" })).toBeVisible();
     await context.close();
   });

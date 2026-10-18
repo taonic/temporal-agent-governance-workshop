@@ -723,6 +723,37 @@ body.is-resizing iframe {
   border-radius: 0;
 }
 
+/* The briefing's diagram: the workspace's whole height, the terminals stepped aside. */
+.diagram-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  border: 0;
+  display: block;
+  background: var(--code-panel);
+}
+
+/* In the guide, while the diagram is in the workspace: a link to it, not a second copy. */
+.guide-body.diagram-on-left a[href^="content/architecture/"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--temporal-uv);
+  border-radius: 999px;
+  background: var(--temporal-uv-soft);
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+.guide-body.diagram-on-left a[href^="content/architecture/"] img {
+  display: none;
+}
+
+.guide-body.diagram-on-left a[href^="content/architecture/"]::before {
+  content: "◧ The diagram is on the left";
+}
+
 /* The Agent UI and the Temporal UI get the terminals' height too; Code brings them back. */
 .exercise-shell.pane-shown .dock-resizer,
 .exercise-shell.pane-shown .terminal-dock {

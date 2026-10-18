@@ -83,6 +83,9 @@ export const store = reactive({
   pageTourRequest: 0,
   // Bumped to ask the exercise page for the Agent UI's tour (a step's ✦ Take a tour button).
   agentTourRequest: 0,
+  // The archify diagram the guide's beat has (its content/architecture/… page), shown as the
+  // workspace's Diagram view: on the briefing, in place of the code and the terminals.
+  guideDiagram: null,
   // The guide's beat on show (its id): the editor shows the files that beat uses.
   guideBeat: null,
 

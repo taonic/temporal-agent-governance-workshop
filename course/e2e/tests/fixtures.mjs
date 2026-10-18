@@ -39,3 +39,12 @@ export async function coursePages(page) {
   await expect(options.first()).toBeAttached();
   return options.evaluateAll((els) => els.map((el) => ({ hash: el.value, label: el.textContent.trim() })));
 }
+
+// The workspace's Code view, as a learner clicks it: an exercise's briefing opens on its
+// diagram, with the editor and the terminals behind it.
+export async function showCode(page) {
+  const tab = page.getByRole("tab", { name: "Code", exact: true });
+  await expect(tab).toBeVisible();
+  if ((await tab.getAttribute("aria-selected")) !== "true") await tab.click();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+}

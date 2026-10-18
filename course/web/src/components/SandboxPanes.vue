@@ -227,7 +227,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section v-show="active !== 'code'" class="panes-view" :aria-label="active === 'console' ? 'The Agent UI' : 'The Temporal UI'" data-tour="panes">
+  <section v-show="active === 'console' || active === 'temporal'" class="panes-view" :aria-label="active === 'console' ? 'The Agent UI' : 'The Temporal UI'" data-tour="panes">
     <div class="pane-body">
       <template v-if="live">
         <iframe

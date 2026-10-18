@@ -267,10 +267,36 @@ function viewFor(b) {
   if (b.html.includes('class="file-ref"')) return "code";
   return null;
 }
+// The archify diagram a beat links to (`[![…](….png)](docs/architecture/….html)`), or null.
+const diagramOf = (b) => b?.html?.match(/<a href="(content\/architecture\/[^"]+\.html)"/)?.[1] ?? null;
+// What the briefing (the intro and the background before step 1) shows in the workspace, in
+// place of the code: its beat's own diagram, or, before step 1, the briefing's first (exercise
+// 1's intro shows The pieces'). A later background beat shows its own (exercise 2's The agent).
+function briefingDiagram(b) {
+  if (!["intro", "plain"].includes(b.kind)) return null;
+  const own = diagramOf(b);
+  if (own) return own;
+  const firstStep = beats.value.findIndex((x) => x.kind === "step");
+  if (firstStep < 0 || beats.value.indexOf(b) > firstStep) return null;
+  return beats.value.slice(0, firstStep).map(diagramOf).find(Boolean) ?? null;
+}
+const diagramOnLeft = computed(() => mode.value === "browser" && store.workspaceView === "diagram" && store.guideDiagram === diagramOf(beat.value));
+
+// The exercise too: every exercise's intro is "intro", so opening another one doesn't change the
+// beat's id.
 watch(
-  [() => beat.value.id, () => props.live],
+  [() => props.exercise.id, () => beat.value.id, () => props.live],
   () => {
-    const view = props.live && viewFor(beat.value);
+    const b = beat.value;
+    const shown = mode.value === "browser" ? briefingDiagram(b) : null;
+    // A step's own diagram is on offer too, as the Diagram tab, without taking the workspace.
+    store.guideDiagram = shown ?? (mode.value === "browser" ? diagramOf(b) : null);
+    if (shown) {
+      store.workspaceView = "diagram";
+      return;
+    }
+    if (store.workspaceView === "diagram") store.workspaceView = "code";
+    const view = props.live && viewFor(b);
     if (view) store.workspaceView = view;
   },
   { immediate: true },
@@ -513,6 +539,12 @@ function onClick(event) {
   const target = event.target.closest("a, button, code.file-ref");
   if (!target) return;
   if (target.matches("a[href^='#']") && goToSection(target, event)) return;
+  if (target.matches("a[href^='content/architecture/']") && mode.value === "browser") {
+    event.preventDefault();
+    store.guideDiagram = target.getAttribute("href");
+    store.workspaceView = "diagram";
+    return;
+  }
   if (target.matches("button[data-worker-toggle]")) {
     if ("workerRestart" in target.dataset) restartWorker(props.exercise);
     else toggleWorker(props.exercise);
@@ -623,7 +655,7 @@ function onClick(event) {
           <p class="guide-kicker">{{ kicker }}<template v-if="beat.kind === 'intro' && exercise.minutes"> · ~{{ exercise.minutes }} min</template></p>
           <h2 class="guide-title">{{ heading }}</h2>
           <p v-if="beat.kind === 'intro' && exercise.teaser" class="exercise-meta">{{ exercise.teaser }}</p>
-          <div class="guide-body markdown" v-html="beat.html" />
+          <div class="guide-body markdown" :class="{ 'diagram-on-left': diagramOnLeft }" v-html="beat.html" />
           <AskSetupCard v-if="beat.id === 'start-ask'" class="guide-body" />
           <div v-if="beat.kind === 'check' && mode === 'browser'" class="instruction-actions">
             <button class="button button-primary" type="button" :disabled="!live" @click="emit('check')">✓ Run the check</button>

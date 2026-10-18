@@ -89,9 +89,14 @@ const VIEWS = [
   { key: "code", label: "Code" },
   { key: "console", label: "Agent UI", title: "The Agent UI: talk to the agent here" },
   { key: "temporal", label: "Temporal UI", title: "Your sandbox's Temporal UI: workflows and their histories" },
+  { key: "diagram", label: "Diagram", title: "This part of the exercise, as a diagram you can zoom and explore" },
 ];
+// Views that need the sandbox: the diagram doesn't.
+const needsSandbox = (key) => key === "console" || key === "temporal";
 // No Agent UI before there's an agent (exercise 1).
-const views = computed(() => VIEWS.filter((view) => view.key !== "console" || exercise.value.agentUi));
+const views = computed(() =>
+  VIEWS.filter((view) => (view.key !== "console" || exercise.value.agentUi) && (view.key !== "diagram" || store.guideDiagram)),
+);
 watch(
   () => props.id,
   () => {
@@ -100,7 +105,7 @@ watch(
   { immediate: true },
 );
 function showView(key) {
-  if (key !== "code" && !live.value) return toast("Start your sandbox to open it.");
+  if (needsSandbox(key) && !live.value) return toast("Start your sandbox to open it.");
   store.workspaceView = key;
 }
 // Double-click the tab bar's empty space to expand or restore.
@@ -281,7 +286,7 @@ function onVisibility() {
 // No sandbox, no worker to know about.
 watch(live, (now) => {
   if (!now) {
-    store.workspaceView = "code";
+    if (store.workspaceView !== "diagram") store.workspaceView = "code";
     store.worker = { running: null, name: null, env: {}, pending: null };
     store.trips = { list: null, starter: false, pending: {} };
   }
@@ -314,15 +319,16 @@ onBeforeUnmount(() => {
           type="button"
           role="tab"
           :aria-selected="store.workspaceView === view.key"
-          :disabled="view.key !== 'code' && !live"
-          :title="view.key !== 'code' && !live ? 'Start your sandbox first' : view.title"
+          :disabled="needsSandbox(view.key) && !live"
+          :title="needsSandbox(view.key) && !live ? 'Start your sandbox first' : view.title"
           @click="showView(view.key)"
         >
           {{ view.label }}
         </button>
         <div class="workspace-actions" @dblclick.stop>
           <button v-if="paneMaximized && store.workspaceView === 'console' && live" class="icon-btn workspace-tour" type="button" title="A tour of the Agent UI" @click="agentTourOpen = true">Tour</button>
-          <template v-if="store.workspaceView !== 'code' && live">
+          <a v-if="store.workspaceView === 'diagram' && store.guideDiagram" class="icon-btn" :href="store.guideDiagram" target="_blank" rel="noopener" title="Open in a new tab">↗</a>
+          <template v-if="needsSandbox(store.workspaceView) && live">
             <button class="icon-btn" type="button" title="Reload this view" @click="panes?.reload()">↻</button>
             <a class="icon-btn" :class="{ disabled: !panes?.newTabHref }" :href="panes?.newTabHref || undefined" target="_blank" rel="noopener" title="Open in a new tab">↗</a>
           </template>
@@ -344,6 +350,14 @@ onBeforeUnmount(() => {
           :stamps="stamps"
           :shown="mode === 'local' || store.workspaceView === 'code'"
           :maximizable="mode === 'local'"
+        />
+        <!-- The briefing's diagram (the guide sets it), sandbox or not. -->
+        <iframe
+          v-if="mode === 'browser' && store.guideDiagram"
+          v-show="store.workspaceView === 'diagram'"
+          class="diagram-frame"
+          :src="store.guideDiagram"
+          title="The exercise's diagram"
         />
         <!-- Mounted while the sandbox is up and only hidden behind Code, so its frames stay loaded. -->
         <SandboxPanes v-if="live" ref="panes" :live="live" />

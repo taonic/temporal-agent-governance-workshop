@@ -1,5 +1,5 @@
 // @public: what anyone on the internet gets, signed out. No secrets, nothing created.
-import { coursePages, expect, test } from "./fixtures.mjs";
+import { coursePages, expect, showCode, test } from "./fixtures.mjs";
 
 test.describe("the /api, signed out", { tag: "@public" }, () => {
   test("health: up, with the browser runtime on", async ({ request }) => {
@@ -102,9 +102,15 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
         await page.goto(`/${hash}`);
         const title = label.split(": ").slice(1).join(": ").trim();
         await expect(page.locator(".guide-heading-title")).toContainText(title);
-        // The guide's first message, the editor and the terminal dock.
+        // The guide's first message; the briefing's diagram, if it has one, where the code goes;
+        // then the editor and the terminal dock.
         await expect(page.locator(".guide-msg .guide-title")).not.toBeEmpty();
         await expect(page.locator(".guide-replies button").first()).toBeVisible();
+        if (await page.getByRole("tab", { name: "Diagram", exact: true }).count()) {
+          await expect(page.locator("iframe.diagram-frame"), "the briefing should open on its diagram").toBeVisible();
+          await expect(page.locator("[data-tour='editor']")).toBeHidden();
+        }
+        await showCode(page);
         await expect(page.locator("[data-tour='editor']")).toBeVisible();
         await expect(page.locator(".cm-content").first()).toContainText(/\S/);
         await expect(page.locator(".terminal-dock")).toBeVisible();
@@ -129,6 +135,7 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
   test("an exercise offers the sandbox behind the access code", async ({ page }) => {
     await page.goto("/#/exercise/01-hello-temporal");
     await expect(page.locator(".sandbox-pill")).toHaveText(/Browser sandbox/);
+    await showCode(page);
     const status = page.locator(".dock-status .sandbox-status");
     await expect(status).toContainText("Run the workshop in your browser");
     await expect(status.locator("#access-code")).toBeVisible();
@@ -138,6 +145,7 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
 
   test("a wrong access code says so in the form", async ({ page }) => {
     await page.goto("/#/exercise/01-hello-temporal");
+    await showCode(page);
     const form = page.locator(".dock-status .access-form");
     await form.locator("#access-code").fill(`not-the-code-${Date.now()}`);
     await form.getByRole("button", { name: "Start my sandbox" }).click();
