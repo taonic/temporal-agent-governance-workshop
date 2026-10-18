@@ -172,6 +172,18 @@ function onConsoleLoad() {
   }
 }
 
+// The bottom drawer (each turn's timeline of model and tool calls) stays open: a new session
+// starts with it shut, and a learner can shut it by mistake. Checked once a second, cheaply:
+// when the console shows the drawer's Open button, it's clicked.
+let drawerWatch = 0;
+function keepDrawerOpen() {
+  try {
+    consoleDocument()?.querySelector('button[aria-label="Open the bottom drawer"]')?.click();
+  } catch {
+    /* not reachable: leave it as it is */
+  }
+}
+
 function consoleDocument() {
   return (loaded.value.console && consoleFrame.value?.contentDocument) || null;
 }
@@ -215,9 +227,11 @@ onMounted(() => {
   unregisterSend = registerHook("send", send);
   unregisterSession = registerHook("session", startSession);
   unregisterSessionTab = registerHook("sessionTab", openSession);
+  drawerWatch = setInterval(keepDrawerOpen, 1000);
 });
 onBeforeUnmount(() => {
   window.removeEventListener("message", onMessage);
+  clearInterval(drawerWatch);
   clearTimeout(navFallback);
   unregister?.();
   unregisterSend?.();
