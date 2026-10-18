@@ -199,6 +199,7 @@ export const WALKTHROUGHS = {
     expect(booked.approvals.filter((t) => !isBooking(t)), "only bookings should ask").toEqual([]);
     expect(flights(await l.bookings(), SAMPLE_TRAVELER).length, "the approved booking wasn't made").toBeGreaterThan(0);
     const hotel = await ask(l, "Book Ada a hotel in New York from 2026-11-01 to 2026-11-05.", (h) => h.approvals.some((t) => /book_hotel/.test(t)), {
+      nudge: "Please search for hotels in New York from 2026-11-01 to 2026-11-05 and book the cheapest one for Ada Lovelace now.",
       onApproval: async (card, tool, learner) => {
         if (!(await card.locator("textarea, input").count())) {
           learner.note('Step "Approve one, reject one" says to reject "with a reason", but the approval card has no field for one: Reject sends "Rejected in chat."');
