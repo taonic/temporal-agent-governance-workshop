@@ -272,19 +272,26 @@ In the console, open the side panels:
 
 All of it lives in the session's history, not in the worker or the console.
 
-## 6. Kill things
+## 6. Test Temporal's resiliency
 
-The agent isn't a request/response bot. It's a recoverable process. Prove it:
+The agent isn't a request/response bot. It's a recoverable process. Prove it, twice.
 
-**Stop the worker mid-turn.** Send this, and while the agent is working, **stop the worker** (Ctrl-C):
+**Kill the worker mid-turn.**
+
+1. Send:
 
 > What about JFK to SFO for the way back?
 
-The console stops moving. Start the worker again: the session carries on, and nothing is repeated, because finished steps come from the history.
+2. While the agent is working, **stop the worker** (Ctrl-C). The console stops moving: nothing is running the session.
+3. Start the worker again. The session carries on where it stopped, and nothing is repeated: finished steps come from the history.
 
-**Restart the console**: `uv run travel-stack restart console`, then reload the page<!-- browser
+**Restart the console.**
+
+1. Run `uv run travel-stack restart console`.
+2. Reload the page<!-- browser
  (in the browser, click ↻ on the **Agent UI** tab)
--->. Your session and its whole conversation are still there. The console holds no state; the workflow does.
+-->.
+3. Your session and its whole conversation are still there. The console holds no state; the workflow does.
 
 It's durable. Is it safe?
 

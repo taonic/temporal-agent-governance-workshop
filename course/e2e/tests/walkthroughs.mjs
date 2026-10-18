@@ -139,7 +139,7 @@ export const WALKTHROUGHS = {
     await l.openInTemporal("button[data-session-tab='query']");
     // Not done here: the Agent UI's side panels (State flow, Agent state, a tool call's script).
 
-    await l.step("Kill things");
+    await l.step("Test Temporal's resiliency");
     await l.send("What about JFK to SFO for the way back?");
     await expect.poll(() => l.busy(), { message: "the agent never started working", timeout: 30 * SECOND }).toBe(true);
     await l.worker("stopped");
