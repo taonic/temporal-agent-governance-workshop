@@ -17,7 +17,7 @@
           "label": "Temporal's record"
         },
         "security": {
-          "label": "Approval and policy"
+          "label": "Code Mode"
         },
         "external": {
           "label": "Outside services"
@@ -58,7 +58,7 @@
       "id": "llm",
       "type": "backend",
       "label": "Model call",
-      "sublabel": "decides the next step",
+      "sublabel": "each turn, an activity",
       "pos": [
         660,
         100
@@ -97,26 +97,12 @@
       ]
     },
     {
-      "id": "gate",
+      "id": "monty",
       "type": "security",
-      "label": "Approval gate",
-      "sublabel": "you (ex. 3) or a policy (ex. 4)",
+      "label": "Monty sandbox",
+      "sublabel": "Code Mode: runs its script",
       "pos": [
         660,
-        290
-      ],
-      "size": [
-        180,
-        60
-      ]
-    },
-    {
-      "id": "policy",
-      "type": "security",
-      "label": "Dogwood policy",
-      "sublabel": "decides on its own",
-      "pos": [
-        980,
         290
       ],
       "size": [
@@ -161,7 +147,7 @@
         "session",
         "llm",
         "history",
-        "gate",
+        "monty",
         "tools"
       ]
     }
@@ -197,28 +183,21 @@
       "variant": "dashed"
     },
     {
-      "id": "llm-gate",
+      "id": "llm-monty",
       "from": "llm",
-      "to": "gate",
+      "to": "monty",
       "fromSide": "bottom",
       "toSide": "top",
-      "label": "tool calls",
+      "label": "a script",
       "variant": "emphasis"
     },
     {
-      "id": "gate-policy",
-      "from": "gate",
-      "to": "policy",
-      "label": "ask the policy",
-      "variant": "dashed"
-    },
-    {
-      "id": "gate-tools",
-      "from": "gate",
+      "id": "monty-tools",
+      "from": "monty",
       "to": "tools",
       "fromSide": "bottom",
       "toSide": "top",
-      "label": "allowed",
+      "label": "each call",
       "variant": "emphasis"
     },
     {
@@ -248,10 +227,11 @@
     },
     {
       "dot": "rose",
-      "title": "Where it's going",
+      "title": "Code Mode",
       "items": [
-        "Here the gate lets every call through",
-        "Exercise 3: you approve bookings. Exercise 4: a policy decides"
+        "The model writes a short script, not one tool call at a time",
+        "Monty runs it inside the workflow: no files, no network",
+        "Each call the script makes is a tool call, an activity"
       ]
     }
   ]

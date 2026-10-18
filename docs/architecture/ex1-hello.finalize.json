@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-10-18T09:51:04.688Z",
+  "startedAt": "2026-10-18T09:54:31.840Z",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.candidate.json",
-    "sha256": "cc3e46abb1834cd5cda757b5d70d3f5b37e47eaf77b8351659da20974867c6aa",
-    "bytes": 3439
+    "sha256": "185a9d1b345075b08cd31512efb5ea273d4f158871d1a8a1fefb7b248cd92515",
+    "bytes": 3060
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
-    "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
-    "bytes": 754437
+    "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
+    "bytes": 752087
   },
   "stages": {
     "validate": {
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "cc3e46abb1834cd5cda757b5d70d3f5b37e47eaf77b8351659da20974867c6aa",
-          "bytes": 3439
+          "sha256": "185a9d1b345075b08cd31512efb5ea273d4f158871d1a8a1fefb7b248cd92515",
+          "bytes": 3060
         },
         "validation": {
           "checksPassed": 9,
@@ -54,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 262,
+      "durationMs": 259,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856",
+        "receiptId": "7e3e6c95-60bc-4755-b60e-75c32338d416",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
         "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.candidate.json",
         "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
         "specification": {
-          "sha256": "cc3e46abb1834cd5cda757b5d70d3f5b37e47eaf77b8351659da20974867c6aa",
-          "bytes": 3439
+          "sha256": "185a9d1b345075b08cd31512efb5ea273d4f158871d1a8a1fefb7b248cd92515",
+          "bytes": 3060
         },
         "artifact": {
-          "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
-          "bytes": 754437
+          "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
+          "bytes": 752087
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 155,
+      "durationMs": 124,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
         "artifact": {
-          "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
-          "bytes": 754437
+          "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
+          "bytes": 752087
         },
         "checks": [
           {
@@ -186,16 +186,16 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 20,
+            "minLabelRouteClearance": 136.2,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
             "minProjectedNodeTextPx": 7.5,
-            "maxBends": 2,
+            "maxBends": 0,
             "routesOverSuggestedBends": 0,
             "maxStretch": 1,
             "routesOverSuggestedStretch": 0,
-            "minSegmentPx": 75,
-            "minInteriorSegmentPx": 193,
+            "minSegmentPx": 140,
+            "minInteriorSegmentPx": null,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
             "shortInteriorSegmentCount": 0,
@@ -214,10 +214,10 @@
           "leadingSpace": {
             "measured": true,
             "emptyTopPx": 70,
-            "emptyTopRatio": 0.156,
+            "emptyTopRatio": 0.164,
             "occupiedTop": 70,
             "viewBoxTop": 0,
-            "canvasHeight": 448,
+            "canvasHeight": 428,
             "typicalNodeHeight": 60,
             "reviewSuggested": false
           },
@@ -242,18 +242,18 @@
             },
             "minimumSourceTextPx": 8,
             "minimumProjectedTextPx": 7.5,
-            "semanticTextCount": 18
+            "semanticTextCount": 15
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856"
+        "deliveryReceiptId": "7e3e6c95-60bc-4755-b60e-75c32338d416"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 791,
+      "durationMs": 831,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -271,11 +271,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856",
+        "deliveryReceiptId": "7e3e6c95-60bc-4755-b60e-75c32338d416",
         "artifact": {
           "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
-          "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
-          "bytes": 754437
+          "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
+          "bytes": 752087
         },
         "state": {
           "detail": "read",
@@ -312,9 +312,9 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 450,
+                "svgPx": 430,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -364,9 +364,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 503,
+                "svgPx": 481,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -416,9 +416,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 610,
+                "svgPx": 583,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -468,9 +468,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 625,
+                "svgPx": 597,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -573,9 +573,9 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 450,
+                "svgPx": 430,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -625,9 +625,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 503,
+                "svgPx": 481,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -677,9 +677,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 610,
+                "svgPx": 583,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -729,9 +729,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 625,
+                "svgPx": 597,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -786,9 +786,9 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 450,
+                "svgPx": 430,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -838,9 +838,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 503,
+                "svgPx": 481,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -890,9 +890,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 610,
+                "svgPx": 583,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -942,9 +942,9 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 625,
+                "svgPx": 597,
                 "cardsPx": 0,
-                "viewBoxHeight": 448
+                "viewBoxHeight": 428
               },
               "viewBoxWidth": 1340,
               "minimumProjectedNodeTextPx": 8,
@@ -993,8 +993,8 @@
     "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-18T09:51:06.051Z",
-  "durationMs": 1362,
+  "finishedAt": "2026-10-18T09:54:33.226Z",
+  "durationMs": 1385,
   "update": {
     "status": "update_available",
     "installedVersion": "3.0.1",

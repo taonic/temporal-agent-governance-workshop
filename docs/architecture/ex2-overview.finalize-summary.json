@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.candidate.json",
-    "sha256": "ba8ef7c97c044be243d932e814ef44fb33c6ff49b5085b636ae931d8f217ab94",
-    "bytes": 4834
+    "sha256": "5fb6452b2e18c142f73e2a3b17b6086f29e63a47d8cc318081d438e690678182",
+    "bytes": 4527
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
-    "sha256": "3ffd9df24939021eaabae7344837d75c720122c82a4c1d6168c2315b41e967ca",
-    "bytes": 761313
+    "sha256": "274e317350d704fbdb2853538826846dc5a2e03d87e305dc48ae063bc1850f26",
+    "bytes": 759198
   },
   "gates": {
     "validate": "pass",
@@ -45,5 +45,5 @@
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   },
   "visualReview": "not-requested",
-  "durationMs": 1490
+  "durationMs": 1443
 }

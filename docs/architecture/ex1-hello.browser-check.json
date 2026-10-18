@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856",
+  "deliveryReceiptId": "7e3e6c95-60bc-4755-b60e-75c32338d416",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
-    "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
-    "bytes": 754437
+    "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
+    "bytes": 752087
   },
   "state": {
     "detail": "read",
@@ -47,9 +47,9 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 450,
+          "svgPx": 430,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -99,9 +99,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 503,
+          "svgPx": 481,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -151,9 +151,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 610,
+          "svgPx": 583,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -203,9 +203,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 625,
+          "svgPx": 597,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -308,9 +308,9 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 450,
+          "svgPx": 430,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -360,9 +360,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 503,
+          "svgPx": 481,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -412,9 +412,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 610,
+          "svgPx": 583,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -464,9 +464,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 625,
+          "svgPx": 597,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -521,9 +521,9 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 450,
+          "svgPx": 430,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -573,9 +573,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 503,
+          "svgPx": 481,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -625,9 +625,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 610,
+          "svgPx": 583,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,
@@ -677,9 +677,9 @@
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 625,
+          "svgPx": 597,
           "cardsPx": 0,
-          "viewBoxHeight": 448
+          "viewBoxHeight": 428
         },
         "viewBoxWidth": 1340,
         "minimumProjectedNodeTextPx": 8,

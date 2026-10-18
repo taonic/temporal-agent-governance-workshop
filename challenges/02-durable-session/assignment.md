@@ -10,9 +10,9 @@ timelimit: 2700
 
 You just wrote raw Temporal. Now an agent runs on it: a travel assistant that searches and books flights. The goal of this exercise: see that a conversation with an agent can be a process that lasts. A broken tool makes it wait for you instead of failing, and a crash or a restart loses nothing and repeats nothing.
 
-Here's the agent, and where Temporal, the tool calls and the policy sit:
+Here's the agent, and where Temporal, Code Mode and the tool calls sit:
 
-[![How the travel agent works. You chat with it in the Agent UI. Each conversation is an agent session, a Temporal workflow, and everything inside Temporal is durable: every step is recorded in the event history. Each turn, a model call asks the model (Gemini) what to do next. The tool calls it asks for go through an approval gate, which asks you in exercise 3 and a Dogwood policy in exercise 4; here it lets every call through. Allowed tool calls, searching and booking flights, call the travel API, and their results are recorded in the history.](../../docs/architecture/ex2-overview.png)](../../docs/architecture/ex2-overview.html)
+[![How the travel agent works. You chat with it in the Agent UI. Each conversation is an agent session, a Temporal workflow, and everything inside Temporal is durable: every step is recorded in the event history. Each turn, a model call asks the model (Gemini) what to do next, and the model answers with a script. Code Mode: the Monty sandbox runs the script inside the workflow, and each call the script makes is a tool call, an activity, to the travel API, its result recorded in the history.](../../docs/architecture/ex2-overview.png)](../../docs/architecture/ex2-overview.html)
 
 First, how it uses its tools.
 

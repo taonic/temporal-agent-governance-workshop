@@ -27,7 +27,7 @@
       "id": "starter",
       "type": "frontend",
       "label": "Starter",
-      "sublabel": "hello-start · hello-board",
+      "sublabel": "hello-start SFO JFK",
       "pos": [
         40,
         100
@@ -56,7 +56,7 @@
       "id": "ui",
       "type": "frontend",
       "label": "Temporal UI",
-      "sublabel": "Event History · Queries tab",
+      "sublabel": "Event History · Pending Activities",
       "pos": [
         360,
         300
@@ -96,22 +96,6 @@
         200,
         60
       ]
-    },
-    {
-      "id": "board",
-      "type": "database",
-      "label": "BoardingWorkflow",
-      "sublabel": "on_board += 1 every 2s",
-      "tag": "workflow",
-      "icon": "clock",
-      "pos": [
-        710,
-        300
-      ],
-      "size": [
-        210,
-        60
-      ]
     }
   ],
   "boundaries": [
@@ -120,8 +104,7 @@
       "label": "hello-worker",
       "wraps": [
         "trip",
-        "lookup",
-        "board"
+        "lookup"
       ]
     }
   ],
@@ -147,16 +130,10 @@
       "variant": "emphasis"
     },
     {
-      "id": "run-board",
-      "from": "server",
-      "to": "board",
-      "label": "timers · queries"
-    },
-    {
       "id": "read",
       "from": "ui",
       "to": "server",
-      "label": "query boarded"
+      "label": "reads the history"
     }
   ],
   "cards": [
@@ -171,11 +148,11 @@
     },
     {
       "dot": "cyan",
-      "title": "The count is rebuilt, not saved",
+      "title": "The history, not the worker, holds the run",
       "items": [
-        "The server records every step and timer",
-        "A new worker replays them to rebuild on_board",
-        "No worker: queries time out, work waits"
+        "The server records the start and each activity's result",
+        "A new worker replays the history and carries on",
+        "No worker: the work waits, and nothing is lost"
       ]
     }
   ]
