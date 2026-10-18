@@ -44,37 +44,36 @@ Runs too. You never asked for December 24th: your form says November 1st. But th
 
 ## 3. Look back in time
 
-Replace `flights-for-ada` (at `TODO(ch04)` in `policies/travel.dw`) with two rules that look back at the trip form, one for the date there and one for the date back:
+Replace `flights-for-ada` (at `TODO(ch04)` in `policies/travel.dw`) with a rule that looks back at the trip form:
 
 ```dogwood
 // A flight booking runs unattended when you put its passenger and date on a trip form
-// earlier in this session.
+// earlier in this session: the date there, or the date back.
 @id("flights-on-the-trip-form")
 // Permit this call (a flight booking), checked before it runs...
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
-// ...when the session's history has a matching event: a temporal condition.
-when temporal {
-  // At some point in the last 30 days, a trip form result was received...
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    // ...whose traveler is this booking's passenger...
-    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
-    // ...and whose departure date is this booking's date.
-    input.arg0.departure_date: context.input.arg0.request.date
-  }
-};
-
-// The same for the date back.
-@id("return-flights-on-the-trip-form")
-permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
-when temporal {
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
-    input.arg0.return_date: context.input.arg0.request.date
+when {
+  // ...when the session's history has a matching event: a temporal condition.
+  temporal {
+    // At some point in the last 30 days, a trip form result was received...
+    formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+      // ...whose traveler is this booking's passenger...
+      input.arg0.traveler_name: context.input.arg0.request.passenger_name,
+      // ...and whose departure date is this booking's date...
+      input.arg0.departure_date: context.input.arg0.request.date
+    }
+  } ||
+  // ...or one whose return date is.
+  temporal {
+    formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+      input.arg0.traveler_name: context.input.arg0.request.passenger_name,
+      input.arg0.return_date: context.input.arg0.request.date
+    }
   }
 };
 ```
 
-Read the first as: permit `book_flight` when, at some point in the last 30 days of **this session's** history, a trip form result was received whose `traveler_name` equals this booking's `passenger_name` and whose `departure_date` equals its `date`. `when` checks the call; `when temporal` checks the call against the past. No name is written into the rule: the form you submit supplies it.
+Read it as: permit `book_flight` when, at some point in the last 30 days of **this session's** history, a trip form result was received whose `traveler_name` equals this booking's `passenger_name` and whose `departure_date`, or `return_date`, equals its `date`. Plain Cedar checks the call; a `temporal { … }` block checks it against the past, and sits in a condition like any other test. No name is written into the rule: the form you submit supplies it.
 
 Save it, and the verifier loads it within a few seconds. (A policy that doesn't validate isn't loaded: the last one that did keeps serving.)
 
