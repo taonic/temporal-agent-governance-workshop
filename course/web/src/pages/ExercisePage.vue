@@ -91,6 +91,19 @@ const VIEWS = [
   { key: "temporal", label: "Temporal UI", title: "Your sandbox's Temporal UI: workflows and their histories" },
   { key: "diagram", label: "Diagram", title: "This part of the exercise, as a diagram you can zoom and explore" },
 ];
+// The diagram as the course shows it: without archify's Export menu (it's on this origin, so a
+// stylesheet of the page's own goes in on every load).
+const DIAGRAM_STYLE = ".export-wrap{display:none!important}";
+function onDiagramLoad(event) {
+  try {
+    const doc = event.target.contentDocument;
+    if (doc && !doc.getElementById("course-style")) {
+      doc.head.append(Object.assign(doc.createElement("style"), { id: "course-style", textContent: DIAGRAM_STYLE }));
+    }
+  } catch {
+    /* not reachable: leave it as it is */
+  }
+}
 // Views that need the sandbox: the diagram doesn't.
 const needsSandbox = (key) => key === "console" || key === "temporal";
 // No Agent UI before there's an agent (exercise 1).
@@ -358,6 +371,7 @@ onBeforeUnmount(() => {
           class="diagram-frame"
           :src="store.guideDiagram"
           title="The exercise's diagram"
+          @load="onDiagramLoad"
         />
         <!-- Mounted while the sandbox is up and only hidden behind Code, so its frames stay loaded. -->
         <SandboxPanes v-if="live" ref="panes" :live="live" />
