@@ -1,254 +1,304 @@
 {
-  "schema_version": 1,
-  "diagram_type": "architecture",
+  "schema_version": 2,
+  "diagram_type": "workflow",
   "meta": {
     "title": "The policy decides",
-    "output": "docs/architecture/ex4-auto-mode.html",
+    "animation": "trace",
     "quality_profile": "showcase",
+    "output": "docs/architecture/ex4-auto-mode.html",
     "legend": {
       "entries": {
-        "frontend": {
+        "external": {
           "label": "You"
         },
-        "database": {
-          "label": "Workflow code"
+        "frontend": {
+          "label": "What you see"
         },
         "backend": {
-          "label": "Activity"
+          "label": "Workflow and activity"
+        },
+        "security": {
+          "label": "The policy check"
         },
         "messagebus": {
           "label": "Nexus endpoint"
         },
-        "security": {
-          "label": "Dogwood"
-        },
-        "cloud": {
-          "label": "Verifier's store"
+        "database": {
+          "label": "History"
         }
       }
     }
   },
-  "components": [
+  "lanes": [
     {
       "id": "you",
-      "type": "frontend",
+      "label": "You"
+    },
+    {
+      "id": "worker",
+      "label": "Travel worker \u00b7 auto_mode"
+    },
+    {
+      "id": "temporal",
+      "label": "Temporal"
+    },
+    {
+      "id": "dogwood",
+      "label": "Dogwood verifier"
+    }
+  ],
+  "phases": [
+    {
+      "id": "ask",
+      "label": "You ask",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "work",
+      "label": "The agent works",
+      "fromCol": 2,
+      "toCol": 2,
+      "variant": "dashed"
+    },
+    {
+      "id": "decide",
+      "label": "The policy decides",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "groups": [
+    {
+      "id": "judged",
+      "label": "Judged with policies/travel.dw",
+      "lane": "dogwood",
+      "fromCol": 2,
+      "toCol": 5,
+      "variant": "security"
+    }
+  ],
+  "mainPath": [
+    "you",
+    "session",
+    "script",
+    "book",
+    "endpoint",
+    "verifier",
+    "run",
+    "reply"
+  ],
+  "nodes": [
+    {
+      "id": "you",
+      "lane": "you",
+      "col": 0,
+      "type": "external",
       "label": "You",
-      "sublabel": "in the console",
-      "pos": [
-        40,
-        120
-      ],
-      "size": [
-        140,
-        60
-      ]
+      "sublabel": "ask \u00b7 fill the trip form",
+      "width": 160
     },
     {
-      "id": "workflow",
-      "type": "database",
-      "label": "TravelAgent workflow",
-      "sublabel": "posture: auto_mode",
-      "tag": "workflow",
-      "icon": "backend",
-      "pos": [
-        260,
-        120
-      ],
-      "size": [
-        210,
-        60
-      ]
+      "id": "reply",
+      "lane": "you",
+      "col": 5,
+      "type": "frontend",
+      "label": "The reply",
+      "sublabel": "booked, or why not",
+      "width": 160
     },
     {
-      "id": "gate",
-      "type": "database",
-      "label": "Approval gate",
-      "sublabel": "before each gated call",
-      "tag": "in workflow",
-      "icon": "security",
-      "pos": [
-        600,
-        120
-      ],
-      "size": [
-        200,
-        60
-      ]
-    },
-    {
-      "id": "call",
+      "id": "session",
+      "lane": "worker",
+      "col": 1,
       "type": "backend",
-      "label": "The tool call",
-      "sublabel": "book_flight, search_hotels…",
-      "tag": "activity",
-      "pos": [
-        1010,
-        120
-      ],
-      "size": [
-        200,
-        60
-      ]
+      "label": "Agent session",
+      "sublabel": "TravelAgent workflow",
+      "width": 160
+    },
+    {
+      "id": "script",
+      "lane": "worker",
+      "col": 2,
+      "type": "backend",
+      "label": "The model's script",
+      "sublabel": "searches run as is",
+      "width": 160
+    },
+    {
+      "id": "book",
+      "lane": "worker",
+      "col": 3,
+      "type": "security",
+      "label": "book_flight(\u2026)",
+      "sublabel": "waits on the policy",
+      "tag": "each booking",
+      "width": 160
+    },
+    {
+      "id": "run",
+      "lane": "worker",
+      "col": 4,
+      "type": "backend",
+      "label": "Booking runs",
+      "sublabel": "an activity",
+      "width": 160
+    },
+    {
+      "id": "history",
+      "lane": "temporal",
+      "col": 1,
+      "type": "database",
+      "label": "Session history",
+      "sublabel": "messages \u00b7 form \u00b7 results",
+      "width": 160
     },
     {
       "id": "endpoint",
+      "lane": "temporal",
+      "col": 3,
       "type": "messagebus",
       "label": "tool-verifier",
       "sublabel": "Nexus endpoint",
-      "tag": "Temporal",
-      "pos": [
-        600,
-        290
-      ],
-      "size": [
-        200,
-        60
-      ]
-    },
-    {
-      "id": "verifier",
-      "type": "security",
-      "label": "Dogwood verifier",
-      "sublabel": "a separate service",
-      "pos": [
-        1010,
-        290
-      ],
-      "size": [
-        200,
-        60
-      ]
-    },
-    {
-      "id": "policy",
-      "type": "security",
-      "label": "policies/travel.dw",
-      "sublabel": "permit · forbid · escalate",
-      "tag": "policy",
-      "pos": [
-        890,
-        460
-      ],
-      "size": [
-        200,
-        60
-      ]
+      "width": 160
     },
     {
       "id": "store",
-      "type": "cloud",
-      "label": ".dogwood/travel.redb",
-      "sublabel": "each session's history",
-      "icon": "database",
-      "pos": [
-        1130,
-        460
-      ],
-      "size": [
-        200,
-        60
-      ]
-    }
-  ],
-  "boundaries": [
-    {
-      "kind": "region",
-      "label": "travel-worker",
-      "wraps": [
-        "workflow",
-        "gate",
-        "call"
-      ]
+      "lane": "dogwood",
+      "col": 2,
+      "type": "database",
+      "label": "The session's past",
+      "sublabel": "kept by the verifier",
+      "width": 160
     },
     {
-      "kind": "region",
-      "label": "Temporal server",
-      "wraps": [
-        "endpoint"
-      ]
+      "id": "verifier",
+      "lane": "dogwood",
+      "col": 3,
+      "type": "security",
+      "label": "Dogwood verifier",
+      "sublabel": "a separate service",
+      "tag": "temporal rules",
+      "width": 160
     },
     {
-      "kind": "security-group",
-      "label": "travel-stack: the verifier",
-      "wraps": [
-        "verifier",
-        "policy",
-        "store"
-      ]
+      "id": "refused",
+      "lane": "dogwood",
+      "col": 5,
+      "type": "security",
+      "label": "Refused",
+      "sublabel": "the model is told why",
+      "width": 160
     }
   ],
-  "connections": [
+  "edges": [
     {
       "id": "ask",
       "from": "you",
-      "to": "workflow",
-      "label": "ask",
+      "to": "session",
       "variant": "emphasis"
     },
     {
-      "id": "gated",
-      "from": "workflow",
-      "to": "gate",
-      "label": "each tool call"
+      "id": "writes",
+      "from": "session",
+      "to": "script",
+      "variant": "default"
     },
     {
-      "id": "permit",
-      "from": "gate",
-      "to": "call",
-      "label": "permit: runs unattended",
-      "variant": "emphasis"
+      "id": "books",
+      "from": "script",
+      "to": "book",
+      "variant": "default"
     },
     {
-      "id": "nexus",
-      "from": "gate",
+      "id": "verify",
+      "from": "book",
       "to": "endpoint",
-      "label": "RecordInputEvents · VerifyToolCalls",
+      "label": "VerifyToolCalls",
       "variant": "security"
     },
     {
       "id": "queue",
       "from": "endpoint",
       "to": "verifier",
-      "label": "tool-verifier task queue"
+      "variant": "security"
     },
     {
-      "id": "rules",
+      "id": "permit",
       "from": "verifier",
-      "to": "policy",
-      "label": "loads"
+      "to": "run",
+      "label": "permit",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "bottom"
     },
     {
-      "id": "history",
+      "id": "booked",
+      "from": "run",
+      "to": "reply",
+      "label": "booked",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "no-permit",
+      "from": "verifier",
+      "to": "refused",
+      "label": "no permit",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "told",
+      "from": "refused",
+      "to": "reply",
+      "label": "the agent tells you",
+      "variant": "dashed",
+      "role": "return",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "recorded",
+      "from": "session",
+      "to": "history",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "record-events",
+      "from": "history",
+      "to": "endpoint",
+      "label": "RecordInputEvents",
+      "variant": "dashed",
+      "role": "async"
+    },
+    {
+      "id": "looks-back",
       "from": "verifier",
       "to": "store",
-      "label": "records"
-    },
-    {
-      "id": "escalate",
-      "from": "gate",
-      "to": "you",
-      "label": "escalate: comes to you",
+      "label": "looks back",
       "variant": "dashed",
-      "fromSide": "top",
-      "toSide": "top"
+      "role": "branch"
     }
   ],
   "cards": [
     {
       "dot": "violet",
-      "title": "The policy's three answers",
+      "title": "Plain Cedar, then temporal",
       "items": [
-        "permit: the call runs unattended",
-        "forbid, or no permit: refused, and the model is told which policy",
-        "forbid marked @decision(\"escalate\"): it comes to you, as in exercise 3"
+        "A plain rule sees only the call: any flight for Ada, any day",
+        "A temporal rule looks back: a flight runs only if an earlier trip form named its passenger and date"
       ]
     },
     {
       "dot": "amber",
-      "title": "No verifier, no allow",
+      "title": "Only bookings are judged",
       "items": [
-        "If the verifier doesn't answer, auto mode escalates to you",
-        "It never falls back to allowing the call"
+        "The script and its searches run unattended",
+        "Anything no rule permits is refused, and the model is told why"
       ]
     }
   ]

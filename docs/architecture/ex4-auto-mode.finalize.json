@@ -3,18 +3,18 @@
   "ok": true,
   "command": "finalize",
   "status": "pass",
-  "type": "architecture",
+  "type": "workflow",
   "quality": "showcase",
-  "startedAt": "2026-10-18T09:51:40.095Z",
+  "startedAt": "2026-10-18T23:39:58.894Z",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
-    "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
-    "bytes": 4837
+    "sha256": "0fe45443fe48ba61c65ae562dc9758e8e37f063060d21bda894fa94bb23a75a4",
+    "bytes": 6225
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
-    "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
-    "bytes": 762907
+    "sha256": "4a4c892cf29cde425d293a90f3a7230f88f2cbb586060ad4ed30e17b47088244",
+    "bytes": 765495
   },
   "stages": {
     "validate": {
@@ -26,7 +26,7 @@
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
-        "architecture",
+        "workflow",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "--quality",
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
-          "bytes": 4837
+          "sha256": "0fe45443fe48ba61c65ae562dc9758e8e37f063060d21bda894fa94bb23a75a4",
+          "bytes": 6225
         },
         "validation": {
           "checksPassed": 9,
@@ -54,12 +54,12 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 256,
+      "durationMs": 235,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
-        "architecture",
+        "workflow",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "--quality",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "004e7ab1-16f0-4411-93db-7b260169f60c",
+        "receiptId": "d08cf174-fe69-40b2-a74a-6bfdd08b14d1",
         "ok": true,
         "command": "deliver",
-        "type": "architecture",
+        "type": "workflow",
         "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
         "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "specification": {
-          "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
-          "bytes": 4837
+          "sha256": "0fe45443fe48ba61c65ae562dc9758e8e37f063060d21bda894fa94bb23a75a4",
+          "bytes": 6225
         },
         "artifact": {
-          "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
-          "bytes": 762907
+          "sha256": "4a4c892cf29cde425d293a90f3a7230f88f2cbb586060ad4ed30e17b47088244",
+          "bytes": 765495
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 123,
+      "durationMs": 124,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "artifact": {
-          "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
-          "bytes": 762907
+          "sha256": "4a4c892cf29cde425d293a90f3a7230f88f2cbb586060ad4ed30e17b47088244",
+          "bytes": 765495
         },
         "checks": [
           {
@@ -186,16 +186,16 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 34,
+            "minLabelRouteClearance": 42,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
-            "minProjectedNodeTextPx": 7.5,
+            "minProjectedNodeTextPx": 7.032136105860113,
             "maxBends": 2,
             "routesOverSuggestedBends": 0,
-            "maxStretch": 1.081,
+            "maxStretch": 1.142,
             "routesOverSuggestedStretch": 0,
-            "minSegmentPx": 24,
-            "minInteriorSegmentPx": 113,
+            "minSegmentPx": 21,
+            "minInteriorSegmentPx": 288,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
             "shortInteriorSegmentCount": 0,
@@ -212,48 +212,37 @@
             "detours": []
           },
           "leadingSpace": {
-            "measured": true,
-            "emptyTopPx": 76,
-            "emptyTopRatio": 0.125,
-            "occupiedTop": 76,
-            "viewBoxTop": 0,
-            "canvasHeight": 608,
-            "typicalNodeHeight": 60,
+            "measured": false,
             "reviewSuggested": false
           },
           "desktopReadability": {
-            "budgetBasis": "recognized-declared-wide",
+            "budgetBasis": "legacy-930",
             "readerContract": "declared-wide-v1",
-            "availableDiagramWidth": 1312.5,
-            "actualBudgetPx": 1312.5,
-            "actualReaderWidth": 1342.5,
-            "desiredReaderWidth": 1342.5,
-            "viewportCap": 1376,
-            "limit": "source-size",
-            "requestedTargetPx": 7.5,
-            "requestedTargetMet": true,
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "limit": "legacy",
+            "requestedTargetPx": null,
+            "requestedTargetMet": null,
             "hardFloorPx": 6,
             "hardFloorMet": true,
             "minimumOwner": {
-              "kind": "edge",
-              "id": "ask",
-              "from": "you",
-              "to": "workflow"
+              "kind": "node",
+              "id": "you"
             },
             "minimumSourceTextPx": 8,
-            "minimumProjectedTextPx": 7.5,
-            "semanticTextCount": 27
+            "minimumProjectedTextPx": 7.032136105860113,
+            "semanticTextCount": 29
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "004e7ab1-16f0-4411-93db-7b260169f60c"
+        "deliveryReceiptId": "d08cf174-fe69-40b2-a74a-6bfdd08b14d1"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 891,
+      "durationMs": 1031,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -271,11 +260,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "004e7ab1-16f0-4411-93db-7b260169f60c",
+        "deliveryReceiptId": "d08cf174-fe69-40b2-a74a-6bfdd08b14d1",
         "artifact": {
           "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
-          "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
-          "bytes": 762907
+          "sha256": "4a4c892cf29cde425d293a90f3a7230f88f2cbb586060ad4ed30e17b47088244",
+          "bytes": 765495
         },
         "state": {
           "detail": "read",
@@ -304,29 +293,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1215,
+              "diagramWidth": 1185,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 585,
+                "svgPx": 746,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
-              "minimumProjectedNodeTextPx": 7.691428571428571,
-              "minimumProjectedNonEdgeTextPx": 8.652857142857142,
-              "minimumProjectedEdgeTextPx": 7.691428571428571,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 125,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 76,
+                  "spaceAboveNodesPx": 44,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 119,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 58,
+                  "spaceAboveNodesPx": 47,
+                  "spaceBelowNodesPx": 13
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 119,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 76,
+                  "spaceAboveNodesPx": 38,
+                  "spaceBelowNodesPx": 4
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 119,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 58,
+                  "spaceAboveNodesPx": 47,
+                  "spaceBelowNodesPx": 13
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -356,29 +396,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1506,
+              "readerWidth": 1269,
+              "diagramWidth": 1239,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 654,
+                "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 131,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 80,
+                  "spaceAboveNodesPx": 46,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 124,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 61,
+                  "spaceAboveNodesPx": 49,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 124,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 80,
+                  "spaceAboveNodesPx": 40,
+                  "spaceBelowNodesPx": 5
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 124,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 61,
+                  "spaceAboveNodesPx": 49,
+                  "spaceBelowNodesPx": 14
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -408,29 +499,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1826,
+              "readerWidth": 1396,
+              "diagramWidth": 1366,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 793,
+                "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 145,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 50,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 137,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 54,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 137,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 44,
+                  "spaceBelowNodesPx": 5
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 137,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 54,
+                  "spaceBelowNodesPx": 15
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -460,29 +602,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1920,
-              "diagramWidth": 1870,
+              "readerWidth": 1769,
+              "diagramWidth": 1719,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 812,
+                "svgPx": 1082,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 182,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 63,
+                  "spaceBelowNodesPx": 8
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 172,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 84,
+                  "spaceAboveNodesPx": 68,
+                  "spaceBelowNodesPx": 19
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 172,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 55,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 172,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 84,
+                  "spaceAboveNodesPx": 68,
+                  "spaceBelowNodesPx": 19
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -565,29 +758,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1215,
+              "diagramWidth": 1185,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 585,
+                "svgPx": 746,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
-              "minimumProjectedNodeTextPx": 7.691428571428571,
-              "minimumProjectedNonEdgeTextPx": 8.652857142857142,
-              "minimumProjectedEdgeTextPx": 7.691428571428571,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 125,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 76,
+                  "spaceAboveNodesPx": 44,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 119,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 58,
+                  "spaceAboveNodesPx": 47,
+                  "spaceBelowNodesPx": 13
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 119,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 76,
+                  "spaceAboveNodesPx": 38,
+                  "spaceBelowNodesPx": 4
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 119,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 58,
+                  "spaceAboveNodesPx": 47,
+                  "spaceBelowNodesPx": 13
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -617,29 +861,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1506,
+              "readerWidth": 1269,
+              "diagramWidth": 1239,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 654,
+                "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 131,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 80,
+                  "spaceAboveNodesPx": 46,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 124,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 61,
+                  "spaceAboveNodesPx": 49,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 124,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 80,
+                  "spaceAboveNodesPx": 40,
+                  "spaceBelowNodesPx": 5
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 124,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 61,
+                  "spaceAboveNodesPx": 49,
+                  "spaceBelowNodesPx": 14
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -669,29 +964,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1826,
+              "readerWidth": 1396,
+              "diagramWidth": 1366,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 793,
+                "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 145,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 50,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 137,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 54,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 137,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 44,
+                  "spaceBelowNodesPx": 5
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 137,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 54,
+                  "spaceBelowNodesPx": 15
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -721,29 +1067,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1920,
-              "diagramWidth": 1870,
+              "readerWidth": 1769,
+              "diagramWidth": 1719,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 812,
+                "svgPx": 1082,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 182,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 63,
+                  "spaceBelowNodesPx": 8
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 172,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 84,
+                  "spaceAboveNodesPx": 68,
+                  "spaceBelowNodesPx": 19
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 172,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 55,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 172,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 84,
+                  "spaceAboveNodesPx": 68,
+                  "spaceBelowNodesPx": 19
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -778,29 +1175,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1215,
+              "diagramWidth": 1185,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 585,
+                "svgPx": 746,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
-              "minimumProjectedNodeTextPx": 7.691428571428571,
-              "minimumProjectedNonEdgeTextPx": 8.652857142857142,
-              "minimumProjectedEdgeTextPx": 7.691428571428571,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 125,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 76,
+                  "spaceAboveNodesPx": 44,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 119,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 58,
+                  "spaceAboveNodesPx": 47,
+                  "spaceBelowNodesPx": 13
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 119,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 76,
+                  "spaceAboveNodesPx": 38,
+                  "spaceBelowNodesPx": 4
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 119,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 58,
+                  "spaceAboveNodesPx": 47,
+                  "spaceBelowNodesPx": 13
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -830,29 +1278,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1506,
+              "readerWidth": 1269,
+              "diagramWidth": 1239,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 654,
+                "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 131,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 80,
+                  "spaceAboveNodesPx": 46,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 124,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 61,
+                  "spaceAboveNodesPx": 49,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 124,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 80,
+                  "spaceAboveNodesPx": 40,
+                  "spaceBelowNodesPx": 5
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 124,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 61,
+                  "spaceAboveNodesPx": 49,
+                  "spaceBelowNodesPx": 14
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -882,29 +1381,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1826,
+              "readerWidth": 1396,
+              "diagramWidth": 1366,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 793,
+                "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 145,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 50,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 137,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 54,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 137,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 88,
+                  "spaceAboveNodesPx": 44,
+                  "spaceBelowNodesPx": 5
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 137,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 54,
+                  "spaceBelowNodesPx": 15
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -934,29 +1484,80 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1920,
-              "diagramWidth": 1870,
+              "readerWidth": 1769,
+              "diagramWidth": 1719,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 812,
+                "svgPx": 1082,
                 "cardsPx": 0,
-                "viewBoxHeight": 608
+                "viewBoxHeight": 666
               },
-              "viewBoxWidth": 1400,
+              "viewBoxWidth": 1058,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-3",
+                  "heightPx": 182,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "store",
+                    "verifier",
+                    "refused"
+                  ],
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 63,
+                  "spaceBelowNodesPx": 8
+                },
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 172,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "you",
+                    "reply"
+                  ],
+                  "nodeSpanPx": 84,
+                  "spaceAboveNodesPx": 68,
+                  "spaceBelowNodesPx": 19
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 172,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "script",
+                    "book",
+                    "run"
+                  ],
+                  "nodeSpanPx": 110,
+                  "spaceAboveNodesPx": 55,
+                  "spaceBelowNodesPx": 6
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 172,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "history",
+                    "endpoint"
+                  ],
+                  "nodeSpanPx": 84,
+                  "spaceAboveNodesPx": 68,
+                  "spaceBelowNodesPx": 19
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "ask",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "ask · fill the trip form",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "ask",
-                "from": "you",
-                "to": "workflow"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -993,18 +1594,18 @@
     "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-18T09:51:41.522Z",
-  "durationMs": 1427,
+  "finishedAt": "2026-10-18T23:40:00.421Z",
+  "durationMs": 1526,
   "update": {
     "status": "update_available",
     "installedVersion": "3.0.1",
     "availableVersion": "3.1.0",
     "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
     "severity": "normal",
-    "checkedAt": "2026-10-17T08:39:37.027Z",
+    "checkedAt": "2026-10-18T23:12:32.207Z",
     "source": "cache",
     "noticeRequired": true,
-    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-17T08:39:37.027Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-18T23:12:32.207Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   }
 }
