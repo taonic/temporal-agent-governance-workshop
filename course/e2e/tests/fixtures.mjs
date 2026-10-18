@@ -34,8 +34,8 @@ export const test = base.extend({
 
 // The course's pages in order, as the exercise picker lists them: [{ hash, label }].
 export async function coursePages(page) {
-  await page.goto("/#/setup");
-  const options = page.locator(".exercise-picker select option");
+  await page.goto("/#/exercise/01-hello-temporal");
+  const options = page.locator(".exercise-picker select option:not([disabled])");
   await expect(options.first()).toBeAttached();
   return options.evaluateAll((els) => els.map((el) => ({ hash: el.value, label: el.textContent.trim() })));
 }

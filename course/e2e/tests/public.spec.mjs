@@ -119,7 +119,7 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
   });
 
   test("Previous and Next walk the course in order", async ({ page }) => {
-    // From the setup guide: the home page (the picker's first) has no Previous or Next.
+    // From exercise 1: the home page (the picker's first) has no Previous or Next.
     const pages = (await coursePages(page)).filter((p) => p.hash !== "#/");
     const at = (hash) => expect(page).toHaveURL(new RegExp(`${hash.replace(/[/#]/g, "\\$&")}$`));
     await page.goto(`/${pages[0].hash}`);

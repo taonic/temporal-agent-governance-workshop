@@ -71,11 +71,10 @@ watch(
   },
 );
 
-// The picker and Previous/Next walk the course in order: the overview, the setup guide,
-// then the exercises.
+// The picker and Previous/Next walk the course in order: the overview, then the exercises.
+// (The setup guide isn't one of them: its links lead there.)
 const pages = [
   { value: "#/", label: "Overview" },
-  { value: "#/setup", label: "Set up on your machine" },
   ...course.exercises.map((e) => ({ value: `#/exercise/${e.id}`, label: `${e.optional ? "★ Capstone" : `Exercise ${e.number}`}: ${e.title}`, id: e.id })),
 ];
 const current = computed(() =>
@@ -200,6 +199,7 @@ watch(() => store.authenticated, () => refreshHelper());
           <label class="exercise-picker" data-tour="exercise-picker">
             <span class="visually-hidden">Go to</span>
             <select :value="current" @change="navigate($event.target.value)">
+              <option v-if="position < 0" :value="current" disabled>Set up on your machine</option>
               <option v-for="page in pages" :key="page.value" :value="page.value">
                 {{ page.label }}{{ page.id && store.passed.includes(page.id) ? "  ✓" : "" }}
               </option>
