@@ -126,9 +126,12 @@ export function registerHook(name, fn) {
 }
 
 // Types commands into a terminal. The worker terminal is interrupted first (Ctrl-C), so a
-// command there always replaces whatever worker was running.
-export function runInTerminal(target, commands, { interrupt = target === "worker" } = {}) {
+// command there always replaces whatever worker was running. The terminals are under Code, so
+// it goes back to Code to show them (the worker toggle, a trip, a ▶), unless `reveal` is false:
+// for what the page does on its own, which shouldn't move the learner off what they're reading.
+export function runInTerminal(target, commands, { interrupt = target === "worker", reveal = true } = {}) {
   if (!hooks.terminal) return toast("Start your sandbox first.");
+  if (reveal) store.workspaceView = "code";
   hooks.terminal(target, commands, { interrupt });
 }
 

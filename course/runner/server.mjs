@@ -14,6 +14,7 @@ import { WebSocketServer } from "ws";
 import {
   clearedSessionCookie,
   codeMatches,
+  codeMatchesAny,
   learnerFromRequest,
   newLearnerId,
   sessionCookie,
@@ -134,7 +135,7 @@ const routes = {
     const helperReason = helperUnavailableReason();
     const learner = learnerFromRequest(config.sessionSecret, req);
     return {
-      runtime: { enabled: !reason, reason, codeRequired: Boolean(config.accessCode) },
+      runtime: { enabled: !reason, reason, codeRequired: config.accessCodes.length > 0 },
       helper: { enabled: !helperReason, reason: helperReason },
       // A session is good for whichever of the sandboxes and the helper is on.
       authenticated: (!reason || !helperReason) && Boolean(learner),
@@ -146,10 +147,10 @@ const routes = {
     const reason = runtimeUnavailableReason();
     if (reason && helperUnavailableReason()) throw Object.assign(new Error(reason), { status: 503 });
     const { code } = await readJson(req);
-    if (config.accessCode && !codeMatches(config.accessCode, code)) {
+    if (config.accessCodes.length && !codeMatchesAny(config.accessCodes, code)) {
       throw Object.assign(new Error("That isn't this workshop's access code."), { status: 403 });
     }
-    if (!config.accessCode && !openAccessAllows(req.headers["x-forwarded-host"] ?? req.headers.host)) {
+    if (!config.accessCodes.length && !openAccessAllows(req.headers["x-forwarded-host"] ?? req.headers.host)) {
       throw Object.assign(new Error("This runner has no access code, so it only opens to this machine (localhost)."), { status: 403 });
     }
     const learner = learnerFromRequest(config.sessionSecret, req) ?? newLearnerId();

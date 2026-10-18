@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { parseCodes } from "./auth.mjs";
 import { snapshotName } from "./repo-files.mjs";
 
 const env = process.env;
@@ -57,10 +58,11 @@ export const config = {
   autoStopMinutes: int("SANDBOX_AUTO_STOP_MINUTES", 30),
   ttlMinutes: int("SANDBOX_TTL_MINUTES", 24 * 60),
 
-  // One code per event. Without one, the runtime is open only when the runner listens on a
+  // The event's codes, comma-separated (one per event or cohort, so one can be retired while
+  // others stay valid). Without any, the runtime is open only when the runner listens on a
   // loopback address (local dev, where only this machine can reach it), or with
   // ALLOW_OPEN_ACCESS=1; otherwise it's off.
-  accessCode: env.ACCESS_CODE || "",
+  accessCodes: parseCodes(env.ACCESS_CODE),
   allowOpenAccess: env.ALLOW_OPEN_ACCESS === "1",
   localOnly: LOOPBACK.test(env.HOST ?? "127.0.0.1"),
   instructorCode: env.INSTRUCTOR_CODE || "",
@@ -92,7 +94,7 @@ export const config = {
 
 // No code needed: ALLOW_OPEN_ACCESS=1, or a local runner with no ACCESS_CODE.
 export function openAccess() {
-  return !config.accessCode && (config.allowOpenAccess || config.localOnly);
+  return !config.accessCodes.length && (config.allowOpenAccess || config.localOnly);
 }
 
 // Who may get a session without a code. A local runner is still reachable through a tunnel
@@ -106,7 +108,7 @@ export function openAccessAllows(hostHeader) {
 
 // Why nobody can get a session (no code to give out, and not open), or null.
 function accessUnavailableReason() {
-  if (!config.accessCode && !config.allowOpenAccess && !config.localOnly) return "The runner has no ACCESS_CODE.";
+  if (!config.accessCodes.length && !config.allowOpenAccess && !config.localOnly) return "The runner has no ACCESS_CODE.";
   return null;
 }
 

@@ -31,7 +31,7 @@ All commands run from `course/` unless noted.
 
 Learners' sandboxes start from a Daytona snapshot named after a hash of its inputs (`pyproject.toml`, `uv.lock`, `scripts/setup_dogwood.sh`, `course/snapshot/*`). It needs rebuilding whenever any of those change.
 
-**CI builds it for you.** [.github/workflows/sandbox-snapshot.yml](../.github/workflows/sandbox-snapshot.yml) runs on every merge to `main` that touches those inputs. It needs the repository secret `DAYTONA_API_KEY` (Settings → Secrets and variables → Actions). To build or force a rebuild by hand: Actions → **Sandbox snapshot** → **Run workflow**.
+**CI builds it for you.** Every deploy from CI (see [Automatic deploys](#automatic-deploys)) first runs [.github/workflows/sandbox-snapshot.yml](../.github/workflows/sandbox-snapshot.yml), which builds the snapshot when its inputs changed and otherwise takes a few seconds. It needs the repository secret `DAYTONA_API_KEY` (Settings → Secrets and variables → Actions). To build or force a rebuild by hand: Actions → **Sandbox snapshot** → **Run workflow**.
 
 To build it from your machine instead (the first time, or without CI):
 
@@ -67,7 +67,7 @@ fly secrets set --app temporal-agent-governance-workshop \
 |---|---|
 | `DAYTONA_API_KEY` | no sandboxes; the site is read-only |
 | `GEMINI_API_KEY` | no model for the agents, no Ask Temporal |
-| `ACCESS_CODE` | the browser runtime is off (reading still works) |
+| `ACCESS_CODE` | the browser runtime is off (reading still works). Takes several codes, comma-separated (`cohort-a,cohort-b`); any one works |
 | `SESSION_SECRET` | a random one per restart, so every restart signs everyone out. Set it once and leave it: changing it signs everyone out and breaks running sandboxes' model keys until they restart |
 | `INSTRUCTOR_CODE` | no admin view of sandboxes |
 | `KAPA_API_KEY` | learners connect their own Kapa sign-in |
@@ -100,6 +100,23 @@ curl https://temporal-agent-governance-workshop.fly.dev/api/health
 
 `runtime.enabled: false` means a missing `DAYTONA_API_KEY` or `ACCESS_CODE`. Then open the site, enter the access code, start a sandbox in exercise 1, and run the worker. Press ⌘K and ask Ask Temporal one question: it should search the docs, cite and link.
 
+## Automatic deploys
+
+After the first deploy, every merge to `main` deploys itself: [.github/workflows/deploy.yml](../.github/workflows/deploy.yml) builds the sandbox snapshot if needed, deploys to Fly, then checks `/api/health`. Changes only under `instructor/` don't deploy. To deploy by hand from GitHub: Actions → **Deploy** → **Run workflow**.
+
+It needs two repository secrets (Settings → Secrets and variables → Actions):
+
+```bash
+# A deploy token scoped to this app
+fly tokens create deploy --app temporal-agent-governance-workshop
+gh secret set FLY_API_TOKEN      # paste the token
+gh secret set DAYTONA_API_KEY    # for the snapshot build
+```
+
+The app's own secrets (`GEMINI_API_KEY`, `ACCESS_CODE`, ...) stay in Fly; CI never sees them.
+
+**A deploy restarts the runner.** Learners keep their sandboxes and stay signed in, but their terminals reconnect. Don't merge to `main` during a session. If you need to block deploys for the day, disable the workflow: `gh workflow disable deploy.yml` (and `gh workflow enable deploy.yml` after).
+
 ## Before an event
 
 **A week before**
@@ -109,7 +126,7 @@ curl https://temporal-agent-governance-workshop.fly.dev/api/health
 
 **The day before**
 
-- **Deploy the version you'll teach** (`npm run deploy`). If dependencies changed, check that the **Sandbox snapshot** workflow for that commit passed first. A deploy whose snapshot doesn't exist fails at "Creating your sandbox", with the snapshot name in the error.
+- **Make sure the version you'll teach is deployed:** the latest **Deploy** run on `main` passed (or run `npm run deploy`, after `npm run snapshot` if dependencies changed). Freeze `main` or disable the workflow until after the session. A deploy whose snapshot doesn't exist fails at "Creating your sandbox", with the snapshot name in the error.
 - **A fresh access code:**
 
   ```bash
@@ -117,11 +134,13 @@ curl https://temporal-agent-governance-workshop.fly.dev/api/health
   ```
 
   Setting a secret restarts the machine. Signed-in learners stay signed in and sandboxes survive (the runner finds them again by their Daytona labels).
+
+  Running more than one session at once (two rooms, or a morning and an afternoon cohort)? Give each its own code, comma-separated: `ACCESS_CODE=sf-morning,sf-afternoon`. Any listed code lets a learner in. Removing a code stops new sign-ins with it; learners already signed in stay signed in. Codes can't contain commas.
 - **Run the smoke test** above end to end, including one exercise check.
 
 **On the day, about 30 minutes before**
 
-- **Keep the machine warm.** By default Fly stops the machine when idle (`min_machines_running = 0`), and the first visitor waits a few seconds. For the event, set `min_machines_running = 1` in `course/fly.toml` under `[http_service]`, then `npm run deploy`. Set it back to `0` afterwards.
+- **Keep the machine warm.** By default Fly stops the machine when idle (`min_machines_running = 0`), and the first visitor waits a few seconds. For the event, set `min_machines_running = 1` in `course/fly.toml` under `[http_service]` and merge it to `main`, which deploys it (do this before you freeze `main`). Set it back to `0` afterwards. A local `npm run deploy` of an uncommitted change works too, but the next CI deploy undoes it.
 - **Check who's in** as learners arrive:
 
   ```bash
@@ -143,7 +162,7 @@ curl https://temporal-agent-governance-workshop.fly.dev/api/health
 
 **When something breaks**
 
-- **"Creating your sandbox" fails with a snapshot name:** the snapshot for this deploy doesn't exist. Run the **Sandbox snapshot** workflow (or `npm run snapshot`); no redeploy is needed.
+- **"Creating your sandbox" fails with a snapshot name:** the snapshot for this deploy doesn't exist. Run the **Sandbox snapshot** workflow (or `npm run snapshot`); no redeploy is needed. CI deploys build it first, so this only happens after a manual `npm run deploy`.
 - **Sandboxes fail to start for everyone:** the Daytona quota or `MAX_SANDBOXES` is full. Check the admin list and Daytona's dashboard.
 - **The agent stops answering (402s or 429s in the logs):** Gemini credit or quota. Learners can switch their sandbox to the scripted model from the sandbox menu in the top bar; it plays every walkthrough, including the injection.
 - **Ask Temporal says the search is busy:** the Kapa team limit (60 a minute). The answer still arrives without docs; it clears within a minute.
@@ -151,6 +170,6 @@ curl https://temporal-agent-governance-workshop.fly.dev/api/health
 
 ## After
 
-- Set `min_machines_running` back to `0` and deploy, so the machine stops when idle.
+- Set `min_machines_running` back to `0` and merge it, so the machine stops when idle. Re-enable the **Deploy** workflow if you disabled it.
 - Sandboxes stop after 30 idle minutes and are deleted 24 hours after creation. To delete them all now, filter Daytona's dashboard by label `app=governance-course`.
 - Optionally rotate `ACCESS_CODE` so the event's code stops working.

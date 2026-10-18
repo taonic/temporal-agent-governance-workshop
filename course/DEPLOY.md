@@ -8,7 +8,7 @@ One [Fly.io](https://fly.io) app, `temporal-agent-governance-workshop`, runs the
 |---|---|
 | `DAYTONA_API_KEY` | creating, starting and deleting learners' sandboxes |
 | `GEMINI_API_KEY` | the model, for the sandboxes' agents and for Ask Temporal. It stays on Fly: sandboxes get a key that only works on the runner's `/llm/v1` |
-| `ACCESS_CODE` | the event's code. Without it the browser runtime is off (reading still works). A runner listening on localhost needs none: it opens to that machine only |
+| `ACCESS_CODE` | the event's code, or several, comma-separated (`spring-sf,spring-nyc`): any one lets a learner in. Without it the browser runtime is off (reading still works). A runner listening on localhost needs none: it opens to that machine only |
 | `SESSION_SECRET` | signs session cookies and the sandboxes' model keys. Changing it signs everyone out and breaks running sandboxes' model keys until they restart |
 | `INSTRUCTOR_CODE` | `GET /api/admin/sandboxes` with header `x-instructor-code` |
 | `KAPA_API_KEY` | optional. An API key for Temporal's Kapa project: Ask Temporal searches the docs with it for everyone, and nobody has to verify with GitHub or Google. Without it, each learner connects their own (free) Kapa sign-in once |
@@ -21,7 +21,8 @@ Ask Temporal's, also in `runner/config.mjs`: `HELPER_MODEL` (defaults to `LLM_MO
 
 ```bash
 # 1. The sandbox snapshot, once per dependency change (compiles Dogwood: a few minutes).
-#    After the first, CI builds it on merges to main (.github/workflows/sandbox-snapshot.yml).
+#    After the first deploy, CI builds it and deploys on every merge to main
+#    (.github/workflows/deploy.yml; repository secrets FLY_API_TOKEN and DAYTONA_API_KEY).
 cd course && npm install && npm run snapshot
 
 # 2. The app and its secrets
@@ -43,8 +44,8 @@ Then open `https://temporal-agent-governance-workshop.fly.dev`, enter the code, 
 - **Daytona quota.** 40 sandboxes × 2 vCPU × 4 GB is 80 vCPU and 160 GB at peak. Check the org's limits (the GPU endpoint, if it's up, shares them), and lower `MAX_SANDBOXES` in `fly.toml` if needed (then deploy).
 - **Gemini spend.** Set a budget cap on the Google project that owns `GEMINI_API_KEY`, and check it has credit (an empty prepaid balance answers 402, and both the agents and Ask Temporal stop). The runner's rate limits slow a runaway loop; the cap stops it.
 - **Ask Temporal.** Open the site, press ⌘K, connect the docs (or set `KAPA_API_KEY`), and ask one question: it should search, cite and link. With a room of learners on their own Kapa sign-ins, the 60-a-minute team limit is the one to watch; a busy search says so in the answer instead of failing it.
-- **A fresh code.** `fly secrets set ACCESS_CODE=...` per event. Learners already signed in stay signed in.
-- **The snapshot is current.** `node course/snapshot/build.mjs --name` should name a snapshot that exists. The **Sandbox snapshot** workflow builds it on merges to `main` that change its inputs (it needs the repository secret `DAYTONA_API_KEY`); `npm run snapshot` says whether it exists, or builds it. A deploy whose snapshot is missing fails at "Creating your sandbox" with that name in the error.
+- **A fresh code.** `fly secrets set ACCESS_CODE=...` per event. Learners already signed in stay signed in, even when their code is no longer in the list. For overlapping cohorts, list several (`ACCESS_CODE=cohort-a,cohort-b`) and drop one when its cohort ends. Codes can't contain commas.
+- **The snapshot is current.** `node course/snapshot/build.mjs --name` should name a snapshot that exists. The **Deploy** workflow builds it before each deploy from `main` (with the repository secret `DAYTONA_API_KEY`); `npm run snapshot` says whether it exists, or builds it. A deploy whose snapshot is missing fails at "Creating your sandbox" with that name in the error.
 - **Warm it.** `min_machines_running = 0` lets Fly stop the machine when nobody's using it; the first visitor waits a few seconds for it to start. For the event, `fly scale count 1` and set `min_machines_running = 1`.
 - **Who's in.** `curl -H "x-instructor-code: $INSTRUCTOR_CODE" https://temporal-agent-governance-workshop.fly.dev/api/admin/sandboxes` lists sandboxes, their state and the exercise each learner last had open.
 

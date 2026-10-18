@@ -203,7 +203,7 @@ const selectionLabel = computed(() => {
 
           <section v-if="status.docs !== 'ready'" class="ask-card ask-connect">
             <h3>One quick step first</h3>
-            <p>The docs search is <a href="https://www.kapa.ai" target="_blank" rel="noopener">Kapa</a>'s, and it asks each person to confirm they're human once, with GitHub or Google. It's only a sign-in check: Kapa doesn't get your name or email, and it can't access your Gmail, your Google account's data or your GitHub repositories.</p>
+            <p>The docs search uses Temporal's knowledge base, managed by <a href="https://www.kapa.ai" target="_blank" rel="noopener">Kapa</a>. Kapa asks each person to confirm they're human once, with GitHub or Google. It's only a sign-in check: Kapa doesn't get your name or email, and it can't access your Gmail, your Google account's data or your GitHub repositories.</p>
             <button class="button button-primary" type="button" :disabled="helper.connecting" @click="connectDocs">
               {{ helper.connecting ? "Waiting for the sign-in window…" : "Verify with GitHub or Google" }}
             </button>

@@ -1,0 +1,76 @@
+# Deploys the course site to Fly.io on every merge to main: first makes sure the sandbox
+# snapshot this commit needs exists (sandbox-snapshot.yml), then deploys, then checks
+# /api/health. The image build runs the course tests, so a failing test stops the deploy.
+#
+# Needs the repository secrets FLY_API_TOKEN (fly tokens create deploy --app
+# temporal-agent-governance-workshop) and DAYTONA_API_KEY. The app's own secrets
+# (GEMINI_API_KEY, ACCESS_CODE, ...) stay in Fly: see instructor/DEPLOY.md.
+#
+# A deploy restarts the runner. Learners keep their sandboxes and stay signed in, but their
+# terminals reconnect, so avoid merging to main mid-session.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - instructor/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time. A merge during a deploy waits for it; only the newest waiting one runs.
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: false
+
+env:
+  FLY_APP: temporal-agent-governance-workshop
+
+jobs:
+  snapshot:
+    uses: ./.github/workflows/sandbox-snapshot.yml
+    secrets: inherit
+
+  deploy:
+    needs: snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: https://temporal-agent-governance-workshop.fly.dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # From the repo root: it's the build context (the image carries the workshop's files).
+      # One machine (--ha=false): the runner keeps terminals and rate limits in memory.
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy . --app "$FLY_APP" \
+            --config course/fly.toml --dockerfile course/Dockerfile \
+            --ignorefile course/.dockerignore --ha=false --remote-only
+
+      - name: Health check
+        run: |
+          for _ in $(seq 1 12); do
+            body=$(curl -fsS "https://$FLY_APP.fly.dev/api/health") && break
+            sleep 5
+          done
+          echo "$body"
+          echo "$body" | jq -e '.ok == true' >/dev/null
+          if ! echo "$body" | jq -e '.runtime.enabled == true' >/dev/null; then
+            echo "::warning::The browser runtime is off: check the app's DAYTONA_API_KEY and ACCESS_CODE secrets in Fly."
+          fi
+
+      - name: Summary
+        run: |
+          {
+            echo "Deployed \`${GITHUB_SHA::7}\` to https://$FLY_APP.fly.dev"
+            echo "Snapshot: \`${{ needs.snapshot.outputs.name }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

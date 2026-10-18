@@ -52,6 +52,16 @@ export function codeMatches(expected, given) {
   return crypto.timingSafeEqual(h(expected), h(given));
 }
 
+// "a, b,,c" → ["a", "b", "c"]: ACCESS_CODE holds one code or several.
+export function parseCodes(value) {
+  return String(value ?? "").split(",").map((code) => code.trim()).filter(Boolean);
+}
+
+// Whether `given` is any of `codes`. Compares against every code, not stopping at a match.
+export function codeMatchesAny(codes, given) {
+  return codes.reduce((matched, code) => codeMatches(code, given) || matched, false);
+}
+
 export function parseCookies(header) {
   const out = {};
   for (const part of String(header ?? "").split(";")) {

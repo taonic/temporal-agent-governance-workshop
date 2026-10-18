@@ -3,9 +3,11 @@ import { test } from "node:test";
 
 import {
   codeMatches,
+  codeMatchesAny,
   learnerFromRequest,
   llmKey,
   newLearnerId,
+  parseCodes,
   parseCookies,
   sessionCookie,
   sessionToken,
@@ -49,6 +51,17 @@ test("the access code compares exactly (after trimming)", () => {
   assert.equal(codeMatches("governed", "Governed"), false);
   assert.equal(codeMatches("governed", undefined), false);
   assert.equal(codeMatches("", ""), false);
+});
+
+test("any one of several access codes lets you in", () => {
+  assert.deepEqual(parseCodes(" governed, durable ,,"), ["governed", "durable"]);
+  assert.deepEqual(parseCodes(undefined), []);
+  const codes = parseCodes("governed,durable");
+  assert.equal(codeMatchesAny(codes, "governed"), true);
+  assert.equal(codeMatchesAny(codes, " durable "), true);
+  assert.equal(codeMatchesAny(codes, "governed,durable"), false);
+  assert.equal(codeMatchesAny(codes, ""), false);
+  assert.equal(codeMatchesAny([], ""), false);
 });
 
 test("the session cookie is HttpOnly, Lax, host-only, and Secure over https", () => {

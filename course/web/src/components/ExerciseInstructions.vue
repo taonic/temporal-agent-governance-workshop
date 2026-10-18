@@ -220,16 +220,36 @@ watch(
 
 // --- The workspace tab a step needs ---------------------------------------------------------
 
-// A step with an Insert button wants the editor; then the first console or Temporal UI it
-// links to; then the console, if it talks about it; then the editor, if it names one of the
-// exercise's files. Otherwise the tab stays as it is (the step carries on where the last one
-// was). Steps only: the intro and background sections mention the UI in passing. It moves the
-// tab when you arrive at a step, never while you're on one.
+// A step with an Insert button wants the editor; then whatever its first action shows: Code
+// for one that runs in a terminal (the worker toggle, a trip, a ▶), so the terminals are in
+// sight before you click, or the Agent UI or Temporal UI it links to or acts in; then the
+// console, if it talks about it; then the editor, if it names one of the exercise's files.
+// Otherwise the tab stays as it is (the step carries on where the last one was). Steps only:
+// the intro and background sections mention the UI in passing. It moves the tab when you arrive
+// at a step, never while you're on one (each button then shows its own tab when clicked).
+
+// The step's first button that does something in the workspace, and the tab it shows.
+const ACTION_VIEWS = [
+  [/^data-(?:worker-toggle|trip|run)\b/, "code"], // the terminals, under Code
+  [/^data-pane="(console|temporal)"/, null],
+  [/^data-(?:send|new-session)\b/, "console"],
+  [/^data-(?:session-tab|workflow-open)\b/, "temporal"],
+];
+const ACTION = /data-(?:worker-toggle|trip|run|send|new-session|session-tab|workflow-open)\b|data-pane="(?:console|temporal)"/;
+function firstAction(html) {
+  const found = html.match(ACTION)?.[0];
+  if (!found) return null;
+  for (const [pattern, view] of ACTION_VIEWS) {
+    const match = found.match(pattern);
+    if (match) return view ?? match[1];
+  }
+  return null;
+}
 function viewFor(b) {
   if (b.kind !== "step") return null;
   if (b.html.includes("data-insert=")) return "code";
-  const linked = b.html.match(/data-pane="(console|temporal)"/)?.[1];
-  if (linked) return linked;
+  const acted = firstAction(b.html);
+  if (acted) return acted;
   if (/\b(?:the|in the|its) console\b/i.test(b.html.replace(/<[^>]+>/g, " "))) return "console";
   if (b.html.includes('class="file-ref"')) return "code";
   return null;
@@ -500,8 +520,6 @@ function onClick(event) {
     navigate(target.getAttribute("href"));
   } else if (target.matches("button[data-run]")) {
     if (!props.live) return toast("Start your sandbox to run this.");
-    // The terminals are under Code: bring them back to watch it run.
-    store.workspaceView = "code";
     const commands = JSON.parse(target.dataset.run);
     if (target.dataset.workerState === "running") stopWorker();
     else if (target.dataset.workerState) runWorkerCommand(commands[0]);

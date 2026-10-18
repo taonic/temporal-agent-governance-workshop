@@ -165,13 +165,13 @@ function caughtUp(numbers, worker) {
   const names = numbers.length > 1 ? `Exercises ${numbers.slice(0, -1).join(", ")} and ${numbers.at(-1)}` : `Exercise ${numbers[0]}`;
   const restart = worker?.running && !store.worker.pending;
   toast(`${names} ${numbers.length > 1 ? "are" : "is"} solved in your sandbox, so this one doesn't depend on ${numbers.length > 1 ? "them" : "it"}${restart ? ": restarting the worker" : ""}`, 5200);
-  if (restart) runInTerminal("worker", [worker.name === "hello-worker" ? "uv run hello-worker" : "uv run travel-worker"], { interrupt: true });
+  if (restart) runInTerminal("worker", [worker.name === "hello-worker" ? "uv run hello-worker" : "uv run travel-worker"], { interrupt: true, reveal: false });
 }
 
 function restartStaleWorker() {
   if (store.worker.pending) return;
   toast("Your sandbox's model address changed: restarting the worker", 4200);
-  runInTerminal("worker", ["uv run travel-worker"]);
+  runInTerminal("worker", ["uv run travel-worker"], { reveal: false });
 }
 
 async function poll() {

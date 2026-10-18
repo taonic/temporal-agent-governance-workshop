@@ -16,7 +16,7 @@ primary_region = "sjc"
   HOST = "0.0.0.0"
   PORT = "8080"
   PUBLIC_URL = "https://temporal-agent-governance-workshop.fly.dev"
-  MAX_SANDBOXES = "40"
+  MAX_SANDBOXES = "100"
   LLM_MODEL = "gemini-3.8-flash"
 
 [http_service]

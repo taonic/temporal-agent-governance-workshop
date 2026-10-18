@@ -87,7 +87,7 @@ function signedIn() {
 
       <div v-if="message.error" class="ask-error" :class="`code-${message.error.code}`">
         <template v-if="message.error.code === 'verify'">
-          <p><strong>Connect the Temporal docs to get an answer.</strong> Kapa, which runs the docs search, asks each person to confirm they're human once, with GitHub or Google. Your question will be asked as soon as you're back.</p>
+          <p><strong>Connect the Temporal docs to get an answer.</strong> Kapa, which manages Temporal's knowledge base, asks each person to confirm they're human once, with GitHub or Google. Your question will be asked as soon as you're back.</p>
           <button class="button button-primary" type="button" :disabled="helper.connecting" @click="connectDocs">
             {{ helper.connecting ? "Waiting for the sign-in window…" : "Verify with GitHub or Google" }}
           </button>

@@ -1,34 +1,30 @@
-# Builds the learner sandbox snapshot on Daytona when its inputs change on main, so a course
-# deploy never asks for a snapshot that doesn't exist. The snapshot's name is a hash of
-# SNAPSHOT_INPUTS in course/runner/repo-files.mjs; keep the paths below in step with it.
-# build.mjs does nothing when a snapshot of that name already exists.
+# Builds the learner sandbox snapshot on Daytona, so a course deploy never asks for a snapshot
+# that doesn't exist. The snapshot's name is a hash of SNAPSHOT_INPUTS in
+# course/runner/repo-files.mjs, and build.mjs does nothing when a snapshot of that name already
+# exists, so running it on every deploy costs a few seconds unless the dependencies changed.
 #
+# Runs as the first job of deploy.yml (every merge to main), or by hand from the Actions tab.
 # Needs the repository secret DAYTONA_API_KEY.
 
 name: Sandbox snapshot
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - pyproject.toml
-      - uv.lock
-      - scripts/setup_dogwood.sh
-      - course/snapshot/**
-      - course/runner/repo-files.mjs
-      - .github/workflows/sandbox-snapshot.yml
+  workflow_call:
+    inputs:
+      force:
+        description: Rebuild even if a snapshot with this name exists
+        type: boolean
+        default: false
+    outputs:
+      name:
+        description: The snapshot's name
+        value: ${{ jobs.build.outputs.name }}
   workflow_dispatch:
     inputs:
       force:
         description: Rebuild even if a snapshot with this name exists
         type: boolean
         default: false
-
-# One build per snapshot name at a time; a second push with the same inputs waits, then finds
-# the snapshot already built.
-concurrency:
-  group: sandbox-snapshot-${{ github.ref }}
-  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -37,6 +33,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # One build at a time; a second run with the same inputs waits, then finds the snapshot built.
+    concurrency:
+      group: sandbox-snapshot
+      cancel-in-progress: false
+    outputs:
+      name: ${{ steps.name.outputs.name }}
     defaults:
       run:
         working-directory: course
