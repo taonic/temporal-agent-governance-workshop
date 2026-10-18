@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "db8fe9d4-91b3-4d0a-9a84-048ab3ab56bc",
+  "deliveryReceiptId": "004e7ab1-16f0-4411-93db-7b260169f60c",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
-    "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
-    "bytes": 763033
+    "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
+    "bytes": 762907
   },
   "state": {
     "detail": "read",

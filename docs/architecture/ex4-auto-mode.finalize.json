@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-10-17T12:21:13.956Z",
+  "startedAt": "2026-10-18T09:51:40.095Z",
   "specification": {
-    "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/.archify/architecture-ex4-auto-mode-20261017-232057/candidate.json",
-    "sha256": "c3663abf37006ebd3382892d333b662eb767bf97d1e064f45e16de72e213e2ed",
-    "bytes": 3987
+    "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
+    "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
+    "bytes": 4837
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
-    "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
-    "bytes": 763033
+    "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
+    "bytes": 762907
   },
   "stages": {
     "validate": {
@@ -27,7 +27,7 @@
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
         "architecture",
-        "/Users/tao/code/taonic/temporal-agent-governance-workshop/.archify/architecture-ex4-auto-mode-20261017-232057/candidate.json",
+        "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "--quality",
         "showcase",
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "c3663abf37006ebd3382892d333b662eb767bf97d1e064f45e16de72e213e2ed",
-          "bytes": 3987
+          "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
+          "bytes": 4837
         },
         "validation": {
           "checksPassed": 9,
@@ -54,13 +54,13 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 287,
+      "durationMs": 256,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
         "architecture",
-        "/Users/tao/code/taonic/temporal-agent-governance-workshop/.archify/architecture-ex4-auto-mode-20261017-232057/candidate.json",
+        "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "--quality",
         "showcase",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "db8fe9d4-91b3-4d0a-9a84-048ab3ab56bc",
+        "receiptId": "004e7ab1-16f0-4411-93db-7b260169f60c",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
-        "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/.archify/architecture-ex4-auto-mode-20261017-232057/candidate.json",
+        "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
         "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "specification": {
-          "sha256": "c3663abf37006ebd3382892d333b662eb767bf97d1e064f45e16de72e213e2ed",
-          "bytes": 3987
+          "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
+          "bytes": 4837
         },
         "artifact": {
-          "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
-          "bytes": 763033
+          "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
+          "bytes": 762907
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 222,
+      "durationMs": 123,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
         "artifact": {
-          "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
-          "bytes": 763033
+          "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
+          "bytes": 762907
         },
         "checks": [
           {
@@ -247,13 +247,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "db8fe9d4-91b3-4d0a-9a84-048ab3ab56bc"
+        "deliveryReceiptId": "004e7ab1-16f0-4411-93db-7b260169f60c"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 955,
+      "durationMs": 891,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -271,11 +271,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "db8fe9d4-91b3-4d0a-9a84-048ab3ab56bc",
+        "deliveryReceiptId": "004e7ab1-16f0-4411-93db-7b260169f60c",
         "artifact": {
           "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
-          "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
-          "bytes": 763033
+          "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
+          "bytes": 762907
         },
         "state": {
           "detail": "read",
@@ -993,8 +993,8 @@
     "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-17T12:21:15.600Z",
-  "durationMs": 1643,
+  "finishedAt": "2026-10-18T09:51:41.522Z",
+  "durationMs": 1427,
   "update": {
     "status": "update_available",
     "installedVersion": "3.0.1",

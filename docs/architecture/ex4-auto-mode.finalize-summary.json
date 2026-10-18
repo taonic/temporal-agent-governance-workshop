@@ -6,14 +6,14 @@
   "type": "architecture",
   "quality": "showcase",
   "specification": {
-    "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/.archify/architecture-ex4-auto-mode-20261017-232057/candidate.json",
-    "sha256": "c3663abf37006ebd3382892d333b662eb767bf97d1e064f45e16de72e213e2ed",
-    "bytes": 3987
+    "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.candidate.json",
+    "sha256": "e2c356e464db4f508184d0056137f9141790257b5b9a1912bf80dc7c16a709be",
+    "bytes": 4837
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex4-auto-mode.html",
-    "sha256": "ace9cf9ed0817b7926e7aa257b99c2d6479e7a38190bcd94e9f1dbc67d8f014b",
-    "bytes": 763033
+    "sha256": "0b0ce7ea72226644d38339d56d7b72f7b7aff7cf7329fba91ae0f3069de5922d",
+    "bytes": 762907
   },
   "gates": {
     "validate": "pass",
@@ -45,5 +45,5 @@
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   },
   "visualReview": "not-requested",
-  "durationMs": 1643
+  "durationMs": 1427
 }

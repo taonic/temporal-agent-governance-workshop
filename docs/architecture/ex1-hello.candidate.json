@@ -2,15 +2,23 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Exercise 1: the history is the state, the worker is replaceable",
+    "title": "History is the state",
     "output": "docs/architecture/ex1-hello.html",
     "quality_profile": "showcase",
     "legend": {
       "entries": {
-        "frontend": { "label": "You" },
-        "messagebus": { "label": "Temporal" },
-        "database": { "label": "Workflow code" },
-        "backend": { "label": "Activity" }
+        "frontend": {
+          "label": "You"
+        },
+        "messagebus": {
+          "label": "Temporal"
+        },
+        "database": {
+          "label": "Workflow code"
+        },
+        "backend": {
+          "label": "Activity"
+        }
       }
     }
   },
@@ -20,8 +28,14 @@
       "type": "frontend",
       "label": "Starter",
       "sublabel": "hello-start · hello-board",
-      "pos": [40, 100],
-      "size": [180, 60]
+      "pos": [
+        40,
+        100
+      ],
+      "size": [
+        180,
+        60
+      ]
     },
     {
       "id": "server",
@@ -29,16 +43,28 @@
       "label": "Temporal server",
       "sublabel": "keeps every workflow's history",
       "icon": "database",
-      "pos": [360, 100],
-      "size": [200, 60]
+      "pos": [
+        360,
+        100
+      ],
+      "size": [
+        200,
+        60
+      ]
     },
     {
       "id": "ui",
       "type": "frontend",
       "label": "Temporal UI",
       "sublabel": "Event History · Queries tab",
-      "pos": [360, 300],
-      "size": [200, 60]
+      "pos": [
+        360,
+        300
+      ],
+      "size": [
+        200,
+        60
+      ]
     },
     {
       "id": "trip",
@@ -47,8 +73,14 @@
       "sublabel": "looks up two airports",
       "tag": "workflow",
       "icon": "backend",
-      "pos": [710, 100],
-      "size": [210, 60]
+      "pos": [
+        710,
+        100
+      ],
+      "size": [
+        210,
+        60
+      ]
     },
     {
       "id": "lookup",
@@ -56,8 +88,14 @@
       "label": "lookup_airport",
       "sublabel": "FLAKY=1: attempts 1-4 fail",
       "tag": "activity",
-      "pos": [1070, 100],
-      "size": [200, 60]
+      "pos": [
+        1070,
+        100
+      ],
+      "size": [
+        200,
+        60
+      ]
     },
     {
       "id": "board",
@@ -66,15 +104,25 @@
       "sublabel": "on_board += 1 every 2s",
       "tag": "workflow",
       "icon": "clock",
-      "pos": [710, 300],
-      "size": [210, 60]
+      "pos": [
+        710,
+        300
+      ],
+      "size": [
+        210,
+        60
+      ]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
       "label": "hello-worker",
-      "wraps": ["trip", "lookup", "board"]
+      "wraps": [
+        "trip",
+        "lookup",
+        "board"
+      ]
     }
   ],
   "connections": [

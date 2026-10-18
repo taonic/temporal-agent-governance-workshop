@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "architecture",
   "quality": "showcase",
-  "startedAt": "2026-10-18T00:12:05.591Z",
+  "startedAt": "2026-10-18T09:51:04.688Z",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.candidate.json",
-    "sha256": "6192932da8353ae9cf077bb180280a6cdb20b7337a77e0eb4df2a3edc83b243b",
-    "bytes": 3090
+    "sha256": "cc3e46abb1834cd5cda757b5d70d3f5b37e47eaf77b8351659da20974867c6aa",
+    "bytes": 3439
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
-    "sha256": "e84e0269f2f99c8564f54550a7607d106700abfad7ceeac1fe0dfcc30e96b2cc",
-    "bytes": 754566
+    "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
+    "bytes": 754437
   },
   "stages": {
     "validate": {
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "6192932da8353ae9cf077bb180280a6cdb20b7337a77e0eb4df2a3edc83b243b",
-          "bytes": 3090
+          "sha256": "cc3e46abb1834cd5cda757b5d70d3f5b37e47eaf77b8351659da20974867c6aa",
+          "bytes": 3439
         },
         "validation": {
           "checksPassed": 9,
@@ -54,7 +54,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 277,
+      "durationMs": 262,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "19ac604d-cd29-4f48-8c42-adda2840aaf4",
+        "receiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856",
         "ok": true,
         "command": "deliver",
         "type": "architecture",
         "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.candidate.json",
         "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
         "specification": {
-          "sha256": "6192932da8353ae9cf077bb180280a6cdb20b7337a77e0eb4df2a3edc83b243b",
-          "bytes": 3090
+          "sha256": "cc3e46abb1834cd5cda757b5d70d3f5b37e47eaf77b8351659da20974867c6aa",
+          "bytes": 3439
         },
         "artifact": {
-          "sha256": "e84e0269f2f99c8564f54550a7607d106700abfad7ceeac1fe0dfcc30e96b2cc",
-          "bytes": 754566
+          "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
+          "bytes": 754437
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 130,
+      "durationMs": 155,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
         "artifact": {
-          "sha256": "e84e0269f2f99c8564f54550a7607d106700abfad7ceeac1fe0dfcc30e96b2cc",
-          "bytes": 754566
+          "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
+          "bytes": 754437
         },
         "checks": [
           {
@@ -247,13 +247,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "19ac604d-cd29-4f48-8c42-adda2840aaf4"
+        "deliveryReceiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 827,
+      "durationMs": 791,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -271,11 +271,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "19ac604d-cd29-4f48-8c42-adda2840aaf4",
+        "deliveryReceiptId": "ebee27a7-5bde-40dd-8386-9f4801ae8856",
         "artifact": {
           "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
-          "sha256": "e84e0269f2f99c8564f54550a7607d106700abfad7ceeac1fe0dfcc30e96b2cc",
-          "bytes": 754566
+          "sha256": "5ac04984f938af5fc944dabe0011acb4ed14de7d31357c15016d894f2cb396ef",
+          "bytes": 754437
         },
         "state": {
           "detail": "read",
@@ -993,8 +993,8 @@
     "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-18T00:12:07.019Z",
-  "durationMs": 1427,
+  "finishedAt": "2026-10-18T09:51:06.051Z",
+  "durationMs": 1362,
   "update": {
     "status": "update_available",
     "installedVersion": "3.0.1",
