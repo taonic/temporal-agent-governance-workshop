@@ -1959,6 +1959,20 @@ body.is-resizing iframe {
   animation: cm-inserted 2.6s ease-out;
 }
 
+/* The lines a snippet is about to replace: marked for a moment before it goes in. */
+.cm-editor .cm-outgoing {
+  animation: cm-outgoing 0.35s ease-out forwards;
+}
+
+@keyframes cm-outgoing {
+  from {
+    box-shadow: inset 4px 0 0 transparent, inset 0 0 0 999px rgba(251, 191, 36, 0);
+  }
+  to {
+    box-shadow: inset 4px 0 0 #fbbf24, inset 0 0 0 999px rgba(251, 191, 36, 0.24);
+  }
+}
+
 @keyframes cm-inserted {
   0%, 35% {
     box-shadow: inset 4px 0 0 #a5b4fc, inset 0 0 0 999px rgba(129, 140, 248, 0.42);

@@ -81,7 +81,8 @@ const lsp = createLsp({
 const languageServer = (path) =>
   props.live && view.value === "mine" && path.endsWith(".py") && !extra.value.some((f) => f.path === path) ? lsp.plugin(path) : [];
 
-// The lines a snippet just went into, highlighted for a moment so you can see where.
+// The lines a snippet just went into, highlighted for a moment so you can see where; and, just
+// before, the lines it's about to replace (`cls: "cm-outgoing"`).
 const flash = StateEffect.define();
 const flashField = StateField.define({
   create: () => Decoration.none,
@@ -93,7 +94,7 @@ const flashField = StateField.define({
       const marks = [];
       const doc = tr.state.doc;
       for (let n = doc.lineAt(effect.value.from).number; n <= doc.lineAt(effect.value.to).number; n++) {
-        marks.push(Decoration.line({ class: "cm-inserted" }).range(doc.line(n).from));
+        marks.push(Decoration.line({ class: effect.value.cls ?? "cm-inserted" }).range(doc.line(n).from));
       }
       next = Decoration.set(marks);
     }
@@ -366,8 +367,8 @@ function lineRange(from, to) {
   return [doc.lineAt(from).number, doc.lineAt(Math.max(from, to - 1)).number];
 }
 
-function highlight(from, to) {
-  editor.dispatch({ effects: [flash.of({ from, to }), EditorView.scrollIntoView(from, { y: "center" })] });
+function highlight(from, to, { scroll = true } = {}) {
+  editor.dispatch({ effects: [flash.of({ from, to }), ...(scroll ? [EditorView.scrollIntoView(from, { y: "center" })] : [])] });
   flashing.value = false;
   requestAnimationFrame(() => (flashing.value = true));
   setTimeout(() => {
@@ -376,9 +377,51 @@ function highlight(from, to) {
   }, 2600);
 }
 
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Where the scroller should be to show `from`..`to`: the block in the middle, or its first lines
+// near the top when it's taller than the view. Lines off screen have estimated heights until
+// CodeMirror draws them, so this is asked again on every frame of a scroll.
+function scrollTargetFor(from, to) {
+  const scroller = editor.scrollDOM;
+  const top = editor.lineBlockAt(from).top;
+  const bottom = editor.lineBlockAt(to).bottom;
+  const view = scroller.clientHeight;
+  const want = bottom - top < view * 0.8 ? top - (view - (bottom - top)) / 2 : top - view * 0.2;
+  return Math.max(0, Math.min(scroller.scrollHeight - view, want));
+}
+
+// Scrolls the editor to show `from`..`to`, eased, over a time that grows with the distance
+// (about 0.3 s for a short hop, at most 0.9 s from the top of a long file).
+function scrollToSlowly(from, to = from) {
+  const scroller = editor.scrollDOM;
+  const start = scroller.scrollTop;
+  const first = scrollTargetFor(from, to);
+  if (Math.abs(first - start) < 4) return Promise.resolve();
+  if (reducedMotion()) {
+    scroller.scrollTop = first;
+    return Promise.resolve();
+  }
+  const duration = Math.min(900, 300 + Math.abs(first - start) * 0.5);
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  return new Promise((resolve) => {
+    const began = performance.now();
+    const step = (now) => {
+      if (!editor) return resolve();
+      const t = Math.min(1, (now - began) / duration);
+      scroller.scrollTop = start + (scrollTargetFor(from, to) - start) * ease(t);
+      if (t < 1) requestAnimationFrame(step);
+      else resolve();
+    };
+    requestAnimationFrame(step);
+  });
+}
+
 // Puts a snippet into a file: in place of the exercise's TODO block when it's the solution
 // to it, at the end of a policy when it's another rule, or at the cursor. Returns a message.
-async function insertSnippet(path, code, mode) {
+// It takes its time, so you see where it goes and what it replaces: the editor scrolls there,
+// marks the lines about to go, waits a moment, then puts the snippet in.
+async function insertSnippet(path, code, mode, { retried = false } = {}) {
   const file = files.value.find((f) => f.path === path);
   if (!file?.editable) return "That file isn't editable here.";
   if (!props.live) return "Start your sandbox first: the editor saves to it.";
@@ -399,7 +442,8 @@ async function insertSnippet(path, code, mode) {
     const at = text.indexOf(first);
     if (at >= 0) {
       const end = text.indexOf("\n", at + 1);
-      highlight(at, end < 0 ? text.length : end);
+      await scrollToSlowly(at, end < 0 ? text.length : end);
+      highlight(at, end < 0 ? text.length : end, { scroll: false });
     }
     return `That's already in ${name}.`;
   }
@@ -442,11 +486,25 @@ async function insertSnippet(path, code, mode) {
     where = "at the cursor";
   }
 
+  await scrollToSlowly(from, to);
+  if (to > from) {
+    editor.dispatch({ effects: flash.of({ from, to: Math.max(from, to - 1), cls: "cm-outgoing" }) });
+    await pause(1100);
+  } else {
+    await pause(350);
+  }
+  // Changed meanwhile (typing, or the sandbox's copy reloading): start over on what's there now.
+  if (!editor || editor.state.doc.toString() !== text) {
+    editor?.dispatch({ effects: flash.of(null) });
+    return retried ? "The file changed while it was going in: try again." : insertSnippet(path, code, mode, { retried: true });
+  }
+
   const lead = insert.match(/^\n*/)[0].length;
   editor.dispatch({ changes: { from, to, insert }, selection: { anchor: from + insert.length } });
   const start = from + lead;
   const end = from + insert.replace(/\n+$/, "").length;
-  highlight(start, end);
+  highlight(start, end, { scroll: false });
+  await scrollToSlowly(start, end); // the new lines, without a jump
   const [a, b] = lineRange(start, end);
   return `Inserted into ${name} ${where}: line${a === b ? ` ${a}` : `s ${a}–${b}`}.`;
 }
