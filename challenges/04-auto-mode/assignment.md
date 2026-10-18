@@ -28,9 +28,8 @@ First, read the policy the agent runs under.
 
 ## 1. Read the policy
 
-Open `policies/travel.dw`. Rule by rule:
+Open `policies/travel.dw`. The agent's script runs unattended; each travel call it makes comes here on its own, with its real arguments. Rule by rule:
 
-- `scripts` and the `no-*` rules: a script runs unattended unless it books in a loop, books more than once, or uses `eval`. The policy can't read the script, so the harness sends it facts about it: which functions it calls, how often, whether in a loop.
 - `lookups`: searches run unattended.
 - `return-flights-on-the-trip-form`: a flight booking runs unattended when a trip form this session named its passenger and its **return** date.
 - `flights-only-as-on-the-trip-form`: a flight for anyone or any day no trip form named is refused.

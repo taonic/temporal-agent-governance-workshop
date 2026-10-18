@@ -99,7 +99,9 @@ def approval_policy(posture: Posture) -> ToolApprovalPolicy:
             # asks about everything.
             return ToolApprovalPolicy.always_require_human_approval()
         case "auto_mode":
-            return ToolApprovalPolicy.auto_mode(pre_approved_tools=PRE_APPROVED_TOOLS)
+            # The script itself runs unattended: each travel call it makes goes to the Dogwood
+            # policy on its own, with its real arguments.
+            return ToolApprovalPolicy.auto_mode(pre_approved_tools=[*PRE_APPROVED_TOOLS, CODE_MODE_TOOL_NAME])
 
 
 # Auto mode only consults the evaluator for tools some criteria set covers. With Dogwood

@@ -253,18 +253,6 @@ export const EXERCISES = {
       },
       {
         file: "policies/travel.dw",
-        from: '@id("scripts")',
-        title: "The script itself",
-        body: "The agent's script runs unattended unless a `forbid` matches. Each travel call inside it is judged on its own, by the rules further down.",
-      },
-      {
-        file: "policies/travel.dw",
-        from: "// Never book in a loop, concurrently, or more than once per script.",
-        title: "Judging code before it runs",
-        body: "Dogwood reads the script first: a booking in a loop, run concurrently, or called from more than one place is refused before anything runs.",
-      },
-      {
-        file: "policies/travel.dw",
         from: '@id("lookups")',
         title: "Lookups are free",
         body: "Searching and summarizing can't change anything, so they run unattended.",

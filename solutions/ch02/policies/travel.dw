@@ -4,43 +4,15 @@
 // call to you instead; any other `forbid`, or a call no `permit` covers, is refused, and the
 // model is told which policy refused it.
 //
-// Actions are "travel-agent/<tool>". The session's history is there to look back on: each
+// Actions are "travel-agent/<tool>": each travel call the agent's script makes, judged on its
+// own (the script itself runs unattended). The session's history is there to look back on: each
 // tool's result as "travel-agent/<tool>/result" (among them the trip form you filled in,
 // "travel-agent/ask_trip_details/result") and each chat message as "update/ask", all
 // `received` events of this session only. schema.cedarschema declares every action's input.
 //
 // After editing, save: the verifier loads the policy within a few seconds, once it validates.
 
-// ---------------------------------------------------------------- the script tool
-
-// A script runs unattended unless a `forbid` below matches. Each host call it makes is still
-// judged on its own.
-@id("scripts")
-permit (principal, action == Temporal::Action::"travel-agent/run_travel_code", resource);
-
-// eval, exec and compile run code the analysis can't read, so a script is refused unless the
-// analysis found none.
-@id("no-dynamic-code")
-forbid (principal, action == Temporal::Action::"travel-agent/run_travel_code", resource)
-unless {
-  context.input has arg0.dynamic_code && !context.input.arg0.dynamic_code
-};
-
-// Never book in a loop, concurrently, or more than once per script.
-@id("no-bulk-booking")
-forbid (principal, action == Temporal::Action::"travel-agent/run_travel_code", resource)
-when {
-  (context.input has arg0.uses.book_flight &&
-   (context.input.arg0.uses.book_flight.in_loop ||
-    context.input.arg0.uses.book_flight.concurrent ||
-    context.input.arg0.uses.book_flight.call_sites > 1)) ||
-  (context.input has arg0.uses.book_hotel &&
-   (context.input.arg0.uses.book_hotel.in_loop ||
-    context.input.arg0.uses.book_hotel.concurrent ||
-    context.input.arg0.uses.book_hotel.call_sites > 1))
-};
-
-// ---------------------------------------------------------------- each host call
+// ---------------------------------------------------------------- lookups
 
 // Searching and summarizing run unattended.
 @id("lookups")

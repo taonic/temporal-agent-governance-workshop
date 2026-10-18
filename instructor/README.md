@@ -102,7 +102,7 @@ While you float, the point to land with each table: **a script can't do anything
 - **Dogwood is Cedar plus temporal conditions** over a history of events. Put the `flights-on-the-trip-form` rule on screen and read it aloud: permit `book_flight` when, earlier in *this session*, a trip form result was received with this passenger and this date.
 - **Architecture.** The verifier is a separate service, reached over a Temporal Nexus endpoint. Before each gated call the agent records what the session received (messages, the form, tool results) and asks for a decision. The agent can't edit the policy or the history; the model never sees either.
 - **Three outcomes:** permit (runs unattended), forbid or no permit (refused, and the model is told which rule), forbid with `@decision("escalate")` (comes to a person).
-- **What the policy sees for a script:** not the code. The harness analyzes it and sends facts: which functions it calls, how often, whether in a loop. "Never book in a loop" is a policy rule, not a prompt.
+- **What the policy sees:** not the script, which runs unattended, but each travel call the script makes, one at a time, with its real arguments. A booking is judged as a booking, however the code got there.
 - **Fail closed:** if the verifier is down, calls come to a person, never "allow".
 
 > "The model decides what to try. The policy decides what is allowed."
