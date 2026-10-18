@@ -139,13 +139,18 @@ function disconnect(name) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Commands typed in order. A worker command first interrupts whatever runs there.
+// Commands typed in order. A worker command first interrupts whatever runs there. The terminal
+// goes to its bottom first: the command and what it prints are what you're there to see, and
+// xterm keeps following the output from there (typed through the socket, not its keyboard, the
+// command wouldn't scroll it by itself).
 async function type(name, commands, { interrupt }) {
   active.value = name;
+  terms[name]?.term.scrollToBottom();
   if (interrupt) {
     send(name, "\x03");
     await sleep(900);
   }
+  terms[name]?.term.scrollToBottom();
   for (const command of commands) send(name, `${command}\r`);
   terms[name]?.term.focus();
 }
