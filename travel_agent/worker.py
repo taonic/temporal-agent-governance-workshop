@@ -9,9 +9,11 @@ were when a worker comes back.
 
 import asyncio
 import logging
+from typing import Any
 
 from temporalio.client import Client
 from temporalio.worker import Worker
+from temporalio.worker._workflow_instance import _WorkflowInstanceImpl
 from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
 
 from temporal_agent_harness.plugin import AgentHarnessPlugin
@@ -39,6 +41,21 @@ async def connect(s: Settings = settings) -> Client:
 # workshop's own modules through costs the sandbox's checks on them: keep workflow code
 # deterministic by hand.
 # (annotated_types: pydantic's, which the SDK passes through, imports it later.)
+_resolve_nexus_start = _WorkflowInstanceImpl._apply_resolve_nexus_operation_start
+
+
+def _apply_resolve_nexus_operation_start(self: _WorkflowInstanceImpl, job: Any) -> None:
+    # The harness cancels a policy check a person beat to the decision, with ABANDON: the SDK
+    # resolves it there and then, and forgets it. The verifier's "started" can still come after
+    # (slow when the verifier is restarting), and temporalio 1.34 fails the workflow task on it,
+    # on every replay too, so the session is stuck. There's nothing left to resolve: skip it, as
+    # the SDK already does for a late completion.
+    if job.seq in self._pending_nexus_operations:
+        _resolve_nexus_start(self, job)
+
+
+_WorkflowInstanceImpl._apply_resolve_nexus_operation_start = _apply_resolve_nexus_operation_start  # type: ignore[method-assign]
+
 RUNNER = SandboxedWorkflowRunner(
     restrictions=SandboxRestrictions.default.with_passthrough_modules("travel_agent", "annotated_types")
 )
