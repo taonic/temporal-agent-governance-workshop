@@ -27,6 +27,12 @@ import {
 
 const ROOT = "file:///workshop";
 
+// When the handshake times out, the client's queued notifications (didOpen…) each reject with
+// it, unhandled: they wait on it with no handler of their own. createLsp reconnects for it.
+window.addEventListener("unhandledrejection", (event) => {
+  if (event.reason?.message === "Request timed out") event.preventDefault();
+});
+
 export const fileUri = (path) => `${ROOT}/${path}`;
 const pathOf = (uri) => (uri.startsWith(`${ROOT}/`) ? decodeURIComponent(uri.slice(ROOT.length + 1)) : null);
 // How a definition's file is shown: a library by its import path, a workshop file by its own.
@@ -267,6 +273,11 @@ export function createLsp({ openPath, notOpen, ask, canAsk = () => true }) {
         send: (message) => ws.send(message),
         subscribe: (handler) => handlers.add(handler),
         unsubscribe: (handler) => handlers.delete(handler),
+      });
+      // A handshake that times out (a sandbox busy running a check, say) leaves the client
+      // refusing everything until it disconnects: start over, as for a dropped connection.
+      client.initializing.catch(() => {
+        if (socket === ws) ws.close();
       });
     };
     ws.onclose = () => {

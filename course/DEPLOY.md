@@ -61,7 +61,7 @@ gh workflow run e2e.yml -f tier=all -f email=always
 
 - **Who can get it.** Resend's test sender, `onboarding@resend.dev`, only delivers to the address the Resend account signed up with. To send to others (comma-separated in `E2E_MAIL_TO`), verify a domain in Resend and set `E2E_MAIL_FROM` to an address on it.
 - **Without a key** the runs still happen and say there's no email; without `E2E_ACCESS_CODE`, only the tiers that need no code run.
-- **What a run tests** after a deploy: every tier, a real sandbox included, when the exercises, the sandbox's files or the runner changed; the quick tiers otherwise (`deploy.yml`, job `e2e-scope`). A failure turns the Deploy run red but doesn't roll back.
+- **What a run tests** after a deploy: every tier, a real sandbox included, when the exercises, the sandbox's files, the runner or the site changed; the quick tiers otherwise (`deploy.yml`, job `e2e-scope`). A failure turns the Deploy run red but doesn't roll back.
 - **To run them by hand**: `gh workflow run e2e.yml -f tier=public` (or `auth`, `all`), or locally: `cd course/e2e && npm ci && npx playwright install chromium && E2E_ACCESS_CODE=... npm test`.
 
 ## Before an event

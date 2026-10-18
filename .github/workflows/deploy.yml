@@ -6,9 +6,9 @@
 # temporal-agent-governance-workshop) and DAYTONA_API_KEY. The app's own secrets
 # (GEMINI_API_KEY, ACCESS_CODE, ...) stay in Fly: see instructor/DEPLOY.md.
 #
-# After the deploy, E2E (e2e.yml) tests what was just deployed: every tier when the exercises
-# or the sandboxes changed (it starts a real sandbox and checks each exercise's solution in it),
-# the quick ones otherwise. A failure emails like the daily run does.
+# After the deploy, E2E (e2e.yml) tests what was just deployed: every tier when the exercises,
+# the sandboxes or the site changed (it starts a real sandbox and checks each exercise's
+# solution in it), the quick ones otherwise. A failure emails like the daily run does.
 #
 # A deploy restarts the runner. Learners keep their sandboxes and stay signed in, but their
 # terminals reconnect, so avoid merging to main mid-session.
@@ -80,8 +80,8 @@ jobs:
             echo "Snapshot: \`${{ needs.snapshot.outputs.name }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # Which E2E tiers this deploy needs: all of them when anything a sandbox runs, or the runner
-  # that drives one, changed since the last deploy.
+  # Which E2E tiers this deploy needs: all of them when anything a sandbox runs, the runner
+  # that drives one, or the site changed since the last deploy.
   e2e-scope:
     needs: deploy
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
           if ! git cat-file -e "${BEFORE:-0000}^{commit}" 2>/dev/null; then
             tier=all # a manual run, or history we can't see: test everything
           elif git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -qE \
-            '^(challenges|solutions|starter|tests|hello|codemode|travel_agent|policies|scripts|authoring)/|^(pyproject.toml|uv.lock|agents.toml|.env.example)$|^course/(runner|snapshot|content)/'; then
+            '^(challenges|solutions|starter|tests|hello|codemode|travel_agent|policies|scripts|authoring)/|^(pyproject.toml|uv.lock|agents.toml|.env.example)$|^course/(runner|snapshot|content|web)/'; then
             tier=all
           fi
           echo "tier=$tier" >> "$GITHUB_OUTPUT"
