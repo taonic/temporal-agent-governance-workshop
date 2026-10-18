@@ -596,7 +596,8 @@ function onClick(event) {
           <p v-if="beat.kind === 'intro' && exercise.teaser" class="exercise-meta">{{ exercise.teaser }}</p>
           <div class="guide-body markdown" v-html="beat.html" />
           <AskSetupCard v-if="beat.id === 'start-ask'" class="guide-body" />
-          <div v-if="beat.kind === 'intro' && mode === 'browser'" class="instruction-actions" data-tour="exercise-actions">
+          <!-- Not on exercise 1: there's nothing earlier to catch up on, and the first one is worth doing by hand. -->
+          <div v-if="beat.kind === 'intro' && mode === 'browser' && exercise.number > 1" class="instruction-actions" data-tour="exercise-actions">
             <button v-if="exercise.scripts.setup && mode === 'browser'" class="button" type="button" :disabled="!live" title="Catch up on earlier exercises and start fresh sessions" @click="emit('setup')">Set up this exercise</button>
             <button v-if="exercise.scripts.solve && mode === 'browser'" class="button" type="button" :disabled="!live" title="Apply the official solution" @click="emit('solve')">Solve it for me</button>
           </div>

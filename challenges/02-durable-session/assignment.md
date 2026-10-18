@@ -2,13 +2,17 @@
 slug: durable-session
 type: challenge
 title: "2 · A durable travel agent session"
-teaser: Run a script in the Monty sandbox, then a travel agent that is a Temporal workflow. Fix a broken tool while a conversation waits for it.
+teaser: Run a Code Mode script in a sandbox, then a travel agent that is a Temporal workflow. Fix a broken tool while a conversation waits for it.
 timelimit: 2700
 ---
 
 # A durable travel agent session
 
-You just wrote raw Temporal. **Monty** packages the same ideas into an agent: a long-running session, messages, tool calls, state and streaming output. Under the hood it's the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), running an agent that works by writing Python, which the [Monty](https://github.com/pydantic/monty) sandbox runs.
+You just wrote raw Temporal. Now an agent runs on it: a travel assistant that searches and books flights. First, how it acts.
+
+**What is Code Mode?** Most agents are handed a list of tools and call them one at a time: the model asks for `search_flights`, waits for the result, asks for the next tool, and so on, one model call per step. In **Code Mode**, the model writes a short program instead. It gets a single tool, `run_travel_code`, and writes a Python script that calls the travel functions, with loops, conditions and arithmetic: search two dates, compare the prices and book the cheaper one, all from one model call. Model-written code can't be trusted with your machine, so the script runs in a sandbox. It can compute, but it can't touch files or the network; it can only call the travel functions, and each call is handed to the host to run.
+
+**Monty** packages that agent and the Temporal ideas you just used: a long-running session, messages, tool calls, state and streaming output. Under the hood it's the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), running a Code Mode agent whose scripts the [Monty](https://github.com/pydantic/monty) sandbox runs.
 
 | Raw Temporal | Monty |
 |---|---|
@@ -20,7 +24,7 @@ You just wrote raw Temporal. **Monty** packages the same ideas into an agent: a 
 | Worker | Agent runtime |
 | Retry / timer | Durable waiting and recovery |
 
-The agent is a travel assistant, and it works in **Code Mode**. The model isn't given `search_flights` and `book_flight` as tools. It gets one tool, `run_travel_code`, and writes a Python script that calls them, with loops, conditions and arithmetic, and the Monty sandbox runs it. Before you meet the agent, run a script like that yourself.
+Before you meet the agent, run a Code Mode script yourself.
 
 ## 1. Meet Code Mode
 

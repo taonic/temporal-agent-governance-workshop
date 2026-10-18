@@ -22,5 +22,9 @@ course/.session-secret
 course/web/dist/
 course/web/src/generated/
 course/web/public/content/
+# The e2e tests' packages and results
+course/e2e/node_modules/
+course/e2e/reports/
+course/e2e/test-results/
 # Archify working folders (the finished diagrams live in docs/architecture/)
 .archify/

@@ -1,0 +1,126 @@
+# Playwright end-to-end tests against the live course site (course/e2e). Runs:
+#
+#   - every day, every tier, and emails the result whatever it is;
+#   - after each deploy (deploy.yml calls it), on what was just deployed, emailing only a failure;
+#   - when the tests themselves change on main, and by hand (Actions → E2E → Run workflow).
+#
+# Repository secrets: E2E_ACCESS_CODE (a code in the app's ACCESS_CODE list; without it the @auth
+# and @sandbox tiers skip), E2E_INSTRUCTOR_CODE (optional), and for the email RESEND_API_KEY.
+# Repository variables: E2E_MAIL_TO (comma-separated), E2E_MAIL_FROM, and E2E_SKIP_SANDBOX=1 to
+# keep the sandbox tier off (during an event). course/e2e/README.md has the details.
+
+name: E2E
+
+on:
+  schedule:
+    - cron: "0 14 * * *" # 14:00 UTC: 7am in San Francisco, before anyone's teaching
+  push:
+    branches: [main]
+    paths: [course/e2e/**, .github/workflows/e2e.yml]
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: Which tests
+        type: choice
+        options: [all, public, auth]
+        default: all
+      email:
+        description: Email the result
+        type: choice
+        options: [always, failure, never]
+        default: always
+  workflow_call:
+    inputs:
+      tier:
+        type: string
+        default: public
+      email:
+        type: string
+        default: failure
+
+permissions:
+  contents: read
+
+# One run at a time: two sandbox tiers at once would hold two sandboxes.
+concurrency:
+  group: e2e
+  cancel-in-progress: false
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: course/e2e
+    env:
+      # A schedule has no inputs: every tier, always emailed. A push to the tests: the cheap tiers.
+      TIER: ${{ inputs.tier || (github.event_name == 'schedule' && 'all') || 'auth' }}
+      EMAIL: ${{ inputs.email || (github.event_name == 'schedule' && 'always') || 'failure' }}
+      E2E_ACCESS_CODE: ${{ secrets.E2E_ACCESS_CODE }}
+      E2E_INSTRUCTOR_CODE: ${{ secrets.E2E_INSTRUCTOR_CODE }}
+      E2E_SKIP_SANDBOX: ${{ vars.E2E_SKIP_SANDBOX }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: course/e2e/package-lock.json
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the tests
+        id: tests
+        run: |
+          case "$TIER" in
+            all)    grep="" ;;
+            public) grep="--grep=@public" ;;
+            auth)   grep="--grep=@public|@auth" ;;
+            *)      echo "unknown tier: $TIER"; exit 2 ;;
+          esac
+          npx playwright test $grep
+
+      - name: Summarize
+        if: always()
+        env:
+          E2E_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          E2E_MAIL_TO: ${{ vars.E2E_MAIL_TO }}
+          E2E_MAIL_FROM: ${{ vars.E2E_MAIL_FROM }}
+        run: |
+          echo "subject=$(node scripts/summary.mjs)" >> "$GITHUB_OUTPUT"
+          cat reports/summary.md >> "$GITHUB_STEP_SUMMARY"
+        id: summary
+
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report-${{ github.run_id }}
+          path: |
+            course/e2e/reports/
+            course/e2e/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # Resend's HTTP API with curl, no SDK or third-party action. The message is the one
+      # scripts/summary.mjs wrote.
+      - name: Email the result
+        if: always() && (env.EMAIL == 'always' || (env.EMAIL == 'failure' && steps.tests.outcome != 'success'))
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          if [ -z "$RESEND_API_KEY" ] || [ ! -f reports/email.json ]; then
+            echo "::notice::No email: set the RESEND_API_KEY secret and the E2E_MAIL_TO and E2E_MAIL_FROM variables."
+            exit 0
+          fi
+          curl --silent --show-error --fail-with-body https://api.resend.com/emails \
+            -H "Authorization: Bearer $RESEND_API_KEY" \
+            -H "Content-Type: application/json" \
+            --data @reports/email.json
+          echo
+          echo "Sent: ${{ steps.summary.outputs.subject }}"

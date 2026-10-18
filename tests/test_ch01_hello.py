@@ -10,6 +10,7 @@ import pytest
 from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
 
+from hello import activities
 from hello.board import BoardingWorkflow
 from hello.shared import BoardingRequest, BoardingStatus, TripRequest
 from hello.worker import build_worker
@@ -31,8 +32,9 @@ async def _run(env, origin="SFO", destination="JFK") -> tuple[str, Client, str]:
             HelloTripWorkflow.run, TripRequest(origin=origin, destination=destination), id=workflow_id, task_queue=queue
         )
         try:
-            # With FLAKY=1, each lookup waits out four retries: 2 + 4 + 6 + 6 seconds.
-            result = await asyncio.wait_for(handle.result(), timeout=60)
+            # Done in a few seconds, even with a retry per lookup (the retry test). An unfinished
+            # TODO never finishes: fail with the hint instead of waiting longer.
+            result = await asyncio.wait_for(handle.result(), timeout=15)
         except TimeoutError:
             pytest.fail(TODO_HINT)
     return result, client, workflow_id
@@ -45,13 +47,16 @@ async def test_describes_the_trip(env):
 
 async def test_retries_a_failed_activity(env, monkeypatch):
     monkeypatch.setenv("FLAKY", "1")
+    # One failure per lookup, not the exercise's four: that proves the retry, and the backoff is
+    # checked from the history below, without waiting it out (four failures take 18s a lookup).
+    monkeypatch.setattr(activities, "FLAKY_FAILURES", 1)
     result, client, workflow_id = await _run(env, "LAX", "ORD")
     assert result == "Your trip: Los Angeles (LAX) to Chicago (ORD)."
-    # The history shows each lookup got through on its fifth attempt, after four failures.
+    # The history shows each lookup got through on its second attempt, after one failure.
     history = await client.get_workflow_handle(workflow_id).fetch_history()
     started = [e.activity_task_started_event_attributes.attempt for e in history.events
                if e.HasField("activity_task_started_event_attributes")]
-    assert started == [5, 5], f"expected each lookup to succeed on attempt 5, saw attempts {started}"
+    assert started == [2, 2], f"expected each lookup to succeed on attempt 2, saw attempts {started}"
 
 
 async def test_uses_a_retry_policy_with_a_gentle_backoff(env):
@@ -79,17 +84,19 @@ async def test_boarding_counts_every_passenger_across_a_worker_restart(env):
         data_converter=pydantic_data_converter,
     )
     queue = f"board-{uuid.uuid4().hex[:8]}"
-    flight = BoardingRequest(origin="SFO", destination="JFK", seats=6, seconds_per_passenger=0.5)
+    # The dev server fires timers about a second apart however short they are, so each
+    # passenger costs a second: one boards before the restart and two after it.
+    flight = BoardingRequest(origin="SFO", destination="JFK", seats=3, seconds_per_passenger=0.5)
     async with build_worker(client, queue):
         handle = await client.start_workflow(
             BoardingWorkflow.run, flight, id=f"board-test-{uuid.uuid4().hex[:8]}", task_queue=queue
         )
-        while (before := await _boarded(handle)).boarded < 2:
+        while (before := await _boarded(handle)).boarded < 1:
             await asyncio.sleep(0.2)
-    assert before.flight == "SFO→JFK" and before.seats == 6
+    assert before.flight == "SFO→JFK" and before.seats == 3
     # A new worker knows nothing of the old one: it rebuilds the count from the history.
     async with build_worker(client, queue):
         after = await _boarded(handle)
         assert after.boarded >= before.boarded, f"boarding started over: {before.boarded} before, {after.boarded} after"
         result = await asyncio.wait_for(handle.result(), timeout=15)
-    assert result == "Flight SFO→JFK: 6 passengers boarded."
+    assert result == "Flight SFO→JFK: 3 passengers boarded."

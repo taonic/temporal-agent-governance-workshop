@@ -22,6 +22,7 @@ course/
   snapshot/     the sandbox image (Dockerfile), lsp_bridge.py (the editor's language server), and
                 build.mjs, which builds it as a Daytona snapshot
   tests/        node --test: the content build, auth, rate limits, the passthrough
+  e2e/          Playwright against the deployed site, daily and after each deploy (e2e/README.md)
   Dockerfile    the site and runner, for Fly (built from the repo root)
   fly.toml
 ```

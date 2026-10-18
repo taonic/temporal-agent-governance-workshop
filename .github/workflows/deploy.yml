@@ -6,6 +6,10 @@
 # temporal-agent-governance-workshop) and DAYTONA_API_KEY. The app's own secrets
 # (GEMINI_API_KEY, ACCESS_CODE, ...) stay in Fly: see instructor/DEPLOY.md.
 #
+# After the deploy, E2E (e2e.yml) tests what was just deployed: every tier when the exercises
+# or the sandboxes changed (it starts a real sandbox and checks each exercise's solution in it),
+# the quick ones otherwise. A failure emails like the daily run does.
+#
 # A deploy restarts the runner. Learners keep their sandboxes and stay signed in, but their
 # terminals reconnect, so avoid merging to main mid-session.
 
@@ -16,6 +20,7 @@ on:
     branches: [main]
     paths-ignore:
       - instructor/**
+      - course/e2e/** # e2e.yml runs those changes against the live site
   workflow_dispatch:
 
 permissions:
@@ -74,3 +79,36 @@ jobs:
             echo "Deployed \`${GITHUB_SHA::7}\` to https://$FLY_APP.fly.dev"
             echo "Snapshot: \`${{ needs.snapshot.outputs.name }}\`"
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # Which E2E tiers this deploy needs: all of them when anything a sandbox runs, or the runner
+  # that drives one, changed since the last deploy.
+  e2e-scope:
+    needs: deploy
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.scope.outputs.tier }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          tier=auth
+          if ! git cat-file -e "${BEFORE:-0000}^{commit}" 2>/dev/null; then
+            tier=all # a manual run, or history we can't see: test everything
+          elif git diff --name-only "$BEFORE" "$GITHUB_SHA" | grep -qE \
+            '^(challenges|solutions|starter|tests|hello|codemode|travel_agent|policies|scripts|authoring)/|^(pyproject.toml|uv.lock|agents.toml|.env.example)$|^course/(runner|snapshot|content)/'; then
+            tier=all
+          fi
+          echo "tier=$tier" >> "$GITHUB_OUTPUT"
+          echo "E2E tier: $tier" >> "$GITHUB_STEP_SUMMARY"
+
+  e2e:
+    needs: e2e-scope
+    uses: ./.github/workflows/e2e.yml
+    with:
+      tier: ${{ needs.e2e-scope.outputs.tier }}
+      email: failure
+    secrets: inherit

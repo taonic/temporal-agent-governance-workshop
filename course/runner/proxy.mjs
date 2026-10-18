@@ -72,7 +72,16 @@ function sendBuffered(req, res, status, headers, entry) {
 // workflow (and a tab) instead of a path, it looks up the latest run with the UI's own API. The
 // UI writes its history filter to ?category= but doesn't read it back on load (2.50), so for
 // history?category=… the loader sets the Filter menu itself.
-const UI_LOADER = `<style>
+//
+// It also sets the UI's own preferences before the UI reads them: dark mode, to match the
+// course, and the side nav collapsed, since the pane is narrower than a browser window. They're
+// the UI's persisted stores (2.50: "dark mode" is "system", true or false; "navOpen" a boolean,
+// both JSON), so the learner can still change them; the next full load sets them again.
+const UI_PREFERENCES = { "dark mode": true, navOpen: false };
+const UI_LOADER = `<script>try{${Object.entries(UI_PREFERENCES)
+  .map(([key, value]) => `localStorage.setItem(${JSON.stringify(key)},${JSON.stringify(JSON.stringify(value))});`)
+  .join("")}}catch(e){}</script>
+<style>
 #__course_loading{position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;
 align-items:center;justify-content:center;gap:14px;background:#1d1d20;color:#e7ebf2;
 font:600 13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transition:opacity .25s ease}
@@ -110,7 +119,7 @@ var m=tab.match(/^history\\?category=([\\w,-]+)/);if(m)setTimeout(function(){fil
 .catch(function(){reply({__course:'navfail',path:wf});});return;}
 if(d.path)go(d.path);});})();</script>`;
 
-function injectUiLoader(html) {
+export function injectUiLoader(html) {
   // The page's CSP meta (strict-dynamic) would block the injected script.
   const stripped = html.replace(/<meta[^>]*http-equiv=["']?content-security-policy["']?[^>]*>/gi, "");
   const match = stripped.match(/<body[^>]*>/i);

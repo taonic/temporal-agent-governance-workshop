@@ -211,3 +211,15 @@ test("a sandbox gets every package pyproject.toml builds, or uv can't build the 
   const files = workshopFiles();
   for (const pkg of packages) assert.ok(files.includes(`${pkg}/__init__.py`), `${pkg}/ isn't copied into sandboxes (runner/repo-files.mjs DIRS)`);
 });
+
+test("the Temporal UI opens in dark mode with its side nav collapsed, set before the UI boots", async () => {
+  const { injectUiLoader } = await import("../runner/proxy.mjs");
+  const html = injectUiLoader('<html><head></head><body><div id="svelte"></div><script>boot()</script></body></html>');
+  const first = html.match(/<body[^>]*>\s*<script>([\s\S]*?)<\/script>/)[1];
+  const stored = {};
+  new Function("localStorage", first)({ setItem: (key, value) => (stored[key] = value) });
+  // The UI's persisted stores read their values as JSON.
+  assert.equal(JSON.parse(stored["dark mode"]), true);
+  assert.equal(JSON.parse(stored.navOpen), false);
+  assert.ok(html.indexOf(first) < html.indexOf("boot()"));
+});

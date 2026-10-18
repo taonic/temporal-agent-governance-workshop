@@ -22,12 +22,16 @@ There's no agent yet. Every idea here comes back in the next three exercises.
 | **Client** | Starts workflows and asks about them. | `uv run hello-start SFO JFK` |
 | **History** | The record of every step, which Temporal stores. It's the source of truth. | The Temporal UI, http://localhost:8233 |
 
+### How the pieces fit together
+
+Take a minute with this diagram before you start. Follow a trip from the starter to the server, to the worker, to the activity and back, and find each piece from the table. Every step below works one part of it: you'll break the activity, stop the worker and watch the history carry on, so knowing where each piece sits now makes those moments make sense. Click it for a larger version you can explore.
+
 [![The starter (hello-start or hello-board) asks the Temporal server to start a workflow, and the server keeps that workflow's history. The hello-worker runs HelloTripWorkflow, which calls the lookup_airport activity; with FLAKY=1 its attempts 1 to 4 fail, and the RetryPolicy (2s, ×2, at most 6s) retries until attempt 5 gets through. The worker also runs BoardingWorkflow, which adds 1 to on_board every 2 seconds. The Temporal UI shows the history and queries the boarded count. The count is never saved: a new worker replays the history to rebuild it, and with no worker, queries time out and the work waits.](../../docs/architecture/ex1-hello.png)](../../docs/architecture/ex1-hello.html)
 
 ## 0. Start your sandbox
 
 <!-- browser
-Everything in this workshop runs in your sandbox: a small cloud machine of your own, with Temporal, the travel agent and the Dogwood verifier already running on it. The editor, the two terminals and the Temporal UI on the left all work in it. It sleeps when you're idle, wakes when you come back, and keeps your work for a day.
+Everything in this workshop runs in your sandbox: a small cloud machine of your own, with a Temporal server already running on it. The editor, the two terminals and the Temporal UI on the left all work in it. It sleeps when you're idle, wakes when you come back, and keeps your work for a day.
 
 [Start my sandbox](#sandbox)
 
@@ -57,7 +61,11 @@ In another, start a workflow:
 uv run hello-start SFO JFK
 ```
 
-It prints a link and then waits. Open the link. The workflow is **Running**, but the worker's terminal shows an error over and over: `NotImplementedError: TODO(ch01): call the lookup_airport activity`.
+It prints a link and then waits. Open the link. The workflow is **Running**, but the worker's terminal shows this error over and over:
+
+```
+NotImplementedError: TODO(ch01): call the lookup_airport activity
+```
 
 That's your TODO. Notice what Temporal does with a bug in workflow code: it doesn't fail the workflow. It **pauses** it, and retries the step until the code is fixed. Leave the starter waiting.
 
@@ -188,4 +196,6 @@ After 40 passengers, the starter prints `Flight SFO→JFK: 40 passengers boarded
 ./challenges/01-hello-temporal/check.sh
 ```
 
-It runs your workflow against a fresh Temporal server, checks the trip description, makes four of every five lookup attempts fail, and checks your timeout and retry policy. It also checks that the boarding counter, which you didn't write, still survives a worker restart.
+It runs your workflow against a fresh Temporal server, checks the trip description, makes a lookup attempt fail to see it retried, and checks your timeout and retry policy. It also checks that the boarding counter, which you didn't write, still survives a worker restart.
+
+**It takes about 10 seconds**, most of it waiting on real retries and timers. Wait for `✓ Check passed`.

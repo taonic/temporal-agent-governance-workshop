@@ -61,6 +61,45 @@ The instructions pane is a conversation with a guide (✦, the same mark as Ask 
 - **"Temporal UI" is a link** wherever the instructions send you to it, opening the pane where it is.
 - **A code tour per exercise**, a card over the editor that spotlights one chunk at a time (other lines fade; the editor gains room at the bottom so a last chunk scrolls clear of the card). The guide offers it at the end of the exercise's briefing, just before step 1, and it steps with → and ←, skips with Esc, and has ✦ Ask for the chunk.
 
+## End-to-end tests (added 2026-10-18)
+
+Playwright, in `course/e2e/`, against the deployed site (the live Fly app unless `E2E_BASE_URL` says otherwise). They test what a learner gets, not the code: the unit tests in `course/tests/` stay the place for the runner's logic.
+
+- **Three tiers, by tag.** `@public` needs no secrets: the `/api`'s answers to a signed-out visitor, every page in the picker, the access form, Ask Temporal's panel. `@auth` signs a fresh learner in with `E2E_ACCESS_CODE` and stops short of a sandbox. `@sandbox` is a learner's whole run in one real Daytona sandbox: sign in through the page, start it, both terminals, the Temporal UI and Agent UI panes, then **every exercise's official solution passes its check**. Its sandbox is deleted at the end, pass or fail. A tier whose secret is missing skips rather than fails.
+- **When they run.** Every day at 14:00 UTC, every tier, emailed whatever the result (`.github/workflows/e2e.yml`). After every deploy, on what was just deployed (`deploy.yml` calls it), emailing only a failure: every tier when anything a sandbox runs or the runner that drives one changed (the paths are in `deploy.yml`'s `e2e-scope` job), `@public` and `@auth` otherwise. And when the tests change.
+- **The email goes through Resend's API**, sent with `curl` from a message `scripts/summary.mjs` writes, rather than through Resend's SDK or a third-party action: nothing to install, and nothing outside this repo and Resend sees the key (`RESEND_API_KEY`, a repository secret). The same script writes the job summary; the HTML report, traces, screenshots and the terminals' text on a failure are the run's artifacts.
+- **A standing access code for the tests.** `ACCESS_CODE` changes per event, so the tests have their own code in the list (`ACCESS_CODE=<event>,<e2e code>`), which stays when the event's code rotates. `E2E_SKIP_SANDBOX=1` (a repository variable) keeps the sandbox tier off during an event, where its sandbox would count against `MAX_SANDBOXES`.
+
+### Keeping them in step with the workshop
+
+The workshop changes more often than the site, so the tests read as much as they can from the deployed site instead of repeating it:
+
+- **The exercises are the picker's.** The tests walk whatever the exercise picker lists, so an exercise added, removed, renamed or reordered is covered without touching them.
+- **Each exercise's check is the one its ✓ Check button runs** (the button's title), and its solution is `solve.sh` beside that `check.sh`. The sandbox tier runs `solve.sh`, presses ✓ Check and waits for the passed badge. So a changed solution, check, starter or dependency is tested in a real sandbox on the deploy that ships it, and a solution that no longer passes its own check fails that deploy's E2E run.
+- **Nothing about an exercise's content is asserted.** No step counts, headings or wording: an assignment can be rewritten freely.
+
+What the tests do depend on is a short contract. **A change to any of these updates `course/e2e/` in the same change:**
+
+| If you change… | …update |
+|---|---|
+| The convention `challenges/<id>/check.sh` with `solve.sh` beside it, or the ✓ Check button's `Run the check: …` title | `sandbox.spec.mjs` (how it finds the scripts) |
+| What the passed badge is (`.course/passed/<exercise>`, `.passed-badge`) | `sandbox.spec.mjs` |
+| The picker (`.exercise-picker select`, its option values `#/exercise/<id>`), Previous / Next, the theme toggle | `fixtures.mjs` `coursePages`, `public.spec.mjs` |
+| The getting-started steps or their `onboarded` key in local storage | `fixtures.mjs` (it sets the key to skip them) |
+| The access form (`#access-code`, **Start my sandbox**, `.form-error`), the sandbox pill's words (`Sandbox ready`, `No sandbox yet`, `Browser sandbox`) | `public.spec.mjs`, `session.spec.mjs`, `sandbox.spec.mjs` |
+| The terminals (`.terminal-pane[aria-label="The worker terminal"]`, `.term-dot.connected`, the workshop at `/workshop` in the sandbox) | `sandbox.spec.mjs` |
+| The workspace tabs' names, the panes' iframe titles, or the Agent UI's `button.session-drawer-trigger` | `sandbox.spec.mjs` |
+| An `/api` route's path, status codes or response shape; a new route a learner depends on | `public.spec.mjs` or `session.spec.mjs`: add it |
+| Something a learner does that no tier covers (a new pane, a new button that types into a terminal) | add a test in the tier it needs |
+
+Before merging such a change, run the tests against a local build of the site set up like production, with an access code and Daytona:
+
+```bash
+cd course && npm run build
+ACCESS_CODE=local-e2e DAYTONA_API_KEY=... GEMINI_API_KEY=... COURSE_DIST_DIR=web/dist npm start
+cd e2e && E2E_BASE_URL=http://127.0.0.1:8787 E2E_ACCESS_CODE=local-e2e npm test
+```
+
 ## Verified (2026-10-16)
 
 With a real Daytona snapshot and the runner and site running locally (the model behind an ngrok tunnel):
