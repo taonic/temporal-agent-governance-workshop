@@ -301,7 +301,8 @@ export const WALKTHROUGHS = {
 
     await l.step("Without the policy");
     await l.newSession("dangerously_skip_all");
-    await l.converse(prompt, { timeout: 6 * MINUTE });
+    // Mallory's booking is the point; the rest of the to-do list can take the agent a while.
+    await l.converse(prompt, { until: async () => mallory(await l.bookings()).length > 0, timeout: 6 * MINUTE });
     expect(mallory(await l.bookings()).length, "without the policy, the planted booking should go through: the exercise's point").toBeGreaterThan(0);
     expect(await l.runButton("cat .data/bookings.json")).toBe(0);
   },
