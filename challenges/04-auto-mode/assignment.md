@@ -42,7 +42,7 @@ Runs without asking: `flights-for-ada`.
 
 > Move Ada to December 24th.
 
-Runs too. You never asked for December 24th: your form says November 1st. But the rule can't see your form. It sees one call at a time, and this one is for Ada. To tell a booking you asked for from one you didn't, the policy has to look at what happened before.
+Runs too, and that's the problem. You asked for November 1st; nobody asked for December 24th. **Ada now holds two flights, and you're paying for both.** In auto mode no one was asked: the policy was the only check, and it said yes. The date could have come from a misread message, a model's mistake, or an instruction slipped into a file the agent read, and the result would be the same: money spent on a trip nobody wanted. The rule can't tell, because it checks who the booking is for, not whether it matches what you asked. That answer is in the session's past.
 
 ## 3. Look back in time
 
