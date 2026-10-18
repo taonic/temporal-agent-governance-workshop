@@ -190,11 +190,18 @@ export class Learner {
   // and then its command 900 ms later, and the travel worker takes longer than that to stop, so
   // the command is lost and reset.sh never runs (TerminalDock's type()).
   async startOver(exercise) {
+    await this.view("Code"); // the dock, with its toggle, is under Code
     const dockToggle = this.page.locator(".dock-bar button.worker-toggle").first();
-    await expect.poll(() => this.workerState(), { timeout: MINUTE }).not.toMatch(/pending|unknown/);
-    if ((await this.workerState()) === "running") {
-      await dockToggle.click();
-      await expect.poll(() => this.workerState(), { message: "the worker didn't stop", timeout: MINUTE }).toBe("stopped");
+    // Stopped, and staying stopped: opening an exercise catches up earlier ones still open (a
+    // walkthrough that failed), and the page restarts a running worker for that, a few seconds in.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await expect.poll(() => this.workerState(), { timeout: MINUTE }).not.toMatch(/pending|unknown/);
+      if ((await this.workerState()) === "running") {
+        await dockToggle.click();
+        await expect.poll(() => this.workerState(), { message: "the worker didn't stop", timeout: MINUTE }).toBe("stopped");
+      }
+      await sleep(6 * SECOND);
+      if ((await this.workerState()) === "stopped") break;
     }
     await this.guide.getByRole("button", { name: /Start over/ }).click();
     await expect(this.terminalText("worker"), `${exercise}'s reset.sh didn't finish`).toContainText("Sessions ended and bookings cleared.", { timeout: 3 * MINUTE });

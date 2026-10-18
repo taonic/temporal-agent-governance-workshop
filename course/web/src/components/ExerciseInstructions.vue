@@ -102,6 +102,10 @@ const beat = computed(() => beats.value[Math.min(at.value, beats.value.length - 
 watch(() => beat.value?.id, (id) => (store.guideBeat = id ?? null), { immediate: true });
 const isLast = computed(() => at.value >= beats.value.length - 1);
 
+// Synchronously: until `at` is this exercise's, `beat` is the new exercise's beat at the old
+// one's position, and the watchers that act on arriving at a beat (bringing a tab forward,
+// the editor's tabs) would act on it: from exercise 1's last beat, exercise 2's step 7, which
+// switched to the Agent UI.
 watch(
   () => props.exercise.id,
   () => {
@@ -110,6 +114,7 @@ watch(
     at.value = restore();
     draft.value = "";
   },
+  { flush: "sync" },
 );
 // A new beat starts at its top, even when it has questions under it already.
 watch(at, () => {

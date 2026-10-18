@@ -58,9 +58,7 @@ Open the refused booking in **Approval decisions**: the action, the exact reques
 
 Start one more session, with the posture `dangerously_skip_all`<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="dangerously_skip_all" title="Open the Travel agent's start form in the Agent UI, with dangerously_skip_all chosen">New session ▸</button>
--->, and send the same prompt. Then look at the trip board, or `.data/bookings.json`<!-- browser
- (`cat .data/bookings.json` in the commands terminal)
--->: Mallory has a flight, paid for by you.
+-->, and send the same prompt. Then look at the trip board, or the bookings ledger (`cat .data/bookings.json`): Mallory has a flight, paid for by you.
 
 ## Why it held
 
