@@ -121,11 +121,10 @@ Short explanation before the lab:
 
 Learners do:
 
-- Fill out the trip form: traveler, origin, destination, dates.
-- Ask the agent to book the cheapest matching flight.
-- See search and matching booking run without manual approval.
-- Ask it to book for a different person.
-- See Dogwood deny it.
+- Run a plain Cedar rule (any flight for Ada): it books Ada on a day nobody asked for.
+- Replace it with temporal rules that look back at the trip form in the session's history.
+- Fill out the trip form, and ask the agent to book the cheapest matching flight: it runs without approval.
+- Ask it to move the flight to another day: Dogwood denies it.
 
 Concepts covered:
 

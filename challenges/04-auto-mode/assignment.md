@@ -16,21 +16,15 @@ Dogwood is a policy language: [Cedar](https://www.cedarpolicy.com/) plus **tempo
 
 Before each booking, the workflow sends the verifier what the session has received since it last asked: your messages, the trip form, tool results. The verifier, a separate service, keeps that history in its own store, so the model can't rewrite the past, and neither can the agent.
 
-First, read the policy the agent runs under.
+You'll start with a plain Cedar rule, run into its limit, then make it look back.
 
 <!-- local -->Starting here, without exercises 1 to 3 done? Run `./challenges/04-auto-mode/setup.sh` first: it solves each of them you haven't, and leaves the ones you did alone. Then restart the worker.<!-- /local -->
 
 ## 1. Read the policy
 
-Open `policies/travel.dw`. Only bookings come to it: the agent's script and its searches run unattended. Every rule looks back over the session's history:
+Open `policies/travel.dw`. Only bookings come to it: the agent's script and its searches run unattended. Find `TODO(ch04)`: the flight rule, `flights-for-ada`, is plain Cedar. It permits a flight booking when its passenger is "Ada Lovelace", and checks nothing else: only the call in front of it.
 
-- `return-flights-on-the-trip-form`: a flight runs unattended when a trip form submitted earlier in this session named its passenger and its **return** date.
-- `hotels-for-the-trip-form-traveler`: a hotel runs unattended when an earlier trip form named its guest.
-- Anything no rule permits is refused: a booking for anyone, or any day, no earlier form named.
-
-Something's missing: there's no rule for the flight **there**. See what that does to a booking.
-
-## 2. Watch it refuse
+## 2. Try the plain rule
 
 Start the worker if it isn't running, then start a new session with the posture **`auto_mode`**<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="auto_mode" title="Open the Travel agent's start form in the Agent UI, with auto_mode chosen">New session ▸</button>
@@ -38,17 +32,23 @@ Start the worker if it isn't running, then start a new session with the posture 
 
 > I need a flight to New York.
 
-Submit the trip form: it starts filled in with Ada Lovelace, SFO → JFK, 2026-11-01, back 2026-11-05. Then:
+Submit the trip form: it starts filled in with Ada Lovelace, SFO → JFK, 2026-11-01, back 2026-11-05. Then send these one at a time:
 
 > Book the cheapest one.
 
-Refused. In the console's **Approval decisions** panel, the evaluation card shows the action (`travel-agent/book_flight`), the exact input the policy saw, and the verdict: "tool travel-agent/book_flight not permitted by any Dogwood policy". Dogwood denies by default. Time to write the missing rule.
+Runs without asking: `flights-for-ada`.
 
-## 3. Write the rule
+> Move Ada to December 24th.
 
-Find `TODO(ch04)` in `policies/travel.dw` and write `flights-on-the-trip-form`. It's `return-flights-on-the-trip-form` with the departure date:
+Runs too. You never asked for December 24th: your form says November 1st. But the rule can't see your form. It sees one call at a time, and this one is for Ada. To tell a booking you asked for from one you didn't, the policy has to look at what happened before.
+
+## 3. Look back in time
+
+Replace `flights-for-ada` (at `TODO(ch04)` in `policies/travel.dw`) with two rules that look back at the trip form, one for the date there and one for the date back:
 
 ```dogwood
+// A flight booking runs unattended when you put its passenger and date on a trip form
+// earlier in this session.
 @id("flights-on-the-trip-form")
 // Permit this call (a flight booking), checked before it runs...
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
@@ -62,15 +62,25 @@ when temporal {
     input.arg0.departure_date: context.input.arg0.request.date
   }
 };
+
+// The same for the date back.
+@id("return-flights-on-the-trip-form")
+permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
+when temporal {
+  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
+    input.arg0.return_date: context.input.arg0.request.date
+  }
+};
 ```
 
-Read it as: permit `book_flight` when, at some point in the last 30 days of **this session's** history, a trip form result was received whose `traveler_name` equals this booking's `passenger_name` and whose `departure_date` equals its `date`.
+Read the first as: permit `book_flight` when, at some point in the last 30 days of **this session's** history, a trip form result was received whose `traveler_name` equals this booking's `passenger_name` and whose `departure_date` equals its `date`. `when` checks the call; `when temporal` checks the call against the past. No name is written into the rule: the form you submit supplies it.
 
 Save it, and the verifier loads it within a few seconds. (A policy that doesn't validate isn't loaded: the last one that did keeps serving.)
 
 A new rule starts with an empty history: it sees only what happens after it's loaded, not the trip form you already filled in. So try it in a new session.
 
-## 4. Try it
+## 4. Try it again
 
 Start a new session with the posture **`auto_mode`**<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="auto_mode" title="Open the Travel agent's start form in the Agent UI, with auto_mode chosen">New session ▸</button>
@@ -78,19 +88,19 @@ Start a new session with the posture **`auto_mode`**<!-- browser
 
 > I need a flight to New York.
 
-Submit the trip form as it is. Then send these one at a time:
+Submit the trip form as it is. Then send the same two, and one more:
 
 > Book the cheapest one.
 
 Runs without asking: `flights-on-the-trip-form` found your form in the session's history.
 
-> Actually, book it for Grace Hopper instead.
+> Move Ada to December 24th.
 
-Refused: no form in this session's history names Grace, and the agent tells you so.
+Refused this time: no form in this session's history names that day. The agent tells you so.
 
 > Book Ada a hotel in New York for those nights.
 
-Runs: `hotels-for-the-trip-form-traveler` finds Ada on the same form.
+Runs: `hotels-for-the-trip-form-traveler`, the same kind of rule, finds Ada on the form.
 
 Every verdict came from the past: a form you submitted a minute ago, found in the session's history. You approved nothing, yet nothing ran that you hadn't asked for. **The model decides what to try. The policy decides what is allowed.**
 

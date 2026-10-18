@@ -40,7 +40,10 @@ def test_booking_for_someone_else_is_refused():
 
 def test_booking_on_another_day_is_refused():
     v = replay(Session().trip_form("Ada Lovelace").book_flight("xmas", "Ada Lovelace", "2026-12-24"))
-    assert not v["xmas"].allowed, "A booking on a date that's on no trip form went through."
+    assert not v["xmas"].allowed, (
+        "A booking on a date that's on no trip form went through: the flight rule checks only the call. "
+        "Replace flights-for-ada (TODO(ch04) in policies/travel.dw) with rules that look back at the trip form."
+    )
 
 
 def test_booking_before_any_form_is_refused():

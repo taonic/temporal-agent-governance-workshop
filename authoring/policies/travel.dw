@@ -10,14 +10,13 @@
 //
 // After editing, save: the verifier loads the policy within a few seconds, once it validates.
 
-// ---------------------------------------------------------------- bookings: only what the form says
+// ---------------------------------------------------------------- bookings
 //
-// No rule permits any other booking, so it's refused: one for a traveler or a day no trip form
-// named, however the model came by it.
+// No rule permits any other booking, so it's refused, however the model came by it.
 
+// @@solution ch04
 // A flight booking runs unattended when you put its passenger and date on a trip form
 // (`ask_trip_details`) earlier in this session: the date there, or the date back.
-// @@solution ch04
 @id("flights-on-the-trip-form")
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
 when temporal {
@@ -26,13 +25,6 @@ when temporal {
     input.arg0.departure_date: context.input.arg0.request.date
   }
 };
-// @@starter
-//
-// TODO(ch04): write the `flights-on-the-trip-form` rule: permit a booking whose passenger and
-// date match the traveler name and departure date of a trip form submitted earlier in this
-// session. `return-flights-on-the-trip-form`, just below, is the same rule for the date back:
-// start from it.
-// @@end
 
 @id("return-flights-on-the-trip-form")
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
@@ -42,6 +34,16 @@ when temporal {
     input.arg0.return_date: context.input.arg0.request.date
   }
 };
+// @@starter
+// TODO(ch04): this rule checks only the call itself, so any flight for Ada runs, on any day.
+// Make flight bookings look back at the trip form submitted earlier in this session instead.
+@id("flights-for-ada")
+permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
+when {
+  context.input has arg0.request.passenger_name &&
+  context.input.arg0.request.passenger_name == "Ada Lovelace"
+};
+// @@end
 
 // A hotel booking runs unattended when its guest is the traveler on a trip form.
 @id("hotels-for-the-trip-form-traveler")

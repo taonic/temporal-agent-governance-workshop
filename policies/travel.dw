@@ -10,10 +10,9 @@
 //
 // After editing, save: the verifier loads the policy within a few seconds, once it validates.
 
-// ---------------------------------------------------------------- bookings: only what the form says
+// ---------------------------------------------------------------- bookings
 //
-// No rule permits any other booking, so it's refused: one for a traveler or a day no trip form
-// named, however the model came by it.
+// No rule permits any other booking, so it's refused, however the model came by it.
 
 // A flight booking runs unattended when you put its passenger and date on a trip form
 // (`ask_trip_details`) earlier in this session: the date there, or the date back.

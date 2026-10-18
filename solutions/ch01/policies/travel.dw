@@ -10,26 +10,17 @@
 //
 // After editing, save: the verifier loads the policy within a few seconds, once it validates.
 
-// ---------------------------------------------------------------- bookings: only what the form says
+// ---------------------------------------------------------------- bookings
 //
-// No rule permits any other booking, so it's refused: one for a traveler or a day no trip form
-// named, however the model came by it.
+// No rule permits any other booking, so it's refused, however the model came by it.
 
-// A flight booking runs unattended when you put its passenger and date on a trip form
-// (`ask_trip_details`) earlier in this session: the date there, or the date back.
-//
-// TODO(ch04): write the `flights-on-the-trip-form` rule: permit a booking whose passenger and
-// date match the traveler name and departure date of a trip form submitted earlier in this
-// session. `return-flights-on-the-trip-form`, just below, is the same rule for the date back:
-// start from it.
-
-@id("return-flights-on-the-trip-form")
+// TODO(ch04): this rule checks only the call itself, so any flight for Ada runs, on any day.
+// Make flight bookings look back at the trip form submitted earlier in this session instead.
+@id("flights-for-ada")
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
-when temporal {
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
-    input.arg0.return_date: context.input.arg0.request.date
-  }
+when {
+  context.input has arg0.request.passenger_name &&
+  context.input.arg0.request.passenger_name == "Ada Lovelace"
 };
 
 // A hotel booking runs unattended when its guest is the traveler on a trip form.

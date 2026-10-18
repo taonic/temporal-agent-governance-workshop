@@ -11,11 +11,12 @@
 // ledger, which calls waited for approval, what the worker logged), not the model's words.
 import { expect } from "@playwright/test";
 
-import { MINUTE, SAMPLE_TRAVELER, SECOND, approve, reject, submitForm } from "./learner.mjs";
+import { MINUTE, SAMPLE_TRAVELER, SECOND, approve, reject } from "./learner.mjs";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // How long the verifier takes to load a saved policy (travel_agent/stack.py watch-verifier).
 const RELOAD = 5 * SECOND;
+const XMAS = "2026-12-24";
 
 const flights = (bookings, passenger) => bookings.filter((b) => b.type === "flight" && (!passenger || b.passenger_name === passenger));
 const hotels = (bookings, guest) => bookings.filter((b) => b.type === "hotel" && (!guest || b.guest_name === guest));
@@ -236,36 +237,36 @@ export const WALKTHROUGHS = {
     await l.step("Read the policy");
     await l.openFile("policies/travel.dw");
 
-    await l.step("Watch it refuse");
+    await l.step("Try the plain rule");
     await l.worker("stopped");
     await l.worker("running");
     await l.newSession("auto_mode");
     const planned = await ask(l, "I need a flight to New York.", (h) => h.forms > 0, { nudge: "Please ask me for the trip details with the trip form." });
     expect(planned.forms, "the agent never asked with the trip form").toBeGreaterThan(0);
-    const refused = await l.converse("Book the cheapest one.");
-    expect(refused.approvals, "auto_mode should refuse, not ask").toEqual([]);
-    expect(flights(await l.bookings()), "the flight there was booked before there's a rule for it").toEqual([]);
+    const adaFlights = async (date) => flights(await l.bookings(), SAMPLE_TRAVELER).filter((b) => !date || b.date === date).length;
+    const plain = await ask(l, "Book the cheapest one.", async () => (await adaFlights()) > 0, { nudge: "Please book the cheapest flight for me now." });
+    expect(plain.approvals, "auto_mode should decide, not ask").toEqual([]);
+    expect(await adaFlights(), "flights-for-ada should permit Ada's flight").toBeGreaterThan(0);
+    await ask(l, "Move Ada to December 24th.", async () => (await adaFlights(XMAS)) > 0, { nudge: "Please book Ada's flight on December 24th now." });
+    expect(await adaFlights(XMAS), "the plain rule should let a flight on a day no form named through: that's its limit").toBeGreaterThan(0);
 
-    await l.step("Write the rule");
+    await l.step("Look back in time");
     await l.openFile("policies/travel.dw");
     await l.insert();
     await sleep(RELOAD); // the verifier loads the saved policy on its own
 
-    await l.step("Try it");
+    await l.step("Try it again");
     // In a new session: a rule just loaded starts with an empty history, so it never saw the
     // first session's trip form.
     await l.newSession("auto_mode");
     const replanned = await ask(l, "I need a flight to New York.", (h) => h.forms > 0, { nudge: "Please ask me for the trip details with the trip form." });
     expect(replanned.forms, "the agent never asked with the trip form").toBeGreaterThan(0);
-    const adaBooked = async () => flights(await l.bookings(), SAMPLE_TRAVELER).length > 0;
-    await ask(l, "Book the cheapest one.", adaBooked, { nudge: "Please book the cheapest flight for me now." });
-    expect(await adaBooked(), "the flight on the trip form wasn't booked: flights-on-the-trip-form should permit it").toBe(true);
-    const grace = await l.converse("Actually, book it for Grace Hopper instead.", {
-      onForm: (card, learner) => submitForm(card, learner, { traveler: "Grace Hopper" }),
-    });
-    const graceBooked = flights(await l.bookings(), "Grace Hopper").length > 0;
-    if (grace.forms) expect(graceBooked, "Grace's booking, on her own trip form, didn't go through").toBe(true);
-    else expect(graceBooked, "Grace was booked with no trip form naming her").toBe(false);
+    const before = await adaFlights();
+    const xmasBefore = await adaFlights(XMAS);
+    await ask(l, "Book the cheapest one.", async () => (await adaFlights()) > before, { nudge: "Please book the cheapest flight for me now." });
+    expect(await adaFlights(), "the flight on the trip form wasn't booked: flights-on-the-trip-form should permit it").toBeGreaterThan(before);
+    await l.converse("Move Ada to December 24th.");
+    expect(await adaFlights(XMAS), "a flight on a day no form named was booked: the temporal rule should refuse it").toBe(xmasBefore);
     const adaHotel = async () => hotels(await l.bookings(), SAMPLE_TRAVELER).length > 0;
     await ask(l, "Book Ada a hotel in New York for those nights.", adaHotel);
     expect(await adaHotel(), "Ada's hotel wasn't booked").toBe(true);
