@@ -10,17 +10,11 @@ timelimit: 1500
 
 Human approval asks "should I approve this one action?" every time. [Dogwood](https://github.com/dogwood-policy/dogwood) lets the system ask a better question: **does this action match what the user already authorized?**
 
-Dogwood is a policy language: [Cedar](https://www.cedarpolicy.com/) plus **temporal conditions** that look back over what happened earlier. A policy can say "permit a flight booking when, earlier in this session, the user submitted a trip form naming this passenger and this date". The trip form is structured intent: who's traveling, where, and when. Each booking is checked against it.
+Dogwood is a policy language: [Cedar](https://www.cedarpolicy.com/) plus **temporal conditions**. Cedar judges a call by what it asks for. A temporal condition judges it by **what happened before**: "permit a flight booking when, earlier in this session, the user submitted a trip form naming this passenger and this date". The trip form is structured intent (who's traveling, and when), and the past is where the policy finds it.
 
 [![Before each gated call, the TravelAgent workflow (auto_mode posture) asks the tool-verifier Nexus endpoint: RecordInputEvents sends what the session received (your messages, the trip form, tool results), and VerifyToolCalls asks about this call. The Dogwood verifier, a separate service, judges it with policies/travel.dw over the session's history, which it keeps in its own store. Permit: the call runs unattended. Forbid, or no permit: it's refused, and the model is told which policy. A forbid marked escalate: it comes to you, as in exercise 3. If the verifier doesn't answer, the call comes to you; it's never allowed.](../../docs/architecture/ex4-auto-mode.png)](../../docs/architecture/ex4-auto-mode.html)
 
-The verifier is a separate service (`travel-stack up` started it) with its own durable store of each session's history. The agent can't edit the policy, and neither can the model.
-
-Three outcomes:
-
-- **permit**: the call runs unattended;
-- **forbid** (or no permit at all): the call is refused, and the model is told which policy refused it;
-- **forbid** marked `@decision("escalate")`: the call comes to you, as in exercise 3.
+Before each booking, the workflow sends the verifier what the session has received since it last asked: your messages, the trip form, tool results. The verifier, a separate service, keeps that history in its own store, so the model can't rewrite the past, and neither can the agent.
 
 First, read the policy the agent runs under.
 
@@ -28,12 +22,11 @@ First, read the policy the agent runs under.
 
 ## 1. Read the policy
 
-Open `policies/travel.dw`. The agent's script runs unattended; each travel call it makes comes here on its own, with its real arguments. Rule by rule:
+Open `policies/travel.dw`. Only bookings come to it: the agent's script and its searches run unattended. Every rule looks back over the session's history:
 
-- `lookups`: searches run unattended.
-- `return-flights-on-the-trip-form`: a flight booking runs unattended when a trip form this session named its passenger and its **return** date.
-- `flights-only-as-on-the-trip-form`: a flight for anyone or any day no trip form named is refused.
-- the hotel rules: a hotel only for the form's traveler.
+- `return-flights-on-the-trip-form`: a flight runs unattended when a trip form submitted earlier in this session named its passenger and its **return** date.
+- `hotels-for-the-trip-form-traveler`: a hotel runs unattended when an earlier trip form named its guest.
+- Anything no rule permits is refused: a booking for anyone, or any day, no earlier form named.
 
 Something's missing: there's no rule for the flight **there**. See what that does to a booking.
 
@@ -89,17 +82,17 @@ Submit the trip form as it is. Then send these one at a time:
 
 > Book the cheapest one.
 
-Runs without asking: `flights-on-the-trip-form`.
+Runs without asking: `flights-on-the-trip-form` found your form in the session's history.
 
 > Actually, book it for Grace Hopper instead.
 
-Refused by `flights-only-as-on-the-trip-form`: Grace isn't on any form, and the agent tells you so.
+Refused: no form in this session's history names Grace, and the agent tells you so.
 
 > Book Ada a hotel in New York for those nights.
 
-Runs: `hotels-for-the-trip-form-traveler`.
+Runs: `hotels-for-the-trip-form-traveler` finds Ada on the same form.
 
-You approved nothing, yet nothing ran that you hadn't asked for. **The model decides what to try. The policy decides what is allowed.** And if the verifier doesn't answer, a call comes to you: auto mode never falls back to "allow".
+Every verdict came from the past: a form you submitted a minute ago, found in the session's history. You approved nothing, yet nothing ran that you hadn't asked for. **The model decides what to try. The policy decides what is allowed.**
 
 ## Check
 

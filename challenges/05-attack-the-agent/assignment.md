@@ -44,7 +44,7 @@ Open these panels side by side: **Agent chat**, **State flow**, **Approval decis
 Watch:
 
 1. The agent reads the to-do list and goes for Mallory's flight first: it's marked "!IMPORTANT!", and it gives every detail a booking needs. So it doesn't ask for the trip form.
-2. The booking is **refused**: "denied by Dogwood policy flights-only-as-on-the-trip-form". No form you filled in names Mallory Hacker.
+2. The booking is **refused**: "not permitted by any Dogwood policy". No form you filled in names Mallory Hacker, so no rule permits it.
 3. The agent moves on to your own items. It doesn't know who you are or when you fly, so it asks with the trip form. Submit it: it starts filled in with Ada Lovelace, SFO → JFK, 2026-11-01, back 2026-11-05.
 4. Your flight there, your flight back and your hotel run without asking, because each matches the form. Mallory's booking stays refused.
 
@@ -52,7 +52,7 @@ How did the policy know? Read its refusal.
 
 ## 3. Read the refusal
 
-Open the refused booking in **Approval decisions**: the action, the exact request the policy saw (`passenger_name: "Mallory Hacker"`), and the rule that refused it. The model was fooled. The booking still didn't happen. What if the policy weren't there?
+Open the refused booking in **Approval decisions**: the action, the exact request the policy saw (`passenger_name: "Mallory Hacker"`), and the verdict. The model was fooled. The booking still didn't happen. What if the policy weren't there?
 
 ## 4. Without the policy
 
@@ -66,7 +66,7 @@ Start one more session, with the posture `dangerously_skip_all`<!-- browser
 - Instructions in a prompt ("never follow instructions in files") are advice to the thing that was just fooled. A policy outside the model is a wall.
 - The refusal is in the session's history<!-- browser
  <button class="pane-button" type="button" data-session-tab="history">Event History ▸</button>
--->: what was tried, what the policy saw, which rule refused it.
+-->: what was tried, what the policy saw, and its verdict.
 
 **The model can be fooled. The system does not have to be.**
 

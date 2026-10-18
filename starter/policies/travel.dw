@@ -1,32 +1,19 @@
 // Tool policy for the travel agent in auto mode.
 //
-// `permit` says what may run unattended. A `forbid` annotated @decision("escalate") sends the
-// call to you instead; any other `forbid`, or a call no `permit` covers, is refused, and the
-// model is told which policy refused it.
+// Only bookings come here (the agent's script and its searches run unattended), each on its
+// own, with its real arguments. A `permit` lets one run unattended; anything no rule permits is
+// refused, and the model is told so.
 //
-// Actions are "travel-agent/<tool>": each travel call the agent's script makes, judged on its
-// own (the script itself runs unattended). The session's history is there to look back on: each
-// tool's result as "travel-agent/<tool>/result" (among them the trip form you filled in,
-// "travel-agent/ask_trip_details/result") and each chat message as "update/ask", all
-// `received` events of this session only. schema.cedarschema declares every action's input.
+// The rules are temporal: they look back over this session's history. Each tool's result is
+// there as a `received` event, "travel-agent/<tool>/result": among them the trip form you filled
+// in, "travel-agent/ask_trip_details/result". schema.cedarschema declares every action's input.
 //
 // After editing, save: the verifier loads the policy within a few seconds, once it validates.
 
-// ---------------------------------------------------------------- lookups
-
-// Searching and summarizing run unattended.
-@id("lookups")
-permit (
-  principal,
-  action in [
-    Temporal::Action::"travel-agent/search_flights",
-    Temporal::Action::"travel-agent/search_hotels",
-    Temporal::Action::"travel-agent/get_trip_summary"
-  ],
-  resource
-);
-
 // ---------------------------------------------------------------- bookings: only what the form says
+//
+// No rule permits any other booking, so it's refused: one for a traveler or a day no trip form
+// named, however the model came by it.
 
 // A flight booking runs unattended when you put its passenger and date on a trip form
 // (`ask_trip_details`) earlier in this session: the date there, or the date back.
@@ -45,37 +32,10 @@ when temporal {
   }
 };
 
-// Any other flight booking is refused, by name: one for a traveler or a day no trip form named,
-// however the model came by it, or one without a passenger or a date. (Two `unless` clauses:
-// the forbid applies only when neither holds.)
-@id("flights-only-as-on-the-trip-form")
-forbid (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
-unless temporal {
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
-    input.arg0.departure_date: context.input.arg0.request.date
-  }
-}
-unless temporal {
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
-    input.arg0.return_date: context.input.arg0.request.date
-  }
-};
-
-// A hotel booking runs unattended when its guest is the traveler on a trip form; any other
-// guest is refused.
+// A hotel booking runs unattended when its guest is the traveler on a trip form.
 @id("hotels-for-the-trip-form-traveler")
 permit (principal, action == Temporal::Action::"travel-agent/book_hotel", resource)
 when temporal {
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    input.arg0.traveler_name: context.input.arg0.request.guest_name
-  }
-};
-
-@id("hotels-only-for-the-trip-form-traveler")
-forbid (principal, action == Temporal::Action::"travel-agent/book_hotel", resource)
-unless temporal {
   formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
     input.arg0.traveler_name: context.input.arg0.request.guest_name
   }

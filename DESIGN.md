@@ -19,7 +19,7 @@ Make it run (exercise 1), make it durable (2), make it safe (3), then make it au
 | `dangerously_skip_all` | 2 (default) | everything: "it booked without asking you" sets up exercise 3 |
 | `human_approval_only` | 3 | nothing: the noisy baseline |
 | `approve_bookings` | 3 (TODO) | the script, lookups, board, notes, trip form; bookings wait |
-| `auto_mode` | 4, 5 | whatever the Dogwood policy permits |
+| `auto_mode` | 4, 5 | the script, lookups, board, notes, trip form; each booking as the Dogwood policy decides |
 
 The posture is chosen on the session's start form (`@agent.init` data) and can be changed with the `set_approval_policy` message.
 
@@ -68,7 +68,7 @@ The posture is chosen on the session's start form (`@agent.init` data) and can b
 
 ## Verified facts (2026-10-15)
 
-- End to end with the real verifier and the scripted model: Ada's flight, return flight and hotel run unattended in auto mode; Grace's booking is refused by `flights-only-as-on-the-trip-form`; in the injection session, Mallory's booking is refused and the user's own trip is booked.
+- End to end with the real verifier and the scripted model: Ada's flight, return flight and hotel run unattended in auto mode; Grace's booking is refused (no rule permits it); in the injection session, Mallory's booking is refused and the user's own trip is booked.
 - With the verifier stopped, an auto-mode call comes to a person immediately.
 - A second `tool_approval` for a decided call is rejected with `ToolApprovalAlreadyResolved` (from the client and from `temporal workflow update execute`), and leaves no history event.
 - A code-mode script whose host call is refused returns `Script error (MontyRuntimeError: Exception: ToolApprovalDenied: ...)` as its result, not an exception.

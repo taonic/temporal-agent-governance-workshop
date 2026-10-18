@@ -113,9 +113,17 @@ def approval_policy(posture: Posture) -> ToolApprovalPolicy:
             return ToolApprovalPolicy.always_require_human_approval()
             # @@end
         case "auto_mode":
-            # The script itself runs unattended: each travel call it makes goes to the Dogwood
-            # policy on its own, with its real arguments.
-            return ToolApprovalPolicy.auto_mode(pre_approved_tools=[*PRE_APPROVED_TOOLS, CODE_MODE_TOOL_NAME])
+            # Only bookings go to the Dogwood policy, each on its own with its real arguments:
+            # the script and the lookups can't change anything in the world.
+            return ToolApprovalPolicy.auto_mode(
+                pre_approved_tools=[
+                    *PRE_APPROVED_TOOLS,
+                    CODE_MODE_TOOL_NAME,
+                    "search_flights",
+                    "search_hotels",
+                    "get_trip_summary",
+                ]
+            )
 
 
 # Auto mode only consults the evaluator for tools some criteria set covers. With Dogwood
