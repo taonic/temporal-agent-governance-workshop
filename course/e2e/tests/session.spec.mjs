@@ -37,14 +37,22 @@ test.describe("a signed-in learner", { tag: "@auth" }, () => {
     expect((await api.get("/api/sandbox")).status()).toBe(401);
   });
 
-  test("the page knows the learner, and offers to start a sandbox", async ({ browser }) => {
+  test("the page knows the learner, and starts their sandbox without asking", async ({ browser }) => {
     const context = await browser.newContext({ storageState: await api.storageState() });
     await context.addInitScript(() => localStorage.setItem("governed-agents-course:onboarded", "true"));
     const page = await context.newPage();
+    // The runner's answers, stubbed: this tier starts no real sandbox.
+    let started = 0;
+    await page.route((url) => url.pathname === "/api/sandbox", (route) => route.fulfill({ json: { state: started ? "creating" : "none", message: "Creating your sandbox…" } }));
+    await page.route((url) => url.pathname === "/api/sandbox/start", (route) => {
+      started++;
+      return route.fulfill({ json: { state: "creating", message: "Creating your sandbox…" } });
+    });
     await page.goto("/#/exercise/01-hello-temporal");
-    await expect(page.locator(".sandbox-pill")).toHaveText(/No sandbox yet/);
+    await expect.poll(() => started, { message: "a signed-in learner with no sandbox should get one started" }).toBeGreaterThan(0);
+    await expect(page.locator(".sandbox-pill")).not.toHaveText(/No sandbox yet/);
     await showCode(page);
-    await expect(page.locator(".dock-status").getByRole("button", { name: "Start my sandbox" })).toBeVisible();
+    await expect(page.locator(".dock-status").getByRole("button", { name: "Start my sandbox" })).toHaveCount(0);
     await context.close();
   });
 

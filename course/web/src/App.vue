@@ -23,6 +23,7 @@ import {
   startSandbox,
   store,
   toast,
+  watchSandbox,
 } from "./store.js";
 
 // Ask Temporal's panel (and its Markdown and highlighting) loads the first time it opens.
@@ -171,6 +172,7 @@ onMounted(async () => {
   window.addEventListener("keydown", onShortcut);
   await refreshSession();
   if (store.authenticated && store.runtime.enabled) resumeSandbox();
+  watchSandbox();
   refreshHelper().then(resumeAfterConnect);
 });
 

@@ -452,13 +452,28 @@ export async function startSandbox() {
   pollSandbox();
 }
 
-// On load: if there's a sandbox, wake it (it may have stopped while idle); if not, wait for
-// the learner to ask for one.
+// A signed-in learner always has a sandbox on the way: on load, after signing in, and whenever
+// the page finds it isn't ready (none yet, stopped while idle, the runner restarted), it starts
+// one. Not after an error, or with the pool full: those wait for the learner's Start.
 export async function resumeSandbox() {
   if (!store.authenticated) return;
   await pollSandbox();
-  // One that exists but isn't known to be ready (stopped while idle, or the runner restarted).
-  if (!["none", "ready", "error", "full"].includes(store.sandbox.state)) startSandbox();
+  if (!["ready", "error", "full"].includes(store.sandbox.state)) startSandbox();
+}
+
+// Keeps it that way while the page is in front of the learner: checks again when the tab comes
+// back, and every couple of minutes, so a sandbox that stopped while idle is started before the
+// learner needs it. A hidden tab wakes nothing.
+const WATCH_MS = 2 * 60_000;
+let sandboxWatch = 0;
+
+export function watchSandbox() {
+  const check = () => {
+    if (document.visibilityState === "visible" && store.authenticated && store.runtime.enabled) resumeSandbox();
+  };
+  document.addEventListener("visibilitychange", check);
+  clearInterval(sandboxWatch);
+  sandboxWatch = setInterval(check, WATCH_MS);
 }
 
 // Deletes the sandbox (the runner also gives up on a start that's in progress or stuck), and
