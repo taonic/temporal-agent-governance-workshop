@@ -245,3 +245,17 @@ test("a policy rule is found by its @id, with the comments right above it, throu
   assert.equal(text.slice(block.start, block.end), '// why\n@id("hotels")\nforbid (x)\nunless {\n  y\n};');
   assert.equal(ruleBlock(text, "missing"), null);
 });
+
+test("a link to a section names one of its exercise's sections", () => {
+  for (const exercise of buildCourse().exercises) {
+    for (const mode of ["browser", "local"]) {
+      const page = exercise.modes[mode];
+      const ids = new Set(page.sections.map((s) => s.id));
+      for (const html of [page.intro, ...page.sections.map((s) => s.html)]) {
+        for (const [, id] of html.matchAll(/href="#([^"/]+)"/g)) {
+          assert.ok(ids.has(id), `${exercise.id} (${mode}) links to #${id}, which isn't one of its sections: was the heading renamed?`);
+        }
+      }
+    }
+  }
+});

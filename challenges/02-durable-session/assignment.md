@@ -244,7 +244,7 @@ return FlightSearchResponse(flights=flights_for(request.origin, request.destinat
 
 `flights_for` (in `travel/inventory.py`) is the simulated flight database. It's seeded, so the same search always finds the same flights, cheapest first.
 
-Restart the worker. Within a few seconds the retry succeeds, the script finishes, and the agent replies in the **same session** with the flights it found. You fixed a tool in the middle of a conversation, and the conversation carried on. How did it know where it was? Look inside.
+Restart the worker. Within a few seconds the retry succeeds, the script finishes, and the agent replies in the **same session** with the flights it found. You fixed a tool in the middle of a conversation, and the conversation carried on. How did it know where it was? [Look inside](#5-look-inside-the-session).
 
 ## 5. Look inside the session
 

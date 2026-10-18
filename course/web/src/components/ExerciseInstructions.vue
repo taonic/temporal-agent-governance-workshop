@@ -489,9 +489,22 @@ function paintInserts() {
 }
 watch([() => store.fileTexts, () => props.live, page, beat], () => nextTick(paintInserts), { immediate: true, deep: true });
 
+// A link to one of the assignment's sections (`[Look inside](#5-look-inside-the-session)`, a
+// heading's anchor on GitHub too): the guide goes to that beat; to the next one, as Done does.
+function goToSection(target, event) {
+  const id = target.getAttribute("href")?.slice(1);
+  const i = beats.value.findIndex((b) => b.id === id);
+  if (i < 0) return false;
+  event.preventDefault();
+  if (i === at.value + 1) advance({ codeTour: false });
+  else goTo(i);
+  return true;
+}
+
 function onClick(event) {
   const target = event.target.closest("a, button, code.file-ref");
   if (!target) return;
+  if (target.matches("a[href^='#']") && goToSection(target, event)) return;
   if (target.matches("button[data-worker-toggle]")) {
     if ("workerRestart" in target.dataset) restartWorker(props.exercise);
     else toggleWorker(props.exercise);
