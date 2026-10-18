@@ -93,6 +93,12 @@ export class Learner {
       }, pages);
   }
 
+  // The last ▶'s output with the terminal's rows run together: a line longer than the terminal
+  // is wrapped across rows, so a phrase in it is only whole this way.
+  get flatOutput() {
+    return (this.output ?? "").replace(/\n/g, "");
+  }
+
   // What the terminal printed since the last time `command` was typed into it.
   async outputOf(name, command) {
     const text = await this.terminalLines(name);

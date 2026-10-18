@@ -4,7 +4,7 @@
 // UI) over a dock with the sandbox's terminals, so whichever you're looking at gets the whole
 // width and the terminals stay in sight. The guide brings the right tab forward for each step.
 // Locally: the files and the instructions only.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { closeCodeTour, codeTour } from "../codeTour.js";
 import { launchConfetti } from "../confetti.js";
@@ -58,13 +58,17 @@ const panes = ref(null);
 const AGENT_UI = "iframe[title='The Agent UI']";
 const agentTourOpen = ref(false);
 // A step's ✦ Take a tour of the Agent UI: the Agent UI, over the whole screen, and its tour.
+// The tour works out which of its cards it can show when it opens, by measuring their targets
+// in the Agent UI: so the Agent UI first, shown and laid out at full size, then the tour.
 watch(
   () => store.agentTourRequest,
-  () => {
+  async () => {
     if (!live.value || !exercise.value.agentUi) return;
     store.workspaceView = "console";
     codeMaximized.value = true;
-    agentTourOpen.value = true;
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    if (store.workspaceView === "console") agentTourOpen.value = true;
   },
 );
 const agentTourSteps = [

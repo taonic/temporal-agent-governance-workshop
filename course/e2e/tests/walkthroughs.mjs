@@ -102,11 +102,11 @@ export const WALKTHROUGHS = {
     await l.insert(0); // MODEL_SCRIPT: its TODO, replaced by the model's script
     await l.insert(1); // run(): its TODO, replaced by the sandbox
     expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
-    expect(l.output, "with no host functions, the script can't call search_flights").toMatch(/search_flights` used when not defined/);
+    expect(l.flatOutput, "with no host functions, the script can't call search_flights").toMatch(/search_flights` used when not defined/);
     await l.insert(2); // HOST_FUNCTIONS: its TODO, replaced by search_flights
     expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
-    expect(l.output, "the search should run on the host").toMatch(/host\s+search_flights\('SFO', 'JFK', '2026-11-20'\)/);
-    expect(l.output, "the script's print should come out of the sandbox").toMatch(/sandbox\s+3 flights, 2 nonstop/);
+    expect(l.flatOutput, "the search should run on the host").toMatch(/host\s+search_flights\('SFO', 'JFK', '2026-11-20'\)/);
+    expect(l.flatOutput, "the script's print should come out of the sandbox").toMatch(/sandbox\s+3 flights, 2 nonstop/);
 
     await l.step("Start the agent's worker");
     expect(await l.runButton("uv run travel-stack status"), "travel-stack status failed").toBe(0);
