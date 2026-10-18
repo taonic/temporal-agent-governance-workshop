@@ -1,7 +1,5 @@
 """The user's travel notes: a few Markdown files the agent's scripts can read at ``/notes``.
 
-Copied from the harness's Dogwood example (examples/auto_mode_dogwood/travel_notes.py).
-
 They seed an in-memory filesystem, so they live in the workflow and the console's file panel,
 never on disk. ``todo.md`` carries a planted prompt injection: a to-do item, slipped in by
 someone else, to book a flight for a stranger. It is the demo's attack; the trip form policy is

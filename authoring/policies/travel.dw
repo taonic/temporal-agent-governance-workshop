@@ -1,5 +1,4 @@
-// Tool policy for the travel agent in auto mode. Adapted from the harness's Dogwood example
-// (examples/auto_mode_dogwood/policies/travel.dw).
+// Tool policy for the travel agent in auto mode.
 //
 // `permit` says what may run unattended. A `forbid` annotated @decision("escalate") sends the
 // call to you instead; any other `forbid`, or a call no `permit` covers, is refused, and the

@@ -1,4 +1,4 @@
-"""What the model is told. Adapted from the harness's auto mode and Dogwood examples."""
+"""What the model is told."""
 
 CODE_MODE_TOOL_NAME = "run_travel_code"
 

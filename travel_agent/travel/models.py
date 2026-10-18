@@ -1,6 +1,6 @@
 """Request and response shapes for the travel tools.
 
-Copied from the harness's Monty example (examples/monty/travel_models.py), with two changes:
+Two things in them are there for the policies:
 
 - Money is integer cents. A Dogwood policy is Cedar underneath, and Cedar has no floats, so a
   price a policy should be able to read has to be an integer.

@@ -1,7 +1,6 @@
 """The agent's running TODO board of trips, as OBSERVABLE state.
 
-Copied from the harness's Monty example (examples/monty/trip_board.py), with prices in integer
-cents like the travel tools.
+Prices are in integer cents, like the travel tools.
 
 The travel tools in ``activities.py`` do the work; this module is the agent's memory of
 what it is collecting — one entry per trip, with the description, the flights and hotels

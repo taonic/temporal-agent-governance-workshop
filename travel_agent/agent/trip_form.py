@@ -1,7 +1,5 @@
 """The trip form: the agent asks the user who is traveling, where, and when.
 
-Copied from the harness's Dogwood example (examples/auto_mode_dogwood/trip_form.py).
-
 ``ask_trip_details`` is a callback tool, so it has no body: the console renders
 :class:`TripDetails` as a form, and what the user submits is the tool's result. The evaluator
 records that result with the verifier as ``travel-agent/ask_trip_details/result``, and

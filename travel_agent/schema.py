@@ -5,8 +5,6 @@
 Run it after changing the agent's tools or messages. The verifier and the `dogwood` CLI check
 ``policies/travel.dw`` against the schema, so a policy that names a tool or field the agent
 doesn't have is rejected, rather than silently never matching.
-
-Adapted from the harness's Dogwood example (examples/auto_mode_dogwood/schema.py).
 """
 
 from temporal_agent_harness.harness.dogwood_approvals.schema import dogwood_schema
