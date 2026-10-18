@@ -67,8 +67,7 @@ class Session:
                 "departure_date": departure, "return_date": back}
         return self.received("travel-agent/ask_trip_details/result", form)
 
-    # By default, the seeded nonstop under $1,000 (slot 2): a booking every exercise 4 menu rule
-    # allows, so a learner's menu edit never fails the graded check.
+    # By default, the seeded nonstop under $1,000 (slot 2).
     def book_flight(self, label: str, passenger: str, date="2026-11-01", *, price_cents=32200, nonstop=True,
                     flight_id=None):
         request = {"flight_id": flight_id or f"FL-SFOJFK-{date.replace('-', '')}-2", "passenger_name": passenger,

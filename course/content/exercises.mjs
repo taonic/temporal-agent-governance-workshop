@@ -166,7 +166,7 @@ export const EXERCISES = {
         from: '"""The simulated travel inventory:',
         to: "rebuild it from the id alone",
         title: "Seeded, not live",
-        body: "No real flights API: results come from the route and date, the same every time, with a planted shape (the cheapest with a stop, nonstops, a fare over $1,000) that the policy exercises rely on.",
+        body: "No real flights API: results come from the route and date, the same every time, with a planted shape (the cheapest with a stop, nonstops, a fare over $1,000), so every run shows the same choices.",
       },
     ],
   },

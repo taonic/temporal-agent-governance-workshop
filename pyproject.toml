@@ -26,9 +26,6 @@ gpu = [
 temporal-agent-harness = { git = "https://github.com/temporal-community/temporal-agent-harness", rev = "15da54ee8e2baff0370ca245e9da1e29ba831ab8" }
 
 [tool.pytest.ini_options]
-# The exercise 4 menu tests fail until you write their rules: run them with `-m menu`.
-addopts = "-m 'not menu'"
-markers = ["menu: exercise 4's optional policy edits"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"

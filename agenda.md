@@ -23,8 +23,8 @@ By the end, participants understand how Temporal makes agent sessions durable, h
 | 1:55-2:10 | Human Approval Pattern | Instructor/demo | Explain why safe-but-manual approval does not scale |
 | 2:10-2:45 | **Exercise 3: Human Approval Mode** | Hands-on | Add/trigger approval for risky bookings |
 | 2:45-3:00 | Introduce Dogwood | Instructor/demo | Policy over tool calls and prior session history |
-| 3:00-3:40 | **Exercise 4: Dogwood Auto Mode** | Hands-on | Let safe actions run, block mismatched bookings |
-| 3:40-3:55 | **Optional Capstone: Attack The Agent** | Hands-on/demo | Prompt injection via travel notes; Dogwood denies unsafe action |
+| 3:00-3:25 | **Exercise 4: Dogwood Auto Mode** | Hands-on | Let safe actions run, block mismatched bookings |
+| 3:25-3:55 | **Optional Capstone: Attack The Agent** | Hands-on/demo | Prompt injection via travel notes; Dogwood denies unsafe action |
 | 3:55-4:00 | Wrap | Instructor | Reusable architecture and next steps |
 
 **Exercise 1: Hello Temporal**
@@ -126,15 +126,6 @@ Learners do:
 - See search and matching booking run without manual approval.
 - Ask it to book for a different person.
 - See Dogwood deny it.
-- Edit one policy rule.
-
-Good learner policy edits:
-
-- Deny flights over a price threshold.
-- Escalate instead of deny expensive hotels.
-- Allow bookings only for nonstop flights.
-- Require hotel guest to match the trip form.
-- Allow coworker booking only if coworker is listed on the form.
 
 Concepts covered:
 

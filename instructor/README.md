@@ -16,7 +16,7 @@ Talking points and demo scripts for the instructor blocks of the 4-hour workshop
 | 2:10 | Exercise 3: Human approval | Float | `challenges/03-human-approval` |
 | 2:45 | Introduce Dogwood | Policy over tool calls and history | |
 | 3:00 | Exercise 4: Auto mode | Float | `challenges/04-auto-mode` |
-| 3:40 | Capstone: attack the agent | Run it as a demo if time is short | `challenges/05-attack-the-agent` |
+| 3:25 | Capstone: attack the agent | Run it as a demo if time is short | `challenges/05-attack-the-agent` |
 | 3:55 | Wrap | Reusable architecture, next steps | |
 
 The arc to keep repeating: **make it run, make it durable, make it safe, then make it autonomous.** Don't explain Dogwood before learners have seen the agent run.

@@ -237,7 +237,6 @@ export const WALKTHROUGHS = {
     await l.openFile("policies/travel.dw");
 
     await l.step("Watch it refuse");
-    expect(await l.runButton("uv run travel-stack status"), "travel-stack status failed").toBe(0);
     await l.worker("stopped");
     await l.worker("running");
     await l.newSession("auto_mode");
@@ -267,28 +266,9 @@ export const WALKTHROUGHS = {
     const graceBooked = flights(await l.bookings(), "Grace Hopper").length > 0;
     if (grace.forms) expect(graceBooked, "Grace's booking, on her own trip form, didn't go through").toBe(true);
     else expect(graceBooked, "Grace was booked with no trip form naming her").toBe(false);
-    await l.converse("Move Ada to December 24th.");
-    expect((await l.bookings()).filter((b) => b.type === "flight" && b.date === "2026-12-24"), "a flight on a date no form named was booked").toEqual([]);
     const adaHotel = async () => hotels(await l.bookings(), SAMPLE_TRAVELER).length > 0;
     await ask(l, "Book Ada a hotel in New York for those nights.", adaHotel);
     expect(await adaHotel(), "Ada's hotel wasn't booked").toBe(true);
-
-    await l.step("Edit one rule");
-    await l.insert(0); // refuse flights over $1,000
-    expect(await l.runButton("uv run pytest -m menu -k price"), "the price rule's test failed").toBe(0);
-    await sleep(RELOAD);
-
-    await l.step("Look under the hood");
-    await l.runButton("uv run travel-stack logs verifier", { wait: false });
-    await sleep(5 * SECOND);
-    await l.page.keyboard.press("Control+C"); // "Ctrl-C stops following it"
-    await l.settle("commands");
-    expect(await l.runButton("uv run travel-stack stop verifier")).toBe(0);
-    const unattended = await l.converse("Book the cheapest flight back from JFK to SFO on 2026-11-05 for Ada Lovelace.", {
-      onApproval: (card, tool, learner) => (isBooking(tool) ? reject(card, tool, learner) : approve(card, tool, learner)),
-    });
-    expect(unattended.approvals.length, "with the verifier stopped, the call should come to you").toBeGreaterThan(0);
-    expect(await l.runButton("uv run travel-stack up")).toBe(0);
 
     await l.check("04-auto-mode");
   },
