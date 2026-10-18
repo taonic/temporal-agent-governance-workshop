@@ -689,6 +689,36 @@ async function reveal(path, lines) {
   editor.dispatch({ effects: EditorView.scrollIntoView(from, { y: "start", yMargin: 24 }) });
 }
 
+// A TODO the instructions mention: in the files that still have it (the ones the sentence names
+// first), the one nearest the names it mentions; its block (from the TODO's line to the next
+// blank line) selected and lit. False when no file has it any more.
+async function openTodo(marker, { prefer = [], near = [] } = {}) {
+  const textOf = (file) => docs[file.path]?.text ?? file.starter ?? "";
+  const having = props.exercise.files.filter((file) => file.editable && textOf(file).includes(marker));
+  const file = having.find((f) => prefer.includes(f.path)) ?? having[0];
+  if (!file) return false;
+  select(file.path);
+  await loadFile(file.path);
+  const lines = textOf(file).split("\n");
+  // The TODO comments, not a placeholder's message (`raise NotImplementedError("TODO(ch02): …")`).
+  const commented = lines.flatMap((line, i) => (/(#|\/\/)/.test(line.split(marker)[0]) && line.includes(marker) ? [i] : []));
+  const hits = commented.length ? commented : lines.flatMap((line, i) => (line.includes(marker) ? [i] : []));
+  // The TODO the instructions mean is the one whose code (not comments) their names sit closest
+  // to: above all the first name, the one the TODO is "at" or "in" (MODEL_SCRIPT, run()…).
+  const code = lines.map((line) => line.replace(/\s*(#|\/\/).*$/, ""));
+  const words = near.map((name) => new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`));
+  const score = (i) =>
+    words.reduce((sum, word, n) => {
+      const distances = code.flatMap((line, j) => (Math.abs(j - i) <= 8 && word.test(line) ? [Math.abs(j - i)] : []));
+      return sum + (distances.length ? (9 - Math.min(...distances)) * (n === 0 ? 10 : 1) : 0);
+    }, 0);
+  const at = hits.reduce((best, i) => (score(i) > score(best) ? i : best), hits[0]);
+  let end = at;
+  while (end + 1 < lines.length && end - at < 12 && lines[end + 1].trim()) end++;
+  reveal(file.path, `${at + 1}-${end + 1}`);
+  return true;
+}
+
 function closeExtra(path) {
   extra.value = extra.value.filter((f) => f.path !== path);
   if (active.value === path) select(props.exercise.files[0]?.path ?? "");
@@ -750,6 +780,7 @@ watch(
 
 let unregister = null;
 let unregisterInsert = null;
+let unregisterTodo = null;
 let unregisterRevert = null;
 let unregisterEditor = null;
 // The tab on show, for Ask Temporal's "send my code" chip.
@@ -764,6 +795,7 @@ onMounted(() => {
   }
   unregister = registerHook("file", openAt);
   unregisterInsert = registerHook("insert", insertSnippet);
+  unregisterTodo = registerHook("todo", openTodo);
   unregisterRevert = registerHook("revert", revertSnippet);
   // For Ask Temporal: the file on show, and what's selected in it.
   unregisterEditor = registerHook("editor", () => {
@@ -780,6 +812,7 @@ onBeforeUnmount(() => {
   editor?.destroy();
   unregister?.();
   unregisterInsert?.();
+  unregisterTodo?.();
   unregisterRevert?.();
   unregisterEditor?.();
   store.fileTexts = {};

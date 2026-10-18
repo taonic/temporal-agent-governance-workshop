@@ -123,7 +123,7 @@ export const effectiveMode = () => (store.runtime.enabled ? "browser" : "local")
 
 // --- Hooks components register ------------------------------------------------------------
 
-const hooks = { terminal: null, pane: null, send: null, session: null, sessionTab: null, file: null, insert: null, revert: null, poll: null, editor: null, terminalSelection: null };
+const hooks = { terminal: null, pane: null, send: null, session: null, sessionTab: null, file: null, todo: null, insert: null, revert: null, poll: null, editor: null, terminalSelection: null };
 
 export function registerHook(name, fn) {
   hooks[name] = fn;
@@ -357,6 +357,15 @@ export async function revertFromEditor(path, code, mode) {
 // exercise (the harness's code) opens read-only, from the sandbox. False when it can't.
 export function openFile(file, lines) {
   const opened = hooks.file?.(file, lines) ?? false;
+  if (opened) store.workspaceView = "code";
+  return opened;
+}
+
+// A `TODO(chNN)` in the instructions: the editor opens the file with it and lights its block.
+// `prefer`: the files the sentence names; `near`: the names it mentions (`run()`, `MODEL_SCRIPT`),
+// to tell several TODOs in one file apart.
+export async function openTodo(marker, hints) {
+  const opened = (await hooks.todo?.(marker, hints)) ?? false;
   if (opened) store.workspaceView = "code";
   return opened;
 }

@@ -21,6 +21,7 @@ import {
   load,
   navigate,
   openFile,
+  openTodo,
   openPane,
   openSessionTab,
   openTrip,
@@ -535,8 +536,22 @@ function goToSection(target, event) {
   return true;
 }
 
+// A `TODO(chNN)` in a step: the TODO in the code. Its paragraph says which: the files it names
+// first, and the names it mentions (`run()`, `MODEL_SCRIPT`) when one file has several.
+async function showTodo(target) {
+  const block = target.closest("p, li") ?? target.parentElement;
+  const prefer = [...block.querySelectorAll("code.file-ref")].map((el) => el.dataset.file);
+  // Names first from the TODO on ("the TODO(ch02) at MODEL_SCRIPT"), then those before it.
+  const codes = [...block.querySelectorAll("code:not(.file-ref):not(.todo-ref)")];
+  const after = codes.filter((el) => target.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const near = [...after, ...codes.filter((el) => !after.includes(el))]
+    .map((el) => el.textContent.trim().replace(/\(\)$/, ""))
+    .filter((name) => name.length > 2);
+  if (!(await openTodo(target.dataset.todo, { prefer, near }))) toast(`No ${target.dataset.todo} left in the code: it's done`);
+}
+
 function onClick(event) {
-  const target = event.target.closest("a, button, code.file-ref");
+  const target = event.target.closest("a, button, code.file-ref, code.todo-ref");
   if (!target) return;
   if (target.matches("a[href^='#']") && goToSection(target, event)) return;
   if (target.matches("a[href^='content/architecture/']") && mode.value === "browser") {
@@ -592,6 +607,8 @@ function onClick(event) {
     copy(target.closest(".snippet")?.querySelector("pre")?.innerText ?? "");
   } else if (target.matches("code.file-ref")) {
     if (!openFile(target.dataset.file)) copy(target.dataset.file);
+  } else if (target.matches("code.todo-ref")) {
+    showTodo(target);
   }
 }
 </script>

@@ -461,13 +461,18 @@ function createRenderer() {
     }
   });
 
-  // `path/to/file.py` in prose opens the file.
+  // `path/to/file.py` in prose opens the file, and `TODO(ch02)` shows that TODO in it.
   // `path/to/file.py` in prose opens the file; in the browser a command in prose
   // (`uv run hello-start SEA LHR`) gets a ▶ that types it into its terminal.
   md.renderer.rules.code_inline = (tokens, idx, _options, env) => {
     const content = tokens[idx].content;
     const file = content.replace(/:\d+$/, "");
-    const attr = knownFiles.has(file) ? ` class="file-ref" data-file="${escapeAttr(file)}"` : "";
+    const todo = /^TODO\(ch\d+\)$/.test(content);
+    const attr = knownFiles.has(file)
+      ? ` class="file-ref" data-file="${escapeAttr(file)}"`
+      : todo
+        ? ` class="todo-ref" data-todo="${escapeAttr(content)}" title="Show it in the code"`
+        : "";
     const code = `<code${attr}>${md.utils.escapeHtml(content)}</code>`;
     if (env?.mode !== "browser" || !isInlineCommand(content)) return code;
     // The trip button says what it runs: the command beside it would only repeat it.

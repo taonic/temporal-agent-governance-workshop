@@ -1393,13 +1393,16 @@ body.is-resizing iframe {
   font-size: 0.9em;
 }
 
-.markdown code.file-ref {
+/* A file, or a TODO in one: a click shows it in the editor. */
+.markdown code.file-ref,
+.markdown code.todo-ref {
   cursor: pointer;
   border-color: color-mix(in srgb, var(--temporal-uv) 40%, var(--line));
   color: var(--temporal-uv);
 }
 
-.markdown code.file-ref:hover {
+.markdown code.file-ref:hover,
+.markdown code.todo-ref:hover {
   background: var(--temporal-uv-soft);
 }
 
