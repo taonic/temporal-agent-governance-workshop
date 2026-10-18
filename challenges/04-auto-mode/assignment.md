@@ -81,11 +81,17 @@ Check it, then load it into the verifier:
 uv run travel-stack restart verifier
 ```
 
-The verifier keeps its history across restarts, so your session's trip form is still there: try the rule in the same session.
+A new rule starts with an empty history: it sees only what happens after it's loaded, not the trip form you already filled in. So try it in a new session.
 
 ## 4. Try it
 
-In the same session, send these one at a time:
+Start a new session with the posture **`auto_mode`**<!-- browser
+ <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="auto_mode" title="Open the Travel agent's start form in the Agent UI, with auto_mode chosen">New session ▸</button>
+-->:
+
+> I need a flight to New York.
+
+Submit the trip form as it is. Then send these one at a time:
 
 > Book the cheapest one.
 

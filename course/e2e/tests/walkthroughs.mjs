@@ -105,7 +105,7 @@ export const WALKTHROUGHS = {
     expect(l.flatOutput, "with no host functions, the script can't call search_flights").toMatch(/search_flights` used when not defined/);
     await l.insert(2); // HOST_FUNCTIONS: its TODO, replaced by search_flights
     expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
-    expect(l.flatOutput, "the search should run on the host").toMatch(/host\s+search_flights\('SFO', 'JFK', '2026-11-20'\)/);
+    expect(l.flatOutput, "the search should run on the host").toMatch(/host\s+search_flights\('SFO',\s*'JFK',\s*'2026-11-20'\)/); // a wrap may eat a space
     expect(l.flatOutput, "the script's print should come out of the sandbox").toMatch(/sandbox\s+3 flights, 2 nonstop/);
 
     await l.step("Start the agent's worker");
@@ -224,9 +224,6 @@ export const WALKTHROUGHS = {
     expect(returned.approvals.some(isBooking), "the return booking didn't wait for approval").toBe(true);
     expect((await l.bookings()).filter(isReturn).length, "the approval didn't go through once the worker was back").toBeGreaterThan(0);
 
-    await l.step("Read the audit trail");
-    await l.openInTemporal("button[data-session-tab='history?category=update']");
-
     await l.check("03-human-approval");
   },
 
@@ -256,15 +253,14 @@ export const WALKTHROUGHS = {
     expect(l.flatOutput, "the check didn't pass with the rule in").toContain("Check passed");
 
     await l.step("Try it");
-    // In the same session as the refusal: the model may not try again until it's told the policy
-    // changed.
+    // In a new session: a rule just loaded starts with an empty history, so it never saw the
+    // first session's trip form.
+    await l.newSession("auto_mode");
+    const replanned = await ask(l, "I need a flight to New York.", (h) => h.forms > 0, { nudge: "Please ask me for the trip details with the trip form." });
+    expect(replanned.forms, "the agent never asked with the trip form").toBeGreaterThan(0);
     const adaBooked = async () => flights(await l.bookings(), SAMPLE_TRAVELER).length > 0;
-    await ask(l, "Book the cheapest one.", adaBooked, { nudge: "The booking policy has just been updated. Please try booking the cheapest flight again." });
-    expect(
-      await adaBooked(),
-      "the flight on the trip form wasn't booked: the agent won't retry a booking the policy refused earlier in the session " +
-        '(travel_agent/agent/prompts.py: "don\'t retry it"), but this step asks for it again in the same session',
-    ).toBe(true);
+    await ask(l, "Book the cheapest one.", adaBooked, { nudge: "Please book the cheapest flight for me now." });
+    expect(await adaBooked(), "the flight on the trip form wasn't booked: flights-on-the-trip-form should permit it").toBe(true);
     const grace = await l.converse("Actually, book it for Grace Hopper instead.", {
       onForm: (card, learner) => submitForm(card, learner, { traveler: "Grace Hopper" }),
     });

@@ -143,7 +143,7 @@ test("in the browser, every new session the instructions ask for is a button wit
   const exercises = buildCourse().exercises;
   const all = (mode) => exercises.map((e) => e.modes[mode].sections.map((s) => s.html).join("\n")).join("\n");
   const postures = [...all("browser").matchAll(/data-new-session="Travel agent" data-posture="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(postures, ["dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode", "auto_mode", "dangerously_skip_all"]);
+  assert.deepEqual(postures, ["dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode", "auto_mode", "auto_mode", "dangerously_skip_all"]);
   assert.ok(!all("local").includes("data-new-session"), "local pages have no session buttons");
   assert.match(all("local"), /Start a new <strong>Travel agent<\/strong> session\. The start form/);
 });

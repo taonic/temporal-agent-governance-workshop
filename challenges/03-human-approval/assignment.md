@@ -74,19 +74,16 @@ You answered within seconds. What if you take an hour?
 
 ## 4. Wait as long as it takes
 
-Ask for another booking:
+1. Ask for another booking:
 
 > Book the cheapest flight back from JFK to SFO on 2026-11-05 for Ada Lovelace.
 
-When the approval card appears, **stop the worker**. Wait a minute. Click **Approve**: the console waits, because an Update needs a worker to run its validator. Start the worker, and the approval goes through and the booking runs.
+2. When the approval card appears, **stop the worker**.
+3. Wait a minute. No process is running the session now.
+4. Click **Approve**. Nothing happens yet: an Update needs a worker to run its validator, so the console waits.
+5. **Start the worker**. The approval goes through, and the booking runs.
 
-The session sat waiting with no process running at all. While a workflow waits it costs nothing; it could wait days. And every decision you make is on record.
-
-## 5. Read the audit trail
-
-The session's history<!-- browser
- <button class="pane-button" type="button" data-session-tab="history?category=update">Updates ▸</button>
---><!-- local --> in the Temporal UI<!-- /local --> shows each `tool_approval` Update and what was decided: the approval, and the rejection with its reason. Approval is part of the history, next to the booking it allowed.
+The session waited with no process running at all, and lost nothing. That's durability: the pending call lives in the workflow's history on the Temporal side, not in a worker, so a wait survives crashes, restarts and redeploys. While a workflow waits it costs nothing; it could wait days for your answer.
 
 It works. But count the clicks.
 
