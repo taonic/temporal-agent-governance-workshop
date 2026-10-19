@@ -23,11 +23,21 @@ when {
   context.input.arg0.request.passenger_name == "Ada Lovelace"
 };
 
+// The flight back: the same, with the form's return date.
+@id("return-flights-on-the-trip-form")
+permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
+when temporal {
+  formerly within 2h Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
+    input.arg0.return_date: context.input.arg0.request.date
+  }
+};
+
 // A hotel booking runs unattended when its guest is the traveler on a trip form.
 @id("hotels-for-the-trip-form-traveler")
 permit (principal, action == Temporal::Action::"travel-agent/book_hotel", resource)
 when temporal {
-  formerly within 30d Temporal::Action::"travel-agent/ask_trip_details/result"::received{
+  formerly within 2h Temporal::Action::"travel-agent/ask_trip_details/result"::received{
     input.arg0.traveler_name: context.input.arg0.request.guest_name
   }
 };

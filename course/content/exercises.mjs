@@ -261,7 +261,7 @@ export const EXERCISES = {
         file: "policies/travel.dw",
         from: '@id("hotels-for-the-trip-form-traveler")',
         title: "A rule that remembers",
-        body: "`formerly within 30d …::received{…}` looks back through the session's history for a trip form whose traveler is this hotel's guest. Temporal's history is what makes that possible.",
+        body: "`formerly within 2h …::received{…}` looks back through the session's history for a trip form whose traveler is this hotel's guest. Temporal's history is what makes that possible.",
       },
     ],
   },
