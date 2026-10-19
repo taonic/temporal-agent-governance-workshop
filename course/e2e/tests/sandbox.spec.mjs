@@ -24,6 +24,9 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
   let context;
   let page;
   const problems = [];
+  // What an uncaught error was, when its message says little ("Object": a promise rejected with
+  // a plain object): the console's report, with its value and the script it came from.
+  const details = [];
 
   test.beforeAll(async ({ browser }) => {
     const signedIn = fs.existsSync(LEARNER_STATE);
@@ -35,6 +38,11 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     await context.addInitScript((key) => localStorage.setItem(key, "true"), storageKey("onboarded"));
     page = await context.newPage();
     page.on("pageerror", (err) => problems.push(`uncaught: ${err.message}`));
+    page.on("console", async (msg) => {
+      if (msg.type() !== "error" || !msg.text().startsWith("Uncaught")) return;
+      const values = await Promise.all(msg.args().map((arg) => arg.jsonValue().catch(() => "?")));
+      details.push(`${msg.text()} ${JSON.stringify(values).slice(0, 400)} (${msg.location().url}:${msg.location().lineNumber})`);
+    });
     page.on("dialog", (dialog) => dialog.accept()); // the page's confirm()s, as a learner says yes
   });
 
@@ -52,7 +60,8 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
       const chat = await page.frameLocator("iframe[title='The Agent UI']").locator(".message-list").innerText({ timeout: 2000 }).catch(() => "");
       if (chat) await testInfo.attach("agent-chat", { body: chat, contentType: "text/plain" });
     }
-    expect(problems.splice(0), "the page threw").toEqual([]);
+    const seen = details.splice(0);
+    expect(problems.splice(0), `the page threw${seen.length ? `: ${seen.join(" | ")}` : ""}`).toEqual([]);
   });
 
   const terminal = (name) => page.locator(`.terminal-pane[aria-label="The ${name} terminal"]`);
