@@ -1,8 +1,8 @@
-Here’s the shape I’d use: **4 core exercises + 1 optional capstone**, in a 4-hour workshop.
+Here’s the shape I’d use: **3 core exercises + 1 bonus exercise**, in a 4-hour workshop.
 
 The spine is:
 
-> Raw Temporal → Monty agent session → human approval → Dogwood auto mode → prompt-injection/policy capstone.
+> Raw Temporal → Monty agent session → human approval → Dogwood auto mode (bonus).
 
 **Workshop Title**
 **Governed Agents With Temporal, Monty, And Dogwood**
@@ -23,8 +23,7 @@ By the end, participants understand how Temporal makes agent sessions durable, h
 | 1:55-2:10 | Human Approval Pattern | Instructor/demo | Explain why safe-but-manual approval does not scale |
 | 2:10-2:45 | **Exercise 3: Human Approval Mode** | Hands-on | Add/trigger approval for risky bookings |
 | 2:45-3:00 | Introduce Dogwood | Instructor/demo | Policy over tool calls and prior session history |
-| 3:00-3:25 | **Exercise 4: Dogwood Auto Mode** | Hands-on | Let safe actions run, block mismatched bookings |
-| 3:25-3:55 | **Optional Capstone: Attack The Agent** | Hands-on/demo | Prompt injection via travel notes; Dogwood denies unsafe action |
+| 3:00-3:55 | **Bonus Exercise 4: Dogwood Auto Mode** | Hands-on | Let safe actions run, block mismatched bookings |
 | 3:55-4:00 | Wrap | Instructor | Reusable architecture and next steps |
 
 **Exercise 1: Hello Temporal**
@@ -112,8 +111,8 @@ The “aha”:
 
 > Human approval is safe, but it gets noisy fast.
 
-**Exercise 4: Dogwood Auto Mode**
-This is the main workshop payoff.
+**Bonus Exercise 4: Dogwood Auto Mode**
+This is the payoff, for those with the time.
 
 Short explanation before the lab:
 
@@ -138,29 +137,6 @@ Concepts covered:
 The “aha”:
 
 > The model decides what to try. The policy decides what is allowed.
-
-**Optional Capstone: Attack The Agent**
-This is the memorable demo.
-
-Learners do:
-
-- Open the travel notes.
-- See a malicious instruction: book a flight for Mallory.
-- Ask: “Take care of everything in my notes.”
-- Watch the model attempt the unsafe booking.
-- See Dogwood deny it.
-- Inspect the denial reason.
-
-Concepts covered:
-
-- Prompt injection.
-- Untrusted content.
-- Policy independent of model confidence.
-- Why prompts alone are insufficient.
-
-The “aha”:
-
-> The model can be fooled. The system does not have to be.
 
 **Where Monty Gets Explained**
 Put Monty immediately after Exercise 1.
@@ -187,9 +163,9 @@ Don’t explain Dogwood deeply before learners have seen Monty run. Also don’t
 **Exercise Count**
 For a 4-hour workshop:
 
-- **4 mandatory exercises**
-- **1 optional capstone**
-- Each mandatory exercise should have one primary TODO
+- **3 mandatory exercises**
+- **1 bonus exercise** (Dogwood auto mode)
+- Each exercise should have one primary TODO
 - Each should have a check script
 - Keep Dogwood policy editing small and concrete
 

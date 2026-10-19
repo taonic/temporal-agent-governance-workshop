@@ -4,6 +4,7 @@
   "meta": {
     "title": "Travel agent on Temporal: session, sandbox, approvals and policy",
     "output": "docs/architecture/governance-architecture.html",
+    "animation": "trace",
     "quality_profile": "showcase",
     "legend": {
       "entries": {

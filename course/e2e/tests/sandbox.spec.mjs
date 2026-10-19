@@ -4,10 +4,11 @@
 // sandbox is deleted at the end, pass or fail (global-teardown.mjs). Skips without
 // E2E_ACCESS_CODE, or with E2E_SKIP_SANDBOX=1.
 //
-// The tests run in order, in one sandbox, but one failing doesn't stop the rest: Playwright
+// The tests run in order, as one learner, but one failing doesn't stop the rest: Playwright
 // starts a new worker for the next test, which signs in as the same learner (its cookies are
-// kept in LEARNER_STATE) and so finds the same sandbox. Each exercise after the first starts
-// with its setup.sh, so it doesn't depend on the one before having passed.
+// kept in LEARNER_STATE) and so finds the same sandbox. Each walkthrough starts with the guide's
+// Start over, which gives it a new sandbox with that exercise as it starts, so it doesn't
+// depend on the one before having passed.
 import fs from "node:fs";
 
 import { ACCESS_CODE, LEARNER_STATE, SKIP_SANDBOX } from "../env.mjs";
@@ -71,8 +72,11 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     await page.goto("/#/exercise/01-hello-temporal");
     await showCode(page);
     const form = page.locator(".dock-status .access-form");
-    await form.locator("#access-code").fill(ACCESS_CODE);
-    await form.getByRole("button", { name: "Start my sandbox" }).click();
+    const start = form.getByRole("button", { name: "Start my sandbox" });
+    await start.waitFor();
+    // A local runner with no ACCESS_CODE asks for none: its form is just the button.
+    if (await form.locator("#access-code").count()) await form.locator("#access-code").fill(ACCESS_CODE);
+    await start.click();
     await expect(form.locator(".form-error")).toHaveCount(0);
     // Creating one from the snapshot, then `travel-stack up`: about a minute, more on a cold day.
     await expect(page.locator(".sandbox-pill"), "the sandbox never got ready").toHaveText(/Sandbox ready/, { timeout: 8 * MINUTE });

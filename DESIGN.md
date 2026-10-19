@@ -5,7 +5,7 @@ The decisions behind this workshop, as agreed during planning (2026-10-14/15). R
 ## Audience and format
 
 - **Who:** AI engineers who are new to Temporal. Policy content stays concrete: edit one rule, not policy theory.
-- **How long:** 4 hours with an instructor: 4 exercises of 35–40 minutes plus a 15-minute capstone (see the agenda). It must also work self-paced, so each assignment carries the explanation the instructor blocks give; `instructor/` has talking points and demo scripts.
+- **How long:** 4 hours with an instructor: 3 exercises of 35–40 minutes, and exercise 4 as a bonus for those with the time (see the agenda). It must also work self-paced, so each assignment carries the explanation the instructor blocks give; `instructor/` has talking points and demo scripts.
 - **Style:** one graded TODO per exercise. The extra time goes to guided run / observe / break steps, so it never becomes a race.
 - **Platform:** local, or in the browser: the [course site](course/DESIGN.md) runs each learner in a Daytona sandbox, generated from these same assignments. The lifecycle scripts (`challenges/*/{setup,check,solve,cleanup}.sh`) keep the Instruqt shape so a track can be added later; there is no `instruqt/` yet.
 - **Naming:** "Monty" is the workshop's umbrella name for the agent stack, as in the agenda. In code: the Temporal Agent Harness, running a Code Mode agent whose scripts run in the pydantic-monty sandbox.
@@ -19,7 +19,7 @@ Make it run (exercise 1), make it durable (2), make it safe (3), then make it au
 | `dangerously_skip_all` | 2 (default) | everything: "it booked without asking you" sets up exercise 3 |
 | `human_approval_only` | 3 | nothing: the noisy baseline |
 | `approve_bookings` | 3 (TODO) | the script, lookups, board, notes, trip form; bookings wait |
-| `auto_mode` | 4, 5 | the script, lookups, board, notes, trip form; each booking as the Dogwood policy decides |
+| `auto_mode` | 4, 5 | the script, lookups, board, notes, trip form; each booking as the Dogwood policy decides; one it doesn't permit comes to you (`@on_deny("escalate")`) |
 
 The posture is chosen on the session's start form (`@agent.init` data) and can be changed with the `set_approval_policy` message.
 
@@ -68,7 +68,8 @@ The posture is chosen on the session's start form (`@agent.init` data) and can b
 
 ## Verified facts (2026-10-15)
 
-- End to end with the real verifier and the scripted model: Ada's flight, return flight and hotel run unattended in auto mode; Grace's booking is refused (no rule permits it); in the injection session, Mallory's booking is refused and the user's own trip is booked.
+- End to end with the real verifier and the scripted model: Ada's flight, return flight and hotel run unattended in auto mode; Grace's booking isn't permitted (no rule permits it); in the injection session, Mallory's booking isn't permitted and the user's own trip is booked.
+- (2026-10-19) With `@on_deny("escalate")` on the booking rules, a booking no rule permits (Mallory's, before any form) comes to a person instead, with the rules' `@reason`: the verifier denies it, the evaluator (`travel_agent/agent/policy.py`) reads the policy file in the `read_policy` activity and escalates, the call stays pending until answered, and a rejection reaches the model.
 - With the verifier stopped, an auto-mode call comes to a person immediately.
 - A second `tool_approval` for a decided call is rejected with `ToolApprovalAlreadyResolved` (from the client and from `temporal workflow update execute`), and leaves no history event.
 - A code-mode script whose host call is refused returns `Script error (MontyRuntimeError: Exception: ToolApprovalDenied: ...)` as its result, not an exception.

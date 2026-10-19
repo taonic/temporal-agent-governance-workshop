@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "receiptId": "7e3e6c95-60bc-4755-b60e-75c32338d416",
+  "receiptId": "783f0499-03e2-4d99-a9f2-3424da8a41f4",
   "status": "current",
   "command": "deliver",
-  "type": "architecture",
+  "type": "workflow",
   "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.candidate.json",
   "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
   "specification": {
-    "sha256": "185a9d1b345075b08cd31512efb5ea273d4f158871d1a8a1fefb7b248cd92515",
-    "bytes": 3060
+    "sha256": "3cbf506f5f336caf16c61edef6970e7ea61d92e8bac6ac0e5447ebe55f114672",
+    "bytes": 3664
   },
   "artifact": {
-    "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
-    "bytes": 752087
+    "sha256": "a5801877ac4f85ed9544cc007cbcd7ed31ea6fb8aeded2b57f12a046767d86dc",
+    "bytes": 752734
   }
 }

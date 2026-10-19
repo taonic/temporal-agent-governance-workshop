@@ -35,14 +35,14 @@ test("snippet commands drop comments and join continuations", () => {
 
 test("the built course covers every exercise in both modes", () => {
   const course = buildCourse();
-  assert.equal(course.exercises.length, 5);
+  assert.equal(course.exercises.length, 4);
   for (const exercise of course.exercises) {
     for (const mode of ["browser", "local"]) {
       const html = [exercise.modes[mode].intro, ...exercise.modes[mode].sections.map((s) => s.html)].join("\n");
       assert.ok(!/<!--\s*(browser|local|\/local)/.test(html), `${exercise.id} ${mode} still has a mode marker`);
       if (mode === "local") assert.ok(!html.includes("data-pane"), `${exercise.id}: local links must stay links`);
     }
-    assert.ok(exercise.files.some((f) => f.editable) || exercise.optional, `${exercise.id} has no editable file`);
+    assert.ok(exercise.files.some((f) => f.editable), `${exercise.id} has no editable file`);
     for (const file of exercise.files.filter((f) => f.editable && !f.scratch)) {
       assert.ok(file.solution, `${exercise.id}: ${file.path} has no solution`);
       assert.notEqual(file.starter, file.solution, `${exercise.id}: ${file.path} starter equals its solution`);
@@ -143,9 +143,9 @@ test("in the browser, every new session the instructions ask for is a button wit
   const exercises = buildCourse().exercises;
   const all = (mode) => exercises.map((e) => e.modes[mode].sections.map((s) => s.html).join("\n")).join("\n");
   const postures = [...all("browser").matchAll(/data-new-session="Travel agent" data-posture="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(postures, ["dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode", "auto_mode", "auto_mode", "dangerously_skip_all"]);
+  assert.deepEqual(postures, ["dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode", "auto_mode"]);
   assert.ok(!all("local").includes("data-new-session"), "local pages have no session buttons");
-  assert.match(all("local"), /Start a new <strong>Travel agent<\/strong> session\. The start form/);
+  assert.match(all("local"), /Then start a new <strong>Travel agent<\/strong> session\. The start form/);
 });
 
 test("in the browser, the Agent UI comes with a tour, from a button; locally, from its URL", () => {
@@ -185,6 +185,7 @@ test("in the browser, a command in prose gets a run button; a command with a pla
   assert.ok(isInlineCommand("FLAKY=1 uv run hello-worker"));
   assert.ok(!isInlineCommand("temporal workflow show -w <workflow-id>"));
   assert.ok(!isInlineCommand("hello/workflow.py"));
+  assert.ok(!isInlineCommand("temporal { … }")); // a policy's temporal block, not the CLI
   const hello = buildCourse().exercises[0];
   const html = hello.modes.browser.sections.map((s) => s.html).join("\n");
   assert.match(html, /Start a trip: <span class="trip-toggle" data-trip="SEA LHR"/);

@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "7e3e6c95-60bc-4755-b60e-75c32338d416",
+  "deliveryReceiptId": "783f0499-03e2-4d99-a9f2-3424da8a41f4",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-hello.html",
-    "sha256": "ddca4a421a0663cc18708e376db7dc97b89ed016b77a487058b732f9c14fd3c8",
-    "bytes": 752087
+    "sha256": "a5801877ac4f85ed9544cc007cbcd7ed31ea6fb8aeded2b57f12a046767d86dc",
+    "bytes": 752734
   },
   "state": {
     "detail": "read",
@@ -39,29 +39,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1376,
-        "diagramWidth": 1346,
+        "readerWidth": 1259,
+        "diagramWidth": 1229,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 430,
+          "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -91,29 +126,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "readerWidth": 1315,
+        "diagramWidth": 1285,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 481,
+          "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -143,29 +213,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1856,
-        "diagramWidth": 1826,
+        "readerWidth": 1447,
+        "diagramWidth": 1417,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 583,
+          "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -195,29 +300,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1833,
+        "diagramWidth": 1783,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 597,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -300,29 +440,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1376,
-        "diagramWidth": 1346,
+        "readerWidth": 1259,
+        "diagramWidth": 1229,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 430,
+          "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -352,29 +527,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "readerWidth": 1315,
+        "diagramWidth": 1285,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 481,
+          "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -404,29 +614,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1856,
-        "diagramWidth": 1826,
+        "readerWidth": 1447,
+        "diagramWidth": 1417,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 583,
+          "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -456,29 +701,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1833,
+        "diagramWidth": 1783,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 597,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -513,29 +793,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1376,
-        "diagramWidth": 1346,
+        "readerWidth": 1259,
+        "diagramWidth": 1229,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 430,
+          "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -565,29 +880,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "readerWidth": 1315,
+        "diagramWidth": 1285,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 481,
+          "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -617,29 +967,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1856,
-        "diagramWidth": 1826,
+        "readerWidth": 1447,
+        "diagramWidth": 1417,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 583,
+          "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -669,29 +1054,64 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1833,
+        "diagramWidth": 1783,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 597,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 428
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1340,
+        "viewBoxWidth": 870,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "starter",
+              "ui"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "trip",
+              "lookup"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "start workflow",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "hello-start SFO JFK",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "start",
-          "from": "starter",
-          "to": "server"
+          "kind": "node",
+          "id": "starter"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,

@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "1915a46f-3402-4454-bd5f-043477ddb8ed",
+  "deliveryReceiptId": "0508e579-297e-40af-9bce-8d9b4c8227bf",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/governance-architecture.html",
-    "sha256": "22b46925b22ed4c3547340aceac6023dfc83cf7e88c2fcefc4a71161617d6100",
-    "bytes": 761021
+    "sha256": "8bb59c9d609de6c487bc5edc4cc035d1962bfb0663a62acdc972cb58e2331d1c",
+    "bytes": 761599
   },
   "state": {
     "detail": "read",

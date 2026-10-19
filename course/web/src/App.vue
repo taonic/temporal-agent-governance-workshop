@@ -76,7 +76,7 @@ watch(
 // (The setup guide isn't one of them: its links lead there.)
 const pages = [
   { value: "#/", label: "Overview" },
-  ...course.exercises.map((e) => ({ value: `#/exercise/${e.id}`, label: `${e.optional ? "★ Capstone" : `Exercise ${e.number}`}: ${e.title}`, id: e.id })),
+  ...course.exercises.map((e) => ({ value: `#/exercise/${e.id}`, label: `Exercise ${e.number}${e.bonus ? " (bonus)" : ""}: ${e.title}`, id: e.id })),
 ];
 const current = computed(() =>
   store.route.page === "exercise" ? `#/exercise/${store.route.id}` : store.route.page === "setup" ? "#/setup" : "#/",
@@ -111,16 +111,16 @@ function confirmReset() {
 const tourSteps = [
   {
     title: "Welcome",
-    body: "You'll build one travel agent on Temporal, make it durable, put a human in the loop, then let a Dogwood policy decide what it may do on its own. Here's the page in a minute.",
+    body: "You'll build one travel agent on Temporal, make it durable, put a human in the loop, then let a policy decide what it may do on its own. Here's the page in a minute.",
   },
-  { selector: "[data-tour='exercise-picker']", title: "Pick an exercise", body: "Four exercises and a capstone, each building on the last. Jump between them here, or use Previous / Next." },
+  { selector: "[data-tour='exercise-picker']", title: "Pick an exercise", body: "Four exercises, each building on the last; the fourth is a bonus. Jump between them here, or use Previous / Next." },
   { selector: "[data-tour='editor']", title: "Edit the code", body: "This is your editor, with the exercise's files as tabs. The file with the TODO is editable and saves to your sandbox as you type. Stuck? Switch to the solution." },
   { selector: "[data-tour='terminals']", title: "Two real terminals", body: "Side by side: the worker terminal runs the process the exercises make you stop and restart, and the commands terminal is for everything else. The ▶ buttons type into the right one, so you always see what they did." },
   { selector: "[data-tour='terminal-actions']", title: "Run it, check it", body: "Stop or start the worker (the toggle shows whether it's running), and run the exercise's check." },
   { selector: "[data-tour='workspace-tabs']", title: "Code, Temporal UI, Agent UI", body: "The workspace shows one at a time, at full width, with the terminals underneath: your code, your sandbox's Temporal UI, and from exercise 2, the Agent UI where you talk to the agent. The guide brings the right one forward for each step." },
   { selector: "[data-tour='instructions']", title: "Your guide", body: "The guide takes you through the exercise one step at a time: say Done to move on, or ← Back to look again. Ask it about the step you're on at the bottom; Ask Temporal answers right there. ▶ on a command types it into a terminal; a file name opens the file; localhost links open the pane." },
   { selector: ".snippet-insert", title: "Code from right to left", body: "← Insert puts a snippet into the editor where it belongs (in place of the TODO, or at the end of the policy), and flashes the lines it added." },
-  { selector: ".guide-restart", title: "Start over", body: "Put this exercise's code back as it starts (your edits are saved first), end its sessions, and go back to its first step." },
+  { selector: ".guide-restart", title: "Start over", body: "Start this exercise again in a new sandbox, with its code as it starts, back at its first step. The old sandbox and your edits in it are deleted, so it asks first." },
   { selector: "[data-tour='sandbox-menu']", title: "Your sandbox", body: "It stops when you're idle and wakes when you come back. Here you can switch to the scripted model, or start over with a fresh sandbox." },
   { selector: "[data-tour='ask']", title: "Ask Temporal", body: `Stuck, or curious? Ask anything about Temporal: answers come from Temporal's docs, with links, and know which exercise you're on. Select text anywhere (an error in a terminal, say) and click ✦ Ask to ask about it. Shortcut: ${isMac ? "⌘K" : "Ctrl+K"}.` },
 ];

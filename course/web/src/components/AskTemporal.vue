@@ -197,7 +197,7 @@ const selectionLabel = computed(() => {
             <h3>What do you want to know about Temporal?</h3>
             <p>
               I search Temporal's docs and answer with links to them.
-              <template v-if="exercise">I know you're on <strong>{{ exercise.optional ? "the capstone" : `exercise ${exercise.number}` }}</strong><template v-if="file && helper.includeCode"> and can see <strong>{{ file.path.split("/").pop() }}</strong></template>.</template>
+              <template v-if="exercise">I know you're on <strong>exercise {{ exercise.number }}</strong><template v-if="file && helper.includeCode"> and can see <strong>{{ file.path.split("/").pop() }}</strong></template>.</template>
             </p>
           </div>
 
@@ -245,8 +245,8 @@ const selectionLabel = computed(() => {
       </div>
 
       <div v-if="exercise || file" class="ask-context" aria-label="Sent with your question">
-        <span v-if="exercise" class="ask-chip is-static" :title="`The helper has ${exercise.optional ? 'the capstone' : `exercise ${exercise.number}`}'s instructions`">
-          {{ exercise.optional ? "★ Capstone" : `Exercise ${exercise.number}` }}
+        <span v-if="exercise" class="ask-chip is-static" :title="`The helper has exercise ${exercise.number}'s instructions`">
+          Exercise {{ exercise.number }}
         </span>
         <button
           v-if="file"

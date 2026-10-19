@@ -118,7 +118,7 @@ function attachedLabels(context) {
   const labels = [];
   const exercise = currentExercise();
   if (context.step) labels.push(context.step.title);
-  else if (exercise) labels.push(exercise.optional ? `Capstone · ${exercise.title}` : `Exercise ${exercise.number} · ${exercise.title}`);
+  else if (exercise) labels.push(`Exercise ${exercise.number} · ${exercise.title}`);
   if (context.file) labels.push(context.file.path.split("/").pop());
   if (context.selection) labels.push(`Selection from the ${context.selection.source}`);
   return labels;

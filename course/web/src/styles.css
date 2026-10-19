@@ -943,6 +943,20 @@ body.is-resizing iframe {
   font-size: 11px;
 }
 
+/* A bonus exercise, beside its title: do it if there's time. */
+.guide-heading-title .bonus-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--temporal-uv-soft);
+  color: var(--temporal-uv);
+  font-size: 11px;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
 /* The steps you've been through, folded. */
 .guide-trail {
   font-size: 12px;
@@ -1165,10 +1179,14 @@ body.is-resizing iframe {
 }
 
 .guide-reply.is-quiet {
-  margin-right: auto;
   border-color: transparent;
   background: none;
   color: var(--muted);
+}
+
+/* ← Back, alone on the left; the replies stay together on the right. */
+.guide-reply.is-back {
+  margin-right: auto;
 }
 
 .guide-finale {

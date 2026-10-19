@@ -1,8 +1,9 @@
 // Tool policy for the travel agent in auto mode.
 //
 // Only bookings come here (the agent's script and its searches run unattended), each on its
-// own, with its real arguments. A `permit` lets one run unattended; anything no rule permits is
-// refused, and the model is told so.
+// own, with its real arguments. A `permit` lets one run unattended. One that no rule permits is
+// refused, unless a rule for it is marked @on_deny("escalate"): then it comes to you to decide,
+// as in exercise 3. Either way, the model is told why: the rule's @reason.
 //
 // The rules are temporal: they look back over this session's history. Each tool's result is
 // there as a `received` event, "travel-agent/<tool>/result": among them the trip form you filled
@@ -12,11 +13,14 @@
 
 // ---------------------------------------------------------------- bookings
 //
-// No rule permits any other booking, so it's refused, however the model came by it.
+// Each rule is marked @on_deny("escalate"), so a booking none of them permits comes to you,
+// however the model came by it. Nothing runs on its own that no rule permits.
 
 // TODO(ch04): this rule checks only the call itself, so any flight for Ada runs, on any day.
 // Make flight bookings look back at the trip form submitted earlier in this session instead.
 @id("flights-for-ada")
+@on_deny("escalate")
+@reason("A flight runs on its own only for Ada Lovelace.")
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
 when {
   context.input has arg0.request.passenger_name &&
@@ -25,6 +29,8 @@ when {
 
 // The flight back: the same, with the form's return date.
 @id("return-flights-on-the-trip-form")
+@on_deny("escalate")
+@reason("A flight runs on its own only for the traveler and dates on your trip form.")
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
 when temporal {
   formerly within 2h Temporal::Action::"travel-agent/ask_trip_details/result"::received{
@@ -35,6 +41,8 @@ when temporal {
 
 // A hotel booking runs unattended when its guest is the traveler on a trip form.
 @id("hotels-for-the-trip-form-traveler")
+@on_deny("escalate")
+@reason("A hotel runs on its own only for the traveler on your trip form.")
 permit (principal, action == Temporal::Action::"travel-agent/book_hotel", resource)
 when temporal {
   formerly within 2h Temporal::Action::"travel-agent/ask_trip_details/result"::received{

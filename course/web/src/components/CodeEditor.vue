@@ -482,11 +482,19 @@ async function insertSnippet(path, code, mode, { retried = false } = {}) {
   const todo = mode === "todo" ? (todoFor(file.todos, code) ?? file.todos?.find((t) => text.includes(t.starter))) : null;
   const todoAt = todo ? text.indexOf(todo.starter) : -1;
   const marker = `TODO(ch${String(props.exercise.number).padStart(2, "0")})`;
+  // A policy's TODO is a rule to replace: if the block isn't there word for word (an older copy
+  // of the file, or an edited one), the rule it starts with still is, by its @id.
+  const todoRule = todoAt < 0 && todo ? ruleBlock(text, ruleId(todo.starter)) : null;
   if (todoAt >= 0) {
     from = todoAt;
     to = todoAt + todo.starter.length;
     insert = `${indentLines(lines, todo.starter.match(/^[ \t]*/)[0])}\n`;
     where = "in place of the TODO";
+  } else if (todoRule) {
+    from = todoRule.start;
+    to = todoRule.end;
+    insert = indentLines(lines, "");
+    where = `in place of the rule ${ruleId(todo.starter)}`;
   } else if (mode === "replace" && ruleBlock(text, ruleId(code))) {
     const block = ruleBlock(text, ruleId(code));
     from = block.start;

@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 
+import { forgetWork } from "./forget.js";
 import "./styles.css";
 
 // ?reset (https://…/?reset): the workshop from a blank canvas, as a new learner gets it. Deletes
@@ -21,8 +22,15 @@ async function reset() {
   window.location.replace(window.location.pathname);
 }
 
-if (new URLSearchParams(window.location.search).has("reset")) {
+const params = new URLSearchParams(window.location.search);
+if (params.has("reset")) {
   reset();
 } else {
+  // ?forget: just after Start over (store.js resetSandbox). The old sandbox's work is forgotten
+  // again here, before the app reads anything, in case a page wrote some back as it unloaded.
+  if (params.has("forget")) {
+    forgetWork();
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.hash}`);
+  }
   import("./App.vue").then(({ default: App }) => createApp(App).mount("#app"));
 }

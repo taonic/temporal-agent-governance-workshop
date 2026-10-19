@@ -3,17 +3,17 @@
   "ok": true,
   "command": "finalize",
   "status": "pass",
-  "type": "architecture",
+  "type": "workflow",
   "quality": "showcase",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-approval.candidate.json",
-    "sha256": "340b38af81d6bbcd28ebf16718a91bce3a9d01f31bc86b14e5818fe8511fa9e9",
-    "bytes": 4224
+    "sha256": "71bacc2484789b31c7e5c730c78def32c58b9509b0907d836456ed4e2c09a5f8",
+    "bytes": 4678
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-approval.html",
-    "sha256": "ceb57e09318672749a031ad57052611dccca959e7d8d6f8a3da3fc29069da5b4",
-    "bytes": 758136
+    "sha256": "03b4b61a9132c5a88e749b323dbfb7b503b2b90b8076da1fc88139a097e6470c",
+    "bytes": 758698
   },
   "gates": {
     "validate": "pass",
@@ -38,18 +38,19 @@
     "availableVersion": "3.1.0",
     "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
     "severity": "normal",
-    "checkedAt": "2026-10-17T08:39:37.027Z",
+    "checkedAt": "2026-10-18T23:12:32.207Z",
     "source": "cache",
     "noticeRequired": true,
-    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-17T08:39:37.027Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-18T23:12:32.207Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   },
   "visualReview": "not-requested",
-  "durationMs": 1747,
+  "durationMs": 1528,
   "visualReviewRecommendation": {
     "action": "inspect-route-readability",
     "signals": {
-      "routesOverSuggestedBends": 1
+      "routesOverSuggestedBends": 2,
+      "routesOverSuggestedStretch": 1
     },
     "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
     "affectedRoutes": {
@@ -57,21 +58,34 @@
       "detours": [
         {
           "relationship": {
-            "id": "model-gate",
-            "from": "model",
-            "to": "gate",
-            "label": "tool calls",
-            "collectionIndex": 2,
-            "artifactIndex": 3
+            "id": "ask",
+            "from": "you",
+            "to": "session",
+            "label": "",
+            "collectionIndex": 1,
+            "artifactIndex": 2
           },
           "bends": 3,
-          "stretch": 1
+          "stretch": 1.107
+        },
+        {
+          "relationship": {
+            "id": "decides",
+            "from": "card",
+            "to": "update",
+            "label": "approve / reject",
+            "collectionIndex": 3,
+            "artifactIndex": 4
+          },
+          "bends": 3,
+          "stretch": 1.658
         }
       ],
       "truncated": false
     },
     "hints": [
-      "model → gate needs 3 bends: move node model or gate so they share a row or column with matching centers, or sit diagonally with a clear corner."
+      "you → session needs 3 bends: move node you or session so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "card → update needs 3 bends: move node card or update so they share a row or column with matching centers, or sit diagonally with a clear corner."
     ],
     "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
   }

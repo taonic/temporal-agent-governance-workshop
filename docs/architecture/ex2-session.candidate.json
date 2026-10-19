@@ -1,210 +1,212 @@
 {
-  "schema_version": 1,
-  "diagram_type": "architecture",
+  "schema_version": 2,
+  "diagram_type": "workflow",
   "meta": {
-    "title": "Exercise 2: every step a session takes is an activity",
-    "output": "docs/architecture/ex2-session.html",
+    "title": "Every step is an activity",
+    "animation": "trace",
     "quality_profile": "showcase",
+    "output": "docs/architecture/ex2-session.html",
     "legend": {
       "entries": {
-        "frontend": {
+        "external": {
           "label": "You"
         },
-        "database": {
+        "backend": {
           "label": "Workflow code"
         },
-        "backend": {
+        "security": {
+          "label": "The sandbox"
+        },
+        "messagebus": {
           "label": "Activity"
         },
-        "external": {
-          "label": "External service"
+        "cloud": {
+          "label": "Outside services"
         }
       }
     }
   },
-  "components": [
+  "lanes": [
     {
-      "id": "you",
-      "type": "frontend",
-      "label": "You",
-      "sublabel": "in the console",
-      "pos": [
-        40,
-        100
-      ],
-      "size": [
-        130,
-        60
-      ]
+      "id": "outside",
+      "label": "Outside the worker"
+    },
+    {
+      "id": "activities",
+      "label": "travel-worker · activities"
     },
     {
       "id": "workflow",
-      "type": "database",
-      "label": "TravelAgent workflow",
-      "sublabel": "one per session",
-      "tag": "workflow",
-      "icon": "backend",
-      "pos": [
-        310,
-        100
-      ],
-      "size": [
-        210,
-        60
-      ]
+      "label": "travel-worker · workflow code"
+    }
+  ],
+  "phases": [
+    {
+      "id": "ask",
+      "label": "You ask",
+      "fromCol": 0,
+      "toCol": 1
     },
     {
-      "id": "callllm",
-      "type": "backend",
-      "label": "call_llm",
-      "sublabel": "one per model turn",
-      "tag": "activity",
-      "pos": [
-        680,
-        100
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "id": "turn",
+      "label": "The model's turn",
+      "fromCol": 2,
+      "toCol": 2,
+      "variant": "dashed"
     },
     {
-      "id": "model",
+      "id": "script",
+      "label": "The script's calls",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "you",
+    "workflow",
+    "monty",
+    "book",
+    "api"
+  ],
+  "nodes": [
+    {
+      "id": "you",
+      "lane": "outside",
+      "col": 0,
       "type": "external",
-      "label": "The model",
-      "sublabel": "Gemini · OpenAI API",
-      "pos": [
-        1010,
-        100
-      ],
-      "size": [
-        170,
-        60
-      ]
+      "label": "You",
+      "sublabel": "ask for a trip",
+      "width": 160
+    },
+    {
+      "id": "workflow",
+      "lane": "workflow",
+      "col": 1,
+      "type": "backend",
+      "label": "TravelAgent",
+      "sublabel": "one workflow per session",
+      "width": 160
     },
     {
       "id": "monty",
-      "type": "database",
+      "lane": "workflow",
+      "col": 3,
+      "type": "security",
       "label": "Monty sandbox",
       "sublabel": "runs the model's script",
-      "tag": "in workflow",
-      "icon": "security",
-      "pos": [
-        320,
-        300
-      ],
-      "size": [
-        190,
-        60
-      ]
+      "width": 160
+    },
+    {
+      "id": "callllm",
+      "lane": "activities",
+      "col": 2,
+      "type": "messagebus",
+      "label": "call_llm",
+      "sublabel": "one per model turn",
+      "width": 160
     },
     {
       "id": "search",
-      "type": "backend",
+      "lane": "activities",
+      "col": 4,
+      "type": "messagebus",
       "label": "search_flights",
       "sublabel": "a step in the history",
-      "tag": "activity",
-      "pos": [
-        680,
-        230
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "width": 160
     },
     {
       "id": "book",
-      "type": "backend",
+      "lane": "activities",
+      "col": 5,
+      "type": "messagebus",
       "label": "book_flight",
       "sublabel": "retried, never repeated",
-      "tag": "activity",
-      "pos": [
-        680,
-        370
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "width": 160
+    },
+    {
+      "id": "model",
+      "lane": "outside",
+      "col": 2,
+      "type": "cloud",
+      "label": "The model",
+      "sublabel": "Gemini · OpenAI API",
+      "width": 160
     },
     {
       "id": "api",
-      "type": "external",
+      "lane": "outside",
+      "col": 5,
+      "type": "cloud",
       "label": "Travel API",
       "sublabel": "simulated flights",
-      "pos": [
-        1010,
-        300
-      ],
-      "size": [
-        170,
-        60
-      ]
+      "width": 160
     }
   ],
-  "boundaries": [
-    {
-      "kind": "region",
-      "label": "travel-worker",
-      "wraps": [
-        "workflow",
-        "callllm",
-        "monty",
-        "search",
-        "book"
-      ]
-    }
-  ],
-  "connections": [
+  "edges": [
     {
       "id": "ask",
       "from": "you",
       "to": "workflow",
       "label": "ask",
-      "variant": "emphasis"
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left"
     },
     {
-      "id": "turn",
+      "id": "each-turn",
       "from": "workflow",
       "to": "callllm",
-      "label": "each model turn"
+      "label": "each model turn",
+      "variant": "default",
+      "fromSide": "top",
+      "toSide": "left"
     },
     {
       "id": "chat",
       "from": "callllm",
       "to": "model",
-      "label": "chat + tool calls"
+      "label": "chat + tool calls",
+      "variant": "default"
     },
     {
-      "id": "script",
+      "id": "run-script",
       "from": "workflow",
       "to": "monty",
-      "label": "run this script"
+      "label": "run this script",
+      "variant": "emphasis"
     },
     {
       "id": "search-call",
       "from": "monty",
       "to": "search",
-      "label": "search_flights(...)",
-      "variant": "emphasis"
+      "label": "search_flights(…)",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom"
     },
     {
       "id": "book-call",
       "from": "monty",
       "to": "book",
-      "label": "book_flight(...)",
-      "variant": "emphasis"
+      "label": "book_flight(…)",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "bottom"
     },
     {
       "id": "search-api",
       "from": "search",
-      "to": "api"
+      "to": "api",
+      "variant": "default",
+      "fromSide": "top",
+      "toSide": "left"
     },
     {
       "id": "book-api",
       "from": "book",
-      "to": "api"
+      "to": "api",
+      "variant": "default"
     }
   ],
   "cards": [

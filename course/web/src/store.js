@@ -3,12 +3,10 @@
 // terminal, open a pane, open a file).
 import { reactive, watch } from "vue";
 
+import { forgetWork, storageKey, storagePrefix } from "./forget.js";
 import course from "./generated/course-data.json";
 
-export { course };
-
-export const storagePrefix = "governed-agents-course";
-export const storageKey = (...parts) => [storagePrefix, ...parts].join(":");
+export { course, storageKey, storagePrefix };
 
 export function load(key, fallback) {
   try {
@@ -477,7 +475,9 @@ export function watchSandbox() {
 }
 
 // Deletes the sandbox (the runner also gives up on a start that's in progress or stuck), and
-// with restart, starts a new one.
+// forgets the work this browser kept from it (forget.js). With restart, starts a new one, then
+// loads the page again with ?forget, so nothing from the old sandbox lingers in memory (open
+// files, the editor, Ask Temporal's answers), or comes back from a write as the page unloads.
 export async function resetSandbox({ restart = false } = {}) {
   clearTimeout(sandboxPoll);
   store.sandbox = { state: "finding", message: "Deleting your sandbox…", sandboxId: null };
@@ -487,8 +487,13 @@ export async function resetSandbox({ restart = false } = {}) {
     store.sandbox = { state: "error", message: err.message, sandboxId: null };
     return;
   }
-  if (restart) startSandbox();
-  else toast("Sandbox deleted. Start a new one when you're ready.");
+  forgetWork();
+  if (restart) {
+    await startSandbox();
+    window.location.replace(`${window.location.pathname}?forget${window.location.hash}`);
+  } else {
+    toast("Sandbox deleted. Start a new one when you're ready.");
+  }
 }
 
 export async function signIn(code) {

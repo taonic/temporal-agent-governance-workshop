@@ -1,218 +1,212 @@
 {
-  "schema_version": 1,
-  "diagram_type": "architecture",
+  "schema_version": 2,
+  "diagram_type": "workflow",
   "meta": {
     "title": "How the travel agent works",
-    "output": "docs/architecture/ex2-overview.html",
+    "animation": "trace",
     "quality_profile": "showcase",
+    "output": "docs/architecture/ex2-overview.html",
     "legend": {
       "entries": {
-        "frontend": {
+        "external": {
           "label": "You"
         },
         "backend": {
           "label": "Runs on Temporal"
         },
-        "database": {
-          "label": "Temporal's record"
-        },
         "security": {
           "label": "Code Mode"
         },
-        "external": {
+        "database": {
+          "label": "History"
+        },
+        "cloud": {
           "label": "Outside services"
         }
       }
     }
   },
-  "components": [
+  "lanes": [
     {
-      "id": "you",
-      "type": "frontend",
-      "label": "You",
-      "sublabel": "chat in the Agent UI",
-      "pos": [
-        40,
-        100
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "id": "outside",
+      "label": "Outside Temporal"
     },
     {
-      "id": "session",
-      "type": "backend",
-      "label": "Agent session",
-      "sublabel": "a Temporal workflow",
-      "pos": [
-        340,
-        100
-      ],
-      "size": [
-        180,
-        60
-      ]
-    },
-    {
-      "id": "llm",
-      "type": "backend",
-      "label": "Model call",
-      "sublabel": "each turn, an activity",
-      "pos": [
-        660,
-        100
-      ],
-      "size": [
-        180,
-        60
-      ]
-    },
-    {
-      "id": "model",
-      "type": "external",
-      "label": "The model",
-      "sublabel": "Gemini",
-      "pos": [
-        980,
-        100
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "id": "temporal",
+      "label": "Temporal · every step durable"
     },
     {
       "id": "history",
-      "type": "database",
-      "label": "Event history",
-      "sublabel": "every step, recorded",
-      "pos": [
-        340,
-        290
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "label": "Temporal Server"
+    }
+  ],
+  "phases": [
+    {
+      "id": "ask",
+      "label": "You ask",
+      "fromCol": 0,
+      "toCol": 1
     },
     {
-      "id": "monty",
-      "type": "security",
-      "label": "Monty sandbox",
-      "sublabel": "Code Mode: runs its script",
-      "pos": [
-        660,
-        290
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "id": "plan",
+      "label": "The model plans",
+      "fromCol": 2,
+      "toCol": 2,
+      "variant": "dashed"
     },
     {
-      "id": "tools",
-      "type": "backend",
-      "label": "Tool calls",
-      "sublabel": "search · book flights",
-      "pos": [
-        660,
-        480
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "id": "run",
+      "label": "Code Mode runs it",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "you",
+    "session",
+    "llm",
+    "monty",
+    "tools",
+    "api"
+  ],
+  "nodes": [
+    {
+      "id": "you",
+      "lane": "outside",
+      "col": 0,
+      "type": "external",
+      "label": "You",
+      "sublabel": "chat with the agent",
+      "width": 160
+    },
+    {
+      "id": "model",
+      "lane": "outside",
+      "col": 2,
+      "type": "cloud",
+      "label": "The model",
+      "sublabel": "Gemini",
+      "width": 160
     },
     {
       "id": "api",
-      "type": "external",
+      "lane": "outside",
+      "col": 5,
+      "type": "cloud",
       "label": "Travel API",
       "sublabel": "simulated flights",
-      "pos": [
-        980,
-        480
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "width": 160
+    },
+    {
+      "id": "session",
+      "lane": "temporal",
+      "col": 1,
+      "type": "backend",
+      "label": "Agent session",
+      "sublabel": "a Temporal workflow",
+      "width": 160
+    },
+    {
+      "id": "llm",
+      "lane": "temporal",
+      "col": 2,
+      "type": "backend",
+      "label": "Model call",
+      "sublabel": "each turn, an activity",
+      "width": 160
+    },
+    {
+      "id": "monty",
+      "lane": "temporal",
+      "col": 3,
+      "type": "security",
+      "label": "Monty sandbox",
+      "sublabel": "runs the model's script",
+      "width": 160
+    },
+    {
+      "id": "tools",
+      "lane": "temporal",
+      "col": 5,
+      "type": "backend",
+      "label": "Tool calls",
+      "sublabel": "search · book flights",
+      "width": 160
+    },
+    {
+      "id": "history",
+      "lane": "history",
+      "col": 2,
+      "type": "database",
+      "label": "Event history",
+      "sublabel": "every step, recorded",
+      "width": 160
     }
   ],
-  "boundaries": [
+  "edges": [
     {
-      "kind": "region",
-      "label": "Temporal: every step durable",
-      "wraps": [
-        "session",
-        "llm",
-        "history",
-        "monty",
-        "tools"
-      ]
-    }
-  ],
-  "connections": [
-    {
-      "id": "you-session",
+      "id": "message",
       "from": "you",
       "to": "session",
       "label": "message",
-      "variant": "emphasis"
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "top"
     },
     {
-      "id": "session-llm",
+      "id": "each-turn",
       "from": "session",
       "to": "llm",
       "label": "each turn",
       "variant": "emphasis"
     },
     {
-      "id": "llm-model",
+      "id": "ask-model",
       "from": "llm",
       "to": "model",
-      "label": "ask"
+      "label": "ask",
+      "variant": "default"
     },
     {
-      "id": "session-history",
-      "from": "session",
-      "to": "history",
-      "fromSide": "bottom",
-      "toSide": "top",
-      "label": "recorded",
-      "variant": "dashed"
-    },
-    {
-      "id": "llm-monty",
+      "id": "script",
       "from": "llm",
       "to": "monty",
-      "fromSide": "bottom",
-      "toSide": "top",
       "label": "a script",
       "variant": "emphasis"
     },
     {
-      "id": "monty-tools",
+      "id": "each-call",
       "from": "monty",
       "to": "tools",
-      "fromSide": "bottom",
-      "toSide": "top",
       "label": "each call",
       "variant": "emphasis"
     },
     {
-      "id": "tools-api",
+      "id": "calls-api",
       "from": "tools",
-      "to": "api"
+      "to": "api",
+      "variant": "default"
     },
     {
-      "id": "tools-history",
+      "id": "recorded",
+      "from": "session",
+      "to": "history",
+      "label": "recorded",
+      "variant": "dashed",
+      "role": "branch",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "results",
       "from": "tools",
       "to": "history",
-      "fromSide": "left",
-      "toSide": "bottom",
       "label": "results",
-      "variant": "dashed"
+      "variant": "dashed",
+      "role": "branch",
+      "fromSide": "bottom",
+      "toSide": "right"
     }
   ],
   "cards": [

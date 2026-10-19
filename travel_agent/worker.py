@@ -2,9 +2,9 @@
 
     uv run travel-worker
 
-It hosts the TravelAgent workflow, the model activity (`call_llm`) and the travel tools'
-activities. Stop it whenever you like: sessions wait in Temporal, and carry on from where they
-were when a worker comes back.
+It hosts the TravelAgent workflow, the model activity (`call_llm`), the policy reader
+(`read_policy`) and the travel tools' activities. Stop it whenever you like: sessions wait in
+Temporal, and carry on from where they were when a worker comes back.
 """
 
 import asyncio
@@ -19,6 +19,7 @@ from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxR
 from temporal_agent_harness.plugin import AgentHarnessPlugin
 
 from .agent.llm import call_llm
+from .agent.policy import read_policy
 from .agent.workflow import TravelAgentWorkflow
 from .config import Settings, settings
 from .travel import activities
@@ -63,7 +64,11 @@ RUNNER = SandboxedWorkflowRunner(
 
 def build_worker(client: Client, task_queue: str = settings.task_queue) -> Worker:
     return Worker(
-        client, task_queue=task_queue, workflows=[TravelAgentWorkflow], activities=[call_llm], workflow_runner=RUNNER
+        client,
+        task_queue=task_queue,
+        workflows=[TravelAgentWorkflow],
+        activities=[call_llm, read_policy],
+        workflow_runner=RUNNER,
     )
 
 

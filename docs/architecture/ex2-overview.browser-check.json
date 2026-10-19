@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "faac30cd-6f23-49e4-8aec-4df3c01a3c1f",
+  "deliveryReceiptId": "7d7409aa-3f37-47bf-99a2-f332ba8e22ea",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
-    "sha256": "274e317350d704fbdb2853538826846dc5a2e03d87e305dc48ae063bc1850f26",
-    "bytes": 759198
+    "sha256": "39e0e87a7b75c7cbdbb2c87cc758af58d6916fb873153ae2e5f655bf6d846f22",
+    "bytes": 758937
   },
   "state": {
     "detail": "read",
@@ -39,7 +39,7 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
         "readerWidth": 1376,
         "diagramWidth": 1346,
@@ -47,21 +47,59 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 704,
+          "svgPx": 677,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 133,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 133,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 133,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -91,29 +129,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1520,
-        "diagramWidth": 1490,
+        "readerWidth": 1536,
+        "diagramWidth": 1506,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 780,
+          "svgPx": 758,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 149,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 149,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 149,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -143,29 +219,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1673,
-        "diagramWidth": 1643,
+        "readerWidth": 1739,
+        "diagramWidth": 1709,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -195,7 +309,7 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
         "readerWidth": 1920,
         "diagramWidth": 1870,
@@ -203,21 +317,59 @@
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 979,
+          "svgPx": 941,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 185,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 185,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 185,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -300,7 +452,7 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
         "readerWidth": 1376,
         "diagramWidth": 1346,
@@ -308,21 +460,59 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 704,
+          "svgPx": 677,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 133,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 133,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 133,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -352,29 +542,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1520,
-        "diagramWidth": 1490,
+        "readerWidth": 1536,
+        "diagramWidth": 1506,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 780,
+          "svgPx": 758,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 149,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 149,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 149,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -404,29 +632,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1673,
-        "diagramWidth": 1643,
+        "readerWidth": 1739,
+        "diagramWidth": 1709,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -456,7 +722,7 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
         "readerWidth": 1920,
         "diagramWidth": 1870,
@@ -464,21 +730,59 @@
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 979,
+          "svgPx": 941,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 185,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 185,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 185,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -513,7 +817,7 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
         "readerWidth": 1376,
         "diagramWidth": 1346,
@@ -521,21 +825,59 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 704,
+          "svgPx": 677,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 133,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 133,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 133,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 67,
+            "spaceAboveNodesPx": 53,
+            "spaceBelowNodesPx": 14
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -565,29 +907,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1520,
-        "diagramWidth": 1490,
+        "readerWidth": 1536,
+        "diagramWidth": 1506,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 780,
+          "svgPx": 758,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 149,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 149,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 149,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 75,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -617,29 +997,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1673,
-        "diagramWidth": 1643,
+        "readerWidth": 1739,
+        "diagramWidth": 1709,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -669,7 +1087,7 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
         "readerWidth": 1920,
         "diagramWidth": 1870,
@@ -677,21 +1095,59 @@
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 979,
+          "svgPx": 941,
           "cardsPx": 0,
-          "viewBoxHeight": 628
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1200,
+        "viewBoxWidth": 1049,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 185,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 185,
+            "nodeCount": 4,
+            "nodeIds": [
+              "session",
+              "llm",
+              "monty",
+              "tools"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 185,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 93,
+            "spaceAboveNodesPx": 73,
+            "spaceBelowNodesPx": 20
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "message",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "chat with the agent",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "you-session",
-          "from": "you",
-          "to": "session"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,

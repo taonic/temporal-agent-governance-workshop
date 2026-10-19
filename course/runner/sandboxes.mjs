@@ -114,6 +114,8 @@ export class SandboxManager {
     this.ready = new Map(); // sandbox id -> verified at
     this.envChecked = new Set(); // sandbox ids whose .env this runner has written or checked
     this.previews = new Map(); // `${id}:${port}` -> { url, expiresAt }
+    // Sandbox ids this runner deleted: Daytona can go on listing one as it was for a while.
+    this.deleted = new Set();
     this.lastSeen = new Map(); // learner -> { at, exercise }
     this.creating = 0;
   }
@@ -124,8 +126,9 @@ export class SandboxManager {
 
   async find(learner, { fresh = false } = {}) {
     const cached = this.cache.get(learner);
-    if (cached && !fresh && Date.now() - cached.at < 5 * 60_000) return cached.sandbox;
-    const found = (await this.#list({ labels: { app: APP_LABEL, learner } })).find((sandbox) => !GONE.has(sandbox.state)) ?? null;
+    if (cached && !fresh && Date.now() - cached.at < 5 * 60_000 && !this.deleted.has(cached.sandbox.id)) return cached.sandbox;
+    const rows = await this.#list({ labels: { app: APP_LABEL, learner } });
+    const found = rows.find((sandbox) => !GONE.has(sandbox.state) && !this.deleted.has(sandbox.id)) ?? null;
     if (found) this.cache.set(learner, { sandbox: found, at: Date.now() });
     else this.cache.delete(learner);
     return found;
@@ -342,7 +345,7 @@ export class SandboxManager {
     await this.#writeEnv(sandbox, run.learner, origins, { keepMode: !fresh });
 
     this.#stillWanted(run);
-    this.#step(run, "bootstrapping", "Starting Temporal, the Dogwood verifier and the console…", { sandboxId: sandbox.id });
+    this.#step(run, "bootstrapping", "Starting Temporal, the policy verifier and the console…", { sandboxId: sandbox.id });
     const steps = [
       // Process ids from before a stop point at nothing (or at something else).
       "rm -f .stack/*.pid",
@@ -492,8 +495,16 @@ export class SandboxManager {
     this.cache.delete(learner);
     if (!sandbox) return null;
     this.ready.delete(sandbox.id);
+    this.deleted.add(sandbox.id);
     for (const key of this.previews.keys()) if (key.startsWith(`${sandbox.id}:`)) this.previews.delete(key);
-    await withTimeout(sandbox.delete(60), 90_000, "Deleting the sandbox");
+    try {
+      await withTimeout(sandbox.delete(60), 90_000, "Deleting the sandbox");
+    } catch (err) {
+      // Deleted already (another Start over got there first): that's what was wanted.
+      if (!/not found|has been deleted/i.test(err.message)) throw err;
+    }
+    // A poll while it was being deleted may have found it again.
+    this.cache.delete(learner);
     return sandbox;
   }
 

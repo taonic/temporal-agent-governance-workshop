@@ -15,8 +15,7 @@ Talking points and demo scripts for the instructor blocks of the 4-hour workshop
 | 1:55 | The human approval pattern | Why safe-but-manual doesn't scale | |
 | 2:10 | Exercise 3: Human approval | Float | `challenges/03-human-approval` |
 | 2:45 | Introduce Dogwood | Policy over tool calls and history | |
-| 3:00 | Exercise 4: Auto mode | Float | `challenges/04-auto-mode` |
-| 3:25 | Capstone: attack the agent | Run it as a demo if time is short | `challenges/05-attack-the-agent` |
+| 3:00 | Bonus exercise 4: Auto mode | Float; run it as a demo if time is short | `challenges/04-auto-mode` |
 | 3:55 | Wrap | Reusable architecture, next steps | |
 
 The arc to keep repeating: **make it run, make it durable, make it safe, then make it autonomous.** Don't explain Dogwood before learners have seen the agent run.
@@ -25,8 +24,8 @@ The arc to keep repeating: **make it run, make it durable, make it safe, then ma
 
 - **Pre-work for learners:** `uv sync`, the Temporal CLI, a Rust toolchain, and `./scripts/setup_dogwood.sh` (several minutes the first time). Ask them to run `uv run travel-stack up` once to confirm it works.
 - **Model:** start the shared GPU endpoint about 30 minutes before (`uv run --group gpu python scripts/gpu_endpoint.py up --hours 4.5`; needs `DAYTONA_API_KEY`) and hand out the `.env` lines it prints.
-- **Benchmark it** with a worker pointed at it: `uv run python scripts/bench_llm.py --runs 3 --concurrency 10`. You want `search`, `form` and `book` at 3/3, and `injection` at 2/3 or better.
-- **Fallback:** if the endpoint dies, learners set `LLM_MODE=scripted` in `.env` and restart the worker. The scripted agent plays every walkthrough in the assignments, including the injection.
+- **Benchmark it** with a worker pointed at it: `uv run python scripts/bench_llm.py --runs 3 --concurrency 10`. You want `search`, `form` and `book` at 3/3.
+- **Fallback:** if the endpoint dies, learners set `LLM_MODE=scripted` in `.env` and restart the worker. The scripted agent plays every walkthrough in the assignments.
 - Have the finished workshop in a second checkout for demos (`scripts/switch.py solution`).
 - **Browser course:** if learners use the hosted site instead of local setup, deploy it and set a fresh access code the day before: [DEPLOY.md](DEPLOY.md).
 
@@ -41,7 +40,7 @@ The arc to keep repeating: **make it run, make it durable, make it safe, then ma
 3. **Audit.** Afterwards: what did the agent try, what was allowed, and why?
 4. **Safe autonomy.** Approving everything doesn't scale. We want the agent to act on its own exactly when the action matches what the user already asked for.
 
-**The plan.** One travel agent, built up over four exercises: raw Temporal, then the agent as a durable session, then human approval, then a policy that lets it act alone. Then we attack it.
+**The plan.** One travel agent, built up over three exercises and a bonus: raw Temporal, then the agent as a durable session, then human approval, and as a bonus, a policy that lets it act alone.
 
 ## Temporal debrief (10)
 
@@ -101,24 +100,11 @@ While you float, the point to land with each table: **a script can't do anything
 - **Structured intent.** The trip form is the user saying, in a form the system can check: this person, this route, these dates.
 - **Dogwood is Cedar plus temporal conditions** over a history of events. Put the `flights-on-the-trip-form` rule on screen and read it aloud: permit `book_flight` when, earlier in *this session*, a trip form result was received with this passenger and this date.
 - **Architecture.** The verifier is a separate service, reached over a Temporal Nexus endpoint. Before each gated call the agent records what the session received (messages, the form, tool results) and asks for a decision. The agent can't edit the policy or the history; the model never sees either.
-- **Three outcomes:** permit (runs unattended), forbid or no permit (refused, and the model is told which rule), forbid with `@decision("escalate")` (comes to a person).
+- **Three outcomes:** permit (runs unattended); not permitted, by a rule marked `@on_deny("escalate")` (comes to a person, as in exercise 3, with the rule's `@reason`); anything else (refused, and the model is told why). Every booking rule is marked, so in the walkthrough an off-form booking comes to you. The verifier decides permit or deny; the agent's evaluator (`travel_agent/agent/policy.py`) reads `@on_deny` and `@reason` from the policy file, the way the harness's Playpen does.
 - **What the policy sees:** not the script, which runs unattended, but each travel call the script makes, one at a time, with its real arguments. A booking is judged as a booking, however the code got there.
 - **Fail closed:** if the verifier is down, calls come to a person, never "allow".
 
 > "The model decides what to try. The policy decides what is allowed."
-
-## Capstone: attack the agent (15)
-
-If time is short, run it yourself on the projector (script in `challenges/05-attack-the-agent/assignment.md`):
-
-1. Fresh session, `auto_mode`. Open five panels: **Agent chat**, **State flow**, **Approval decisions**, **Agent state**, **VFS File Mounts**. Open `/notes/todo.md` and show the planted Mallory line *before* sending anything.
-2. Be upfront: the system prompt tells the model to obey instructions in files (`DEMO_INJECTION_SUSCEPTIBILITY`). We made it gullible on purpose; the point is that it doesn't matter.
-3. One prompt: "Go take care of everything that's in the notes/todo.md."
-4. Mallory's booking is refused first. Fill in the form; your own bookings run. Open the refusal in **Approval decisions**.
-
-If the model happens to skip the injection, say so, and show it with the scripted agent (`LLM_MODE=scripted`), which always falls for it.
-
-> "The model can be fooled. The system does not have to be."
 
 ## Wrap (5)
 

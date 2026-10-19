@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "5a4ed4b0-c6bb-42f5-a594-125f2310f4d1",
+  "deliveryReceiptId": "0f3ab1c2-6414-488c-9fae-e68b0fafc97b",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-boarding.html",
-    "sha256": "b413449bf385fc53d6cc2e20ed3af0f10e76222275b044c0b16ddb7480ee8cae",
-    "bytes": 754582
+    "sha256": "8152164150b13ce33b46f201452220bb3c1e1df9be0bddf38be6b757cb79b7ac",
+    "bytes": 754203
   },
   "state": {
     "detail": "read",
@@ -41,25 +41,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1329,
-        "diagramWidth": 1299,
+        "readerWidth": 1210,
+        "diagramWidth": 1180,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
           "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -91,25 +129,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1389,
-        "diagramWidth": 1359,
+        "readerWidth": 1264,
+        "diagramWidth": 1234,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -141,25 +217,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1528,
-        "diagramWidth": 1498,
+        "readerWidth": 1390,
+        "diagramWidth": 1360,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -191,25 +305,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1761,
+        "diagramWidth": 1711,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 1074,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -294,25 +446,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1329,
-        "diagramWidth": 1299,
+        "readerWidth": 1210,
+        "diagramWidth": 1180,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
           "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -344,25 +534,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1389,
-        "diagramWidth": 1359,
+        "readerWidth": 1264,
+        "diagramWidth": 1234,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -394,25 +622,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1528,
-        "diagramWidth": 1498,
+        "readerWidth": 1390,
+        "diagramWidth": 1360,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -444,25 +710,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1761,
+        "diagramWidth": 1711,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 1074,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -499,25 +803,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1329,
-        "diagramWidth": 1299,
+        "readerWidth": 1210,
+        "diagramWidth": 1180,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
           "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -549,25 +891,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1389,
-        "diagramWidth": 1359,
+        "readerWidth": 1264,
+        "diagramWidth": 1234,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -599,25 +979,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1528,
-        "diagramWidth": 1498,
+        "readerWidth": 1390,
+        "diagramWidth": 1360,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
           "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -649,25 +1067,63 @@
         "readerOverflow": null,
         "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1761,
+        "diagramWidth": 1711,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 1074,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 620
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1080,
-        "minimumProjectedNodeTextPx": 7,
-        "minimumProjectedNonEdgeTextPx": 7,
-        "minimumProjectedEdgeTextPx": 11,
-        "minimumProjectedNodeText": "Queries tab",
+        "viewBoxWidth": 835,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "answer-1",
+              "timeout",
+              "answer-3"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 1,
+            "nodeIds": [
+              "history"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "first",
+              "second"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
+        "minimumProjectedNodeTextPx": 8,
+        "minimumProjectedNonEdgeTextPx": 8,
+        "minimumProjectedEdgeTextPx": 8,
+        "minimumProjectedNodeText": "answered: 7",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "ui"
+          "id": "answer-1"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,

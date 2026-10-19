@@ -1,14 +1,18 @@
 {
-  "schema_version": 1,
-  "diagram_type": "architecture",
+  "schema_version": 2,
+  "diagram_type": "workflow",
   "meta": {
-    "title": "Exercise 3: a booking waits for you",
-    "output": "docs/architecture/ex3-approval.html",
+    "title": "A booking waits for you",
+    "animation": "trace",
     "quality_profile": "showcase",
+    "output": "docs/architecture/ex3-approval.html",
     "legend": {
       "entries": {
-        "frontend": {
+        "external": {
           "label": "You"
+        },
+        "frontend": {
+          "label": "What you see"
         },
         "backend": {
           "label": "Runs on Temporal"
@@ -16,184 +20,191 @@
         "security": {
           "label": "The approval gate"
         },
-        "external": {
+        "cloud": {
           "label": "Outside services"
         }
       }
     }
   },
-  "components": [
+  "lanes": [
     {
-      "id": "you",
-      "type": "frontend",
-      "label": "You",
-      "sublabel": "in the Agent UI",
-      "pos": [
-        40,
-        100
-      ],
-      "size": [
-        190,
-        60
-      ]
+      "id": "outside",
+      "label": "Outside Temporal"
     },
     {
-      "id": "session",
-      "type": "backend",
-      "label": "Agent session",
-      "sublabel": "posture: approve_bookings",
-      "pos": [
-        360,
-        100
-      ],
-      "size": [
-        190,
-        60
-      ]
+      "id": "temporal",
+      "label": "Temporal · every step durable"
     },
     {
-      "id": "model",
-      "type": "external",
-      "label": "The model",
-      "sublabel": "decides the next call",
-      "pos": [
-        1040,
-        100
-      ],
-      "size": [
-        190,
-        60
-      ]
-    },
-    {
-      "id": "update",
-      "type": "backend",
-      "label": "tool_approval Update",
-      "sublabel": "validated, then recorded",
-      "pos": [
-        360,
-        300
-      ],
-      "size": [
-        190,
-        60
-      ]
-    },
-    {
-      "id": "gate",
-      "type": "security",
-      "label": "Approval gate",
-      "sublabel": "approval_policy(): your TODO",
-      "pos": [
-        700,
-        300
-      ],
-      "size": [
-        190,
-        60
-      ]
-    },
-    {
-      "id": "tools",
-      "type": "backend",
-      "label": "Tool calls run",
-      "sublabel": "search, script, trip board",
-      "pos": [
-        700,
-        500
-      ],
-      "size": [
-        190,
-        60
-      ]
-    },
-    {
-      "id": "api",
-      "type": "external",
-      "label": "Travel API",
-      "sublabel": "simulated flights",
-      "pos": [
-        1040,
-        500
-      ],
-      "size": [
-        190,
-        60
-      ]
+      "id": "server",
+      "label": "Temporal Server"
     }
   ],
-  "boundaries": [
+  "phases": [
     {
-      "kind": "region",
-      "label": "Temporal: the session workflow",
-      "wraps": [
-        "session",
-        "update",
-        "gate",
-        "tools"
-      ]
-    }
-  ],
-  "connections": [
+      "id": "ask",
+      "label": "You ask",
+      "fromCol": 0,
+      "toCol": 1
+    },
     {
-      "id": "you-session",
-      "from": "you",
-      "to": "session",
-      "label": "ask",
+      "id": "check",
+      "label": "Each call is checked",
+      "fromCol": 2,
+      "toCol": 3,
       "variant": "emphasis"
     },
     {
-      "id": "session-model",
-      "from": "session",
-      "to": "model",
-      "label": "each turn"
+      "id": "wait",
+      "label": "A booking waits",
+      "fromCol": 4,
+      "toCol": 4,
+      "variant": "dashed"
     },
     {
-      "id": "model-gate",
+      "id": "run",
+      "label": "Allowed calls run",
+      "fromCol": 5,
+      "toCol": 5
+    }
+  ],
+  "mainPath": [
+    "you",
+    "session",
+    "model",
+    "gate",
+    "tools",
+    "api"
+  ],
+  "nodes": [
+    {
+      "id": "you",
+      "lane": "outside",
+      "col": 0,
+      "type": "external",
+      "label": "You",
+      "sublabel": "ask for a trip",
+      "width": 160
+    },
+    {
+      "id": "card",
+      "lane": "outside",
+      "col": 3,
+      "type": "frontend",
+      "label": "Approval card",
+      "sublabel": "approve or reject",
+      "width": 160
+    },
+    {
+      "id": "session",
+      "lane": "temporal",
+      "col": 1,
+      "type": "backend",
+      "label": "Agent session",
+      "sublabel": "posture: approve_bookings",
+      "width": 160
+    },
+    {
+      "id": "update",
+      "lane": "server",
+      "col": 4,
+      "type": "backend",
+      "label": "tool_approval",
+      "sublabel": "validated, then recorded",
+      "width": 160
+    },
+    {
+      "id": "gate",
+      "lane": "temporal",
+      "col": 3,
+      "type": "security",
+      "label": "Approval gate",
+      "sublabel": "approval_policy(): your TODO",
+      "width": 176
+    },
+    {
+      "id": "tools",
+      "lane": "temporal",
+      "col": 5,
+      "type": "backend",
+      "label": "Tool calls run",
+      "sublabel": "search · script · board",
+      "width": 160
+    },
+    {
+      "id": "model",
+      "lane": "outside",
+      "col": 2,
+      "type": "cloud",
+      "label": "The model",
+      "sublabel": "decides the next call",
+      "width": 160
+    },
+    {
+      "id": "api",
+      "lane": "outside",
+      "col": 5,
+      "type": "cloud",
+      "label": "Travel API",
+      "sublabel": "simulated flights",
+      "width": 160
+    }
+  ],
+  "edges": [
+    {
+      "id": "ask",
+      "from": "you",
+      "to": "session",
+      "variant": "emphasis"
+    },
+    {
+      "id": "each-turn",
+      "from": "session",
+      "to": "model",
+      "label": "each turn",
+      "variant": "default"
+    },
+    {
+      "id": "tool-calls",
       "from": "model",
       "to": "gate",
-      "fromSide": "bottom",
-      "toSide": "right",
       "label": "tool calls",
       "variant": "emphasis"
     },
     {
-      "id": "gate-tools",
+      "id": "allowed",
       "from": "gate",
       "to": "tools",
-      "fromSide": "bottom",
-      "toSide": "top",
       "label": "allowed",
       "variant": "emphasis"
     },
     {
-      "id": "tools-api",
+      "id": "calls",
       "from": "tools",
-      "to": "api"
+      "to": "api",
+      "variant": "default"
     },
     {
-      "id": "gate-you",
+      "id": "waits",
       "from": "gate",
-      "to": "you",
-      "fromSide": "top",
-      "toSide": "bottom",
+      "to": "card",
       "label": "a booking waits",
-      "variant": "dashed"
+      "variant": "dashed",
+      "role": "branch"
     },
     {
-      "id": "you-update",
-      "from": "you",
+      "id": "decides",
+      "from": "card",
       "to": "update",
-      "fromSide": "bottom",
-      "toSide": "left",
       "label": "approve / reject",
       "variant": "emphasis"
     },
     {
-      "id": "update-gate",
+      "id": "decision",
       "from": "update",
       "to": "gate",
-      "label": "decision"
+      "label": "decision",
+      "variant": "default"
     }
   ],
   "cards": [

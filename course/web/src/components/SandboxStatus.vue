@@ -56,7 +56,7 @@ function startOver() {
       </template>
       <template v-else-if="!store.authenticated">
         <h3>Run the workshop in your browser</h3>
-        <p>You get your own cloud sandbox with everything installed: Temporal, the agent, the Dogwood verifier, two terminals, an editor and the Agent UI. It stops when you're idle and keeps your work for a day.</p>
+        <p>You get your own cloud sandbox with everything installed: Temporal, the agent, the policy verifier, two terminals, an editor and the Agent UI. It stops when you're idle and keeps your work for a day.</p>
         <AccessForm />
       </template>
       <template v-else-if="waiting">

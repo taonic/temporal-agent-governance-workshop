@@ -179,17 +179,11 @@ It's built from the Temporal you wrote in exercise 1:
 
 [![You ask the TravelAgent workflow, which runs on the travel-worker. Each model turn is a call_llm activity that talks to the model. The workflow runs the model's script in the Monty sandbox, and each call the script makes, search_flights(...) or book_flight(...), is an activity that calls the travel API: recorded in the session's history, retried until it succeeds, never run again once it has.](../../docs/architecture/ex2-session.png)](../../docs/architecture/ex2-session.html)
 
-Time to start it.
+First, where you'll talk to it.
 
-## 2. Start the agent's worker
+## 2. Meet the Agent UI
 
-The stack from exercise 1 is still running (`uv run travel-stack status` to check). In its own terminal, start the travel agent's worker and leave it running:
-
-```bash
-uv run travel-worker
-```
-
-You'll talk to it in the **Agent UI**.
+You'll talk to the agent in the **Agent UI**.
 
 <div class="callout">
 
@@ -207,11 +201,15 @@ You'll talk to it in the **Agent UI**.
 <button class="pane-button" type="button" data-agent-tour>✦ Take a tour of the Agent UI</button>
 -->
 
-Now start a conversation.
-
 ## 3. Start a session
 
-Start a new **Travel agent** session<!-- browser
+The stack from exercise 1 is still running (`uv run travel-stack status` to check). In its own terminal, start the travel agent's worker and leave it running:
+
+```bash
+uv run travel-worker
+```
+
+Then start a new **Travel agent** session<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="dangerously_skip_all" title="Open the Travel agent's start form in the Agent UI, with dangerously_skip_all chosen">New session ▸</button>
 -->. The start form asks for an **approval posture**: leave it at `dangerously_skip_all` for now. (Exercise 3 is about why that name is a warning.)
 

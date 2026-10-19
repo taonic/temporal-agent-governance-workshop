@@ -26,6 +26,7 @@ import {
   openSessionTab,
   openTrip,
   openWorkflow,
+  resetSandbox,
   runInTerminal,
   save,
   sendToAgent,
@@ -87,7 +88,7 @@ const input = ref(null);
 const draft = ref("");
 const position = computed(() => course.exercises.findIndex((e) => e.id === props.exercise.id));
 const next = computed(() => course.exercises[position.value + 1]);
-const label = (e) => (e.optional ? "★ Capstone" : `Exercise ${e.number}`);
+const label = (e) => `Exercise ${e.number}`;
 
 // --- Where the conversation is ------------------------------------------------------------
 
@@ -133,23 +134,40 @@ function tick(id, value = true) {
   save(`steps:${props.exercise.id}`, ticked.value);
 }
 
-// Start over: the code back as the exercise starts (ExercisePage runs reset.sh), and the guide
-// back to its first step, nothing ticked, the exercise no longer passed.
+// Start over: the guide back to its first step, nothing ticked, the exercise no longer passed.
+// In the browser, with a new sandbox: the old one is deleted, and the new one gets the exercise
+// ready (its first poll catches up the earlier exercises). Locally, the code back as the
+// exercise starts (ExercisePage hands over reset.sh).
 function startOver() {
+  const name = label(props.exercise).toLowerCase();
+  if (mode.value === "browser") {
+    const message =
+      `Start ${name} over with a new sandbox?\n\n` +
+      "Your sandbox is deleted, with your edits, sessions and bookings in it. A new one starts right away " +
+      `(about a minute), with ${name} as it starts, and the guide goes back to its first step.`;
+    if (!window.confirm(message)) return;
+    restartGuide();
+    if (store.authenticated) resetSandbox({ restart: true });
+    else startSandbox(); // signs in first
+    return;
+  }
   const file = props.exercise.files.find((f) => f.editable && !f.scratch)?.path;
   const steps = [
     file && `puts ${file} back as the exercise starts (your edits are saved in .learner-backup/ first)`,
     "ends the running sessions and clears the bookings",
     "takes you back to the first step",
   ].filter(Boolean);
-  if (!window.confirm(`Start ${label(props.exercise).toLowerCase()} over?\n\nThis ${steps.join(", ")}.`)) return;
-  if (mode.value === "browser" && !props.live) return toast("Start your sandbox first: the code to put back is in it.");
+  if (!window.confirm(`Start ${name} over?\n\nThis ${steps.join(", ")}.`)) return;
+  restartGuide();
+  emit("reset");
+}
+
+function restartGuide() {
   ticked.value = {};
   save(`steps:${props.exercise.id}`, {});
   goTo(0);
-  // Not un-celebrated: a poll before reset.sh removes the marker would throw the confetti again.
+  // Not un-celebrated: a poll before the old marker is gone would throw the confetti again.
   store.passed = store.passed.filter((id) => id !== props.exercise.id);
-  emit("reset");
 }
 
 // The last beat of the briefing (the intro and any background before step 1) offers the code
@@ -619,10 +637,11 @@ function onClick(event) {
       <div class="instruction-heading-top">
         <p class="guide-heading-title" :title="exercise.teaser">
           {{ label(exercise) }} · {{ exercise.title }}
+          <span v-if="exercise.bonus" class="bonus-badge" title="A bonus exercise: do it if you have the time">bonus</span>
           <span v-if="passed" class="passed-badge" title="Your check passed">✓ passed</span>
         </p>
         <span v-if="steps.length" class="step-progress-count">{{ done }}/{{ steps.length }}</span>
-        <button v-if="exercise.scripts.reset" class="guide-restart" type="button" title="Start this exercise over: its code as it starts, fresh sessions, back to the first step" @click="startOver">
+        <button v-if="exercise.scripts.reset" class="guide-restart" type="button" :title="mode === 'browser' ? 'Start this exercise over in a new sandbox, back at the first step' : 'Start this exercise over: its code as it starts, fresh sessions, back to the first step'" @click="startOver">
           <span aria-hidden="true">↺</span> Start over
         </button>
       </div>
@@ -687,11 +706,12 @@ function onClick(event) {
       </div>
 
       <div v-show="!streaming" class="guide-replies" role="group" aria-label="Reply to the guide">
-        <button v-if="at > 0" class="guide-reply is-quiet" type="button" @click="goTo(at - 1)">← Back</button>
+        <button v-if="at > 0" class="guide-reply is-quiet is-back" type="button" @click="goTo(at - 1)">← Back</button>
         <template v-if="!isLast">
-          <button v-if="beat.id === 'start-workspace'" class="guide-reply is-primary" type="button" @click="showAround">✦ Show me around</button>
-          <button class="guide-reply" :class="{ 'is-primary': beat.id === 'start-ask' ? askReady : beat.id !== 'start-workspace', 'is-quiet': beat.id === 'start-workspace' }" type="button" @click="advance()">{{ nextLabel }}</button>
+          <!-- The quiet choice first: the primary one is always rightmost. -->
           <button v-if="offersCodeTour" class="guide-reply is-quiet" type="button" @click="advance({ codeTour: false })">Skip the code tour</button>
+          <button class="guide-reply" :class="{ 'is-primary': beat.id === 'start-ask' ? askReady : beat.id !== 'start-workspace', 'is-quiet': beat.id === 'start-workspace' }" type="button" @click="advance()">{{ nextLabel }}</button>
+          <button v-if="beat.id === 'start-workspace'" class="guide-reply is-primary" type="button" @click="showAround">✦ Show me around</button>
         </template>
         <template v-else-if="!showPassed">
           <button v-if="beat.kind === 'step' && !ticked[beat.id]" class="guide-reply" type="button" @click="tick(beat.id)">Mark this step done</button>

@@ -3,18 +3,18 @@
   "ok": true,
   "command": "finalize",
   "status": "pass",
-  "type": "architecture",
+  "type": "workflow",
   "quality": "showcase",
-  "startedAt": "2026-10-18T09:54:47.912Z",
+  "startedAt": "2026-10-19T06:14:34.572Z",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.candidate.json",
-    "sha256": "5fb6452b2e18c142f73e2a3b17b6086f29e63a47d8cc318081d438e690678182",
-    "bytes": 4527
+    "sha256": "c6085fa0d7259009c697eb6c2ac65dc44d99e19c991ced9c5d4225bcbd9d5fa2",
+    "bytes": 4750
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
-    "sha256": "274e317350d704fbdb2853538826846dc5a2e03d87e305dc48ae063bc1850f26",
-    "bytes": 759198
+    "sha256": "39e0e87a7b75c7cbdbb2c87cc758af58d6916fb873153ae2e5f655bf6d846f22",
+    "bytes": 758937
   },
   "stages": {
     "validate": {
@@ -26,7 +26,7 @@
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
-        "architecture",
+        "workflow",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
         "--quality",
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "5fb6452b2e18c142f73e2a3b17b6086f29e63a47d8cc318081d438e690678182",
-          "bytes": 4527
+          "sha256": "c6085fa0d7259009c697eb6c2ac65dc44d99e19c991ced9c5d4225bcbd9d5fa2",
+          "bytes": 4750
         },
         "validation": {
           "checksPassed": 9,
@@ -54,12 +54,12 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 261,
+      "durationMs": 208,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
-        "architecture",
+        "workflow",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
         "--quality",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "faac30cd-6f23-49e4-8aec-4df3c01a3c1f",
+        "receiptId": "7d7409aa-3f37-47bf-99a2-f332ba8e22ea",
         "ok": true,
         "command": "deliver",
-        "type": "architecture",
+        "type": "workflow",
         "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.candidate.json",
         "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
         "specification": {
-          "sha256": "5fb6452b2e18c142f73e2a3b17b6086f29e63a47d8cc318081d438e690678182",
-          "bytes": 4527
+          "sha256": "c6085fa0d7259009c697eb6c2ac65dc44d99e19c991ced9c5d4225bcbd9d5fa2",
+          "bytes": 4750
         },
         "artifact": {
-          "sha256": "274e317350d704fbdb2853538826846dc5a2e03d87e305dc48ae063bc1850f26",
-          "bytes": 759198
+          "sha256": "39e0e87a7b75c7cbdbb2c87cc758af58d6916fb873153ae2e5f655bf6d846f22",
+          "bytes": 758937
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 165,
+      "durationMs": 96,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
         "artifact": {
-          "sha256": "274e317350d704fbdb2853538826846dc5a2e03d87e305dc48ae063bc1850f26",
-          "bytes": 759198
+          "sha256": "39e0e87a7b75c7cbdbb2c87cc758af58d6916fb873153ae2e5f655bf6d846f22",
+          "bytes": 758937
         },
         "checks": [
           {
@@ -186,15 +186,15 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 93.2,
+            "minLabelRouteClearance": 84.2,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
-            "minProjectedNodeTextPx": 7.5,
+            "minProjectedNodeTextPx": 7.092469018112488,
             "maxBends": 1,
             "routesOverSuggestedBends": 0,
             "maxStretch": 1,
             "routesOverSuggestedStretch": 0,
-            "minSegmentPx": 120,
+            "minSegmentPx": 40,
             "minInteriorSegmentPx": null,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
@@ -212,48 +212,37 @@
             "detours": []
           },
           "leadingSpace": {
-            "measured": true,
-            "emptyTopPx": 70,
-            "emptyTopRatio": 0.111,
-            "occupiedTop": 70,
-            "viewBoxTop": 0,
-            "canvasHeight": 628,
-            "typicalNodeHeight": 60,
+            "measured": false,
             "reviewSuggested": false
           },
           "desktopReadability": {
-            "budgetBasis": "recognized-declared-wide",
+            "budgetBasis": "legacy-930",
             "readerContract": "declared-wide-v1",
-            "availableDiagramWidth": 1125,
-            "actualBudgetPx": 1125,
-            "actualReaderWidth": 1155,
-            "desiredReaderWidth": 1155,
-            "viewportCap": 1376,
-            "limit": "source-size",
-            "requestedTargetPx": 7.5,
-            "requestedTargetMet": true,
+            "availableDiagramWidth": 930,
+            "actualBudgetPx": 930,
+            "limit": "legacy",
+            "requestedTargetPx": null,
+            "requestedTargetMet": null,
             "hardFloorPx": 6,
             "hardFloorMet": true,
             "minimumOwner": {
-              "kind": "edge",
-              "id": "you-session",
-              "from": "you",
-              "to": "session"
+              "kind": "node",
+              "id": "you"
             },
             "minimumSourceTextPx": 8,
-            "minimumProjectedTextPx": 7.5,
-            "semanticTextCount": 24
+            "minimumProjectedTextPx": 7.092469018112488,
+            "semanticTextCount": 23
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "faac30cd-6f23-49e4-8aec-4df3c01a3c1f"
+        "deliveryReceiptId": "7d7409aa-3f37-47bf-99a2-f332ba8e22ea"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 859,
+      "durationMs": 1013,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -271,11 +260,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "faac30cd-6f23-49e4-8aec-4df3c01a3c1f",
+        "deliveryReceiptId": "7d7409aa-3f37-47bf-99a2-f332ba8e22ea",
         "artifact": {
           "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.html",
-          "sha256": "274e317350d704fbdb2853538826846dc5a2e03d87e305dc48ae063bc1850f26",
-          "bytes": 759198
+          "sha256": "39e0e87a7b75c7cbdbb2c87cc758af58d6916fb873153ae2e5f655bf6d846f22",
+          "bytes": 758937
         },
         "state": {
           "detail": "read",
@@ -304,7 +293,7 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1376,
               "diagramWidth": 1346,
@@ -312,21 +301,59 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 704,
+                "svgPx": 677,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 133,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 133,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 133,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -356,29 +383,67 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1520,
-              "diagramWidth": 1490,
+              "readerWidth": 1536,
+              "diagramWidth": 1506,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 780,
+                "svgPx": 758,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 149,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 149,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 149,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -408,29 +473,67 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1673,
-              "diagramWidth": 1643,
+              "readerWidth": 1739,
+              "diagramWidth": 1709,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 169,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 169,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 169,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -460,7 +563,7 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1920,
               "diagramWidth": 1870,
@@ -468,21 +571,59 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 979,
+                "svgPx": 941,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 185,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 185,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 185,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -565,7 +706,7 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1376,
               "diagramWidth": 1346,
@@ -573,21 +714,59 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 704,
+                "svgPx": 677,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 133,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 133,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 133,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -617,29 +796,67 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1520,
-              "diagramWidth": 1490,
+              "readerWidth": 1536,
+              "diagramWidth": 1506,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 780,
+                "svgPx": 758,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 149,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 149,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 149,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -669,29 +886,67 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1673,
-              "diagramWidth": 1643,
+              "readerWidth": 1739,
+              "diagramWidth": 1709,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 169,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 169,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 169,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -721,7 +976,7 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1920,
               "diagramWidth": 1870,
@@ -729,21 +984,59 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 979,
+                "svgPx": 941,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 185,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 185,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 185,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -778,7 +1071,7 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1376,
               "diagramWidth": 1346,
@@ -786,21 +1079,59 @@
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 704,
+                "svgPx": 677,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 133,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 133,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 133,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 67,
+                  "spaceAboveNodesPx": 53,
+                  "spaceBelowNodesPx": 14
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -830,29 +1161,67 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1520,
-              "diagramWidth": 1490,
+              "readerWidth": 1536,
+              "diagramWidth": 1506,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 780,
+                "svgPx": 758,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 149,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 149,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 149,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 75,
+                  "spaceAboveNodesPx": 59,
+                  "spaceBelowNodesPx": 16
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -882,29 +1251,67 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
-              "readerWidth": 1673,
-              "diagramWidth": 1643,
+              "readerWidth": 1739,
+              "diagramWidth": 1709,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 169,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 169,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 169,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -934,7 +1341,7 @@
               "overflowDisposition": "contained",
               "readerLayout": "adaptive",
               "readerOverflow": null,
-              "readerFit": "intrinsic-height",
+              "readerFit": null,
               "ok": true,
               "readerWidth": 1920,
               "diagramWidth": 1870,
@@ -942,21 +1349,59 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 979,
+                "svgPx": 941,
                 "cardsPx": 0,
-                "viewBoxHeight": 628
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1200,
+              "viewBoxWidth": 1049,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 185,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "you",
+                    "model",
+                    "api"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 185,
+                  "nodeCount": 4,
+                  "nodeIds": [
+                    "session",
+                    "llm",
+                    "monty",
+                    "tools"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 185,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "history"
+                  ],
+                  "nodeSpanPx": 93,
+                  "spaceAboveNodesPx": 73,
+                  "spaceBelowNodesPx": 20
+                }
+              ],
               "minimumProjectedNodeTextPx": 8,
-              "minimumProjectedNonEdgeTextPx": 9,
+              "minimumProjectedNonEdgeTextPx": 8,
               "minimumProjectedEdgeTextPx": 8,
-              "minimumProjectedNodeText": "message",
-              "minimumProjectedNodeTextDetail": "edge",
+              "minimumProjectedNodeText": "chat with the agent",
+              "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
-                "kind": "edge",
-                "id": "you-session",
-                "from": "you",
-                "to": "session"
+                "kind": "node",
+                "id": "you"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -993,18 +1438,18 @@
     "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-overview.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-18T09:54:49.355Z",
-  "durationMs": 1443,
+  "finishedAt": "2026-10-19T06:14:36.059Z",
+  "durationMs": 1487,
   "update": {
     "status": "update_available",
     "installedVersion": "3.0.1",
     "availableVersion": "3.1.0",
     "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
     "severity": "normal",
-    "checkedAt": "2026-10-17T08:39:37.027Z",
+    "checkedAt": "2026-10-18T23:12:32.207Z",
     "source": "cache",
     "noticeRequired": true,
-    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-17T08:39:37.027Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-18T23:12:32.207Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   }
 }

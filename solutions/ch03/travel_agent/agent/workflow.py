@@ -7,7 +7,7 @@ is a Temporal activity, judged first by the session's approval posture:
     dangerously_skip_all   everything runs (exercise 2)
     human_approval_only    every call asks you first
     approve_bookings       searches run; bookings wait for you (exercise 3)
-    auto_mode              a Dogwood policy decides each call (exercise 4)
+    auto_mode              your policy decides each booking (exercise 4)
 
 Chosen when the session starts; `set_approval_policy` changes it. The model is called from the
 `call_llm` activity.
@@ -51,15 +51,16 @@ with workflow.unsafe.imports_passed_through():
     from ..travel import activities, trip_board
     from .llm import call_llm
     from .models import LLMRequest, LLMResponse, ToolCall
+    from .policy import policy_evaluator
     from .prompts import CODE_MODE_TOOL_NAME, SYSTEM_PROMPT
     from .tools import openai_tool
     from .travel_notes import seed_travel_notes
     from .trip_form import ask_trip_details
 
 
-# Tool calls reach the Dogwood policy as "travel-agent/<tool>".
+# Tool calls reach the policy as "travel-agent/<tool>".
 ACTION_PREFIX = "travel-agent"
-# The Nexus endpoint the Dogwood verifier serves; `travel-stack up` creates it.
+# The Nexus endpoint the policy verifier serves; `travel-stack up` creates it.
 POLICY_ENDPOINT = "tool-verifier"
 # How many model calls one message may take before the agent stops and says so.
 MAX_MODEL_CALLS = 12
@@ -85,7 +86,7 @@ Posture = Literal["dangerously_skip_all", "human_approval_only", "approve_bookin
 
 def approval_policy(posture: Posture) -> ToolApprovalPolicy:
     """Which tool calls run without asking, for each posture. Whatever a policy doesn't allow
-    goes to you (or, in auto mode, to the Dogwood policy first)."""
+    goes to you (or, in auto mode, to the policy first)."""
     match posture:
         case "dangerously_skip_all":
             return ToolApprovalPolicy.dangerously_skip_all()
@@ -104,7 +105,7 @@ def approval_policy(posture: Posture) -> ToolApprovalPolicy:
                 ]
             )
         case "auto_mode":
-            # Only bookings go to the Dogwood policy, each on its own with its real arguments:
+            # Only bookings go to the policy, each on its own with its real arguments:
             # the script and the lookups can't change anything in the world.
             return ToolApprovalPolicy.auto_mode(
                 pre_approved_tools=[
@@ -117,10 +118,10 @@ def approval_policy(posture: Posture) -> ToolApprovalPolicy:
             )
 
 
-# Auto mode only consults the evaluator for tools some criteria set covers. With Dogwood
+# Auto mode only consults the evaluator for tools some criteria set covers. With the policy
 # deciding, one catch-all set with no rules of its own is enough.
 _AUTO_APPROVAL_CRITERIA = agent.AutoApprovalCriteria(
-    sets={"dogwood": agent.AutoApprovalCriteriaSet(effect="Judged by the Dogwood tool policy.")},
+    sets={"dogwood": agent.AutoApprovalCriteriaSet(effect="Judged by the rules in policies/travel.dw.")},
     default="dogwood",
 )
 
@@ -168,9 +169,7 @@ class TravelAgentWorkflow:
             stream=WorkflowStream(),
             approval_policy_default=approval_policy(self._posture),
             auto_approval_criteria_default=_AUTO_APPROVAL_CRITERIA,
-            auto_mode_evaluator=agent.dogwood_evaluator(
-                endpoint=POLICY_ENDPOINT, action_prefix=ACTION_PREFIX
-            ),
+            auto_mode_evaluator=policy_evaluator(endpoint=POLICY_ENDPOINT, action_prefix=ACTION_PREFIX),
         )
         code_tool = build_code_tool(self.trip_board, mounts=[self.notes.bind(seed=seed_travel_notes)])
         self._tools = {tool.__name__: tool for tool in (code_tool, ask_trip_details)}
@@ -189,7 +188,7 @@ class TravelAgentWorkflow:
     async def set_approval_policy(self, update: PolicyUpdate) -> TextReply:
         """Set the session's approval posture: `dangerously_skip_all` runs everything,
         `human_approval_only` asks you about every call, `approve_bookings` asks only about
-        bookings, and `auto_mode` lets the Dogwood policy decide."""
+        bookings, and `auto_mode` lets the policy decide."""
         self._posture = update.posture
         self._runner.set_approval_policy(approval_policy(update.posture))
         return TextReply(text=f"Approval posture is now **{update.posture}**.")

@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "3bec5111-66f2-4ef8-9642-799fcc1955d3",
+  "deliveryReceiptId": "78a300d7-b364-4e08-a64a-607644051871",
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex2-session.html",
-    "sha256": "34fbd08db76163fe5b3b948d12b2fc365be6b515f54a954a4af886e7d5d7479c",
-    "bytes": 758933
+    "sha256": "f8e074f8eccc1477760cd246d07ddb3b62bb9e5a4089e5c928fdce2a035ebcd9",
+    "bytes": 758688
   },
   "state": {
     "detail": "read",
@@ -39,29 +39,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1376,
-        "diagramWidth": 1346,
+        "readerWidth": 1314,
+        "diagramWidth": 1284,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 571,
+          "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -91,29 +129,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "readerWidth": 1373,
+        "diagramWidth": 1343,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 639,
+          "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -143,29 +219,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1856,
-        "diagramWidth": 1826,
+        "readerWidth": 1511,
+        "diagramWidth": 1481,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 775,
+          "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -195,29 +309,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1913,
+        "diagramWidth": 1863,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 794,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -300,29 +452,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1376,
-        "diagramWidth": 1346,
+        "readerWidth": 1314,
+        "diagramWidth": 1284,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 571,
+          "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -352,29 +542,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "readerWidth": 1373,
+        "diagramWidth": 1343,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 639,
+          "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -404,29 +632,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1856,
-        "diagramWidth": 1826,
+        "readerWidth": 1511,
+        "diagramWidth": 1481,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 775,
+          "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -456,29 +722,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1913,
+        "diagramWidth": 1863,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 794,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -513,29 +817,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1376,
-        "diagramWidth": 1346,
+        "readerWidth": 1314,
+        "diagramWidth": 1284,
         "pageComposition": {
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 571,
+          "svgPx": 746,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 147,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 147,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 73,
+            "spaceAboveNodesPx": 58,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -565,29 +907,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "readerWidth": 1373,
+        "diagramWidth": 1343,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 639,
+          "svgPx": 780,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 154,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 154,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 77,
+            "spaceAboveNodesPx": 61,
+            "spaceBelowNodesPx": 16
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -617,29 +997,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1856,
-        "diagramWidth": 1826,
+        "readerWidth": 1511,
+        "diagramWidth": 1481,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 775,
+          "svgPx": 860,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 169,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 169,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 85,
+            "spaceAboveNodesPx": 67,
+            "spaceBelowNodesPx": 18
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -669,29 +1087,67 @@
         "overflowDisposition": "contained",
         "readerLayout": "adaptive",
         "readerOverflow": null,
-        "readerFit": "intrinsic-height",
+        "readerFit": null,
         "ok": true,
-        "readerWidth": 1920,
-        "diagramWidth": 1870,
+        "readerWidth": 1913,
+        "diagramWidth": 1863,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 794,
+          "svgPx": 1082,
           "cardsPx": 0,
-          "viewBoxHeight": 518
+          "viewBoxHeight": 528
         },
-        "viewBoxWidth": 1220,
+        "viewBoxWidth": 909,
+        "workflowLanes": [
+          {
+            "frameId": "lane-0",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "you",
+              "model",
+              "api"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 213,
+            "nodeCount": 3,
+            "nodeIds": [
+              "callllm",
+              "search",
+              "book"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 213,
+            "nodeCount": 2,
+            "nodeIds": [
+              "workflow",
+              "monty"
+            ],
+            "nodeSpanPx": 107,
+            "spaceAboveNodesPx": 84,
+            "spaceBelowNodesPx": 23
+          }
+        ],
         "minimumProjectedNodeTextPx": 8,
-        "minimumProjectedNonEdgeTextPx": 9,
+        "minimumProjectedNonEdgeTextPx": 8,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "ask",
-        "minimumProjectedNodeTextDetail": "edge",
+        "minimumProjectedNodeText": "ask for a trip",
+        "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
-          "kind": "edge",
-          "id": "ask",
-          "from": "you",
-          "to": "workflow"
+          "kind": "node",
+          "id": "you"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,

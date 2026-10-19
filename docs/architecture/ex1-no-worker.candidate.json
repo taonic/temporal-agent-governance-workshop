@@ -1,148 +1,174 @@
 {
-  "schema_version": 1,
-  "diagram_type": "sequence",
+  "schema_version": 2,
+  "diagram_type": "workflow",
   "meta": {
-    "title": "Exercise 1: a workflow is recorded before any worker runs it",
-    "output": "docs/architecture/ex1-no-worker.html",
-    "viewBox": [
-      1080,
-      600
-    ],
-    "column_fit": "spread",
+    "title": "Recorded before it runs",
+    "animation": "trace",
     "quality_profile": "showcase",
+    "output": "docs/architecture/ex1-no-worker.html",
     "legend": {
       "entries": {
-        "emphasis": {
-          "label": "recorded in the history"
+        "external": {
+          "label": "You"
         },
-        "default": {
-          "label": "handed over"
+        "frontend": {
+          "label": "What you see"
         },
-        "return": {
-          "label": "back to the starter"
+        "database": {
+          "label": "History"
+        },
+        "messagebus": {
+          "label": "Task queue"
+        },
+        "backend": {
+          "label": "Worker"
         }
       }
     }
   },
-  "participants": [
+  "lanes": [
     {
-      "id": "starter",
-      "type": "frontend",
-      "label": "Starter",
-      "sublabel": "hello-start SEA LHR"
+      "id": "you",
+      "label": "You · the starter"
     },
     {
-      "id": "history",
-      "type": "database",
-      "label": "History",
-      "sublabel": "Temporal server"
-    },
-    {
-      "id": "queue",
-      "type": "messagebus",
-      "label": "Task queue",
-      "sublabel": "\"hello\""
+      "id": "temporal",
+      "label": "Temporal server"
     },
     {
       "id": "worker",
+      "label": "hello-worker"
+    }
+  ],
+  "phases": [
+    {
+      "id": "start",
+      "label": "1 · Recorded first",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "wait",
+      "label": "2 · No worker: it waits",
+      "fromCol": 2,
+      "toCol": 2,
+      "variant": "dashed"
+    },
+    {
+      "id": "run",
+      "label": "3 · A worker runs it",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "emphasis"
+    }
+  ],
+  "mainPath": [
+    "starter",
+    "history",
+    "queue",
+    "worker",
+    "recorded",
+    "result"
+  ],
+  "nodes": [
+    {
+      "id": "starter",
+      "lane": "you",
+      "col": 0,
+      "type": "external",
+      "label": "Starter",
+      "sublabel": "hello-start SEA LHR",
+      "width": 160
+    },
+    {
+      "id": "result",
+      "lane": "you",
+      "col": 5,
+      "type": "frontend",
+      "label": "Your trip",
+      "sublabel": "Seattle to London",
+      "width": 160
+    },
+    {
+      "id": "history",
+      "lane": "temporal",
+      "col": 1,
+      "type": "database",
+      "label": "History",
+      "sublabel": "the start, recorded",
+      "width": 160
+    },
+    {
+      "id": "queue",
+      "lane": "temporal",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Task queue \"hello\"",
+      "sublabel": "the task waits",
+      "width": 160
+    },
+    {
+      "id": "recorded",
+      "lane": "temporal",
+      "col": 4,
+      "type": "database",
+      "label": "History",
+      "sublabel": "the result, recorded",
+      "width": 160
+    },
+    {
+      "id": "worker",
+      "lane": "worker",
+      "col": 3,
       "type": "backend",
-      "label": "Worker",
-      "sublabel": "hello-worker"
+      "label": "A worker starts",
+      "sublabel": "polls the queue",
+      "width": 160
     }
   ],
-  "segments": [
-    {
-      "from": 150,
-      "to": 250,
-      "label": "1. Start: recorded first"
-    },
-    {
-      "from": 260,
-      "to": 330,
-      "label": "2. No worker: the task waits"
-    },
-    {
-      "from": 340,
-      "to": 470,
-      "label": "3. A worker starts and runs it"
-    }
-  ],
-  "messages": [
+  "edges": [
     {
       "id": "start",
       "from": "starter",
       "to": "history",
-      "y": 170,
-      "label": "start workflow: recorded",
+      "label": "start workflow",
       "variant": "emphasis"
     },
     {
       "id": "schedule",
       "from": "history",
       "to": "queue",
-      "y": 200,
-      "label": "schedule a task",
+      "label": "a task",
       "variant": "default"
     },
     {
-      "id": "started",
-      "from": "history",
-      "to": "starter",
-      "y": 230,
-      "label": "id: wait for the result",
-      "variant": "return"
-    },
-    {
-      "id": "poll",
-      "from": "worker",
-      "to": "queue",
-      "y": 360,
-      "label": "poll for work",
-      "variant": "emphasis"
+      "id": "waits",
+      "from": "starter",
+      "to": "result",
+      "label": "waits for the result",
+      "variant": "dashed",
+      "role": "async"
     },
     {
       "id": "task",
       "from": "queue",
       "to": "worker",
-      "y": 390,
       "label": "the waiting task",
       "variant": "default"
     },
     {
-      "id": "record",
+      "id": "lookups",
       "from": "worker",
-      "to": "history",
-      "y": 420,
-      "label": "lookups + result: recorded",
+      "to": "recorded",
+      "label": "lookups + result",
       "variant": "emphasis"
     },
     {
-      "id": "result",
-      "from": "history",
-      "to": "starter",
-      "y": 450,
-      "label": "Your trip: Seattle to London",
-      "variant": "return"
-    }
-  ],
-  "activations": [
-    {
-      "participant": "history",
-      "from": 165,
-      "to": 456,
-      "type": "database"
-    },
-    {
-      "participant": "queue",
-      "from": 195,
-      "to": 396,
-      "type": "messagebus"
-    },
-    {
-      "participant": "worker",
-      "from": 355,
-      "to": 426,
-      "type": "backend"
+      "id": "returned",
+      "from": "recorded",
+      "to": "result",
+      "label": "returned",
+      "variant": "emphasis"
     }
   ],
   "cards": [

@@ -1,139 +1,159 @@
 {
-  "schema_version": 1,
-  "diagram_type": "architecture",
+  "schema_version": 2,
+  "diagram_type": "workflow",
   "meta": {
     "title": "History is the state",
-    "output": "docs/architecture/ex1-hello.html",
+    "animation": "trace",
     "quality_profile": "showcase",
+    "output": "docs/architecture/ex1-hello.html",
     "legend": {
       "entries": {
-        "frontend": {
+        "external": {
           "label": "You"
         },
-        "messagebus": {
-          "label": "Temporal"
+        "frontend": {
+          "label": "What you see"
         },
         "database": {
-          "label": "Workflow code"
+          "label": "History"
         },
         "backend": {
-          "label": "Activity"
+          "label": "Workflow and activity"
         }
       }
     }
   },
-  "components": [
+  "lanes": [
     {
-      "id": "starter",
-      "type": "frontend",
-      "label": "Starter",
-      "sublabel": "hello-start SFO JFK",
-      "pos": [
-        40,
-        100
-      ],
-      "size": [
-        180,
-        60
-      ]
+      "id": "you",
+      "label": "You"
     },
     {
-      "id": "server",
-      "type": "messagebus",
-      "label": "Temporal server",
-      "sublabel": "keeps every workflow's history",
-      "icon": "database",
-      "pos": [
-        360,
-        100
-      ],
-      "size": [
-        200,
-        60
-      ]
+      "id": "temporal",
+      "label": "Temporal server"
     },
     {
-      "id": "ui",
-      "type": "frontend",
-      "label": "Temporal UI",
-      "sublabel": "Event History · Pending Activities",
-      "pos": [
-        360,
-        300
-      ],
-      "size": [
-        200,
-        60
-      ]
-    },
-    {
-      "id": "trip",
-      "type": "database",
-      "label": "HelloTripWorkflow",
-      "sublabel": "looks up two airports",
-      "tag": "workflow",
-      "icon": "backend",
-      "pos": [
-        710,
-        100
-      ],
-      "size": [
-        210,
-        60
-      ]
-    },
-    {
-      "id": "lookup",
-      "type": "backend",
-      "label": "lookup_airport",
-      "sublabel": "FLAKY=1: attempts 1-4 fail",
-      "tag": "activity",
-      "pos": [
-        1070,
-        100
-      ],
-      "size": [
-        200,
-        60
-      ]
+      "id": "worker",
+      "label": "hello-worker"
     }
   ],
-  "boundaries": [
-    {
-      "kind": "region",
-      "label": "hello-worker",
-      "wraps": [
-        "trip",
-        "lookup"
-      ]
-    }
-  ],
-  "connections": [
+  "phases": [
     {
       "id": "start",
-      "from": "starter",
-      "to": "server",
-      "label": "start workflow",
+      "label": "You start it",
+      "fromCol": 0,
+      "toCol": 1
+    },
+    {
+      "id": "record",
+      "label": "Temporal records it",
+      "fromCol": 2,
+      "toCol": 2,
       "variant": "emphasis"
     },
     {
-      "id": "run-trip",
-      "from": "server",
-      "to": "trip",
-      "label": "tasks · replay"
+      "id": "run",
+      "label": "A worker runs it",
+      "fromCol": 3,
+      "toCol": 5,
+      "variant": "dashed"
+    }
+  ],
+  "mainPath": [
+    "starter",
+    "history",
+    "trip",
+    "lookup"
+  ],
+  "nodes": [
+    {
+      "id": "starter",
+      "lane": "you",
+      "col": 0,
+      "type": "external",
+      "label": "Starter",
+      "sublabel": "hello-start SFO JFK",
+      "width": 160
     },
     {
-      "id": "call",
+      "id": "ui",
+      "lane": "you",
+      "col": 2,
+      "type": "frontend",
+      "label": "Temporal UI",
+      "sublabel": "Event History · Pending",
+      "width": 160
+    },
+    {
+      "id": "history",
+      "lane": "temporal",
+      "col": 2,
+      "type": "database",
+      "label": "Workflow history",
+      "sublabel": "the start · each result",
+      "width": 160
+    },
+    {
+      "id": "trip",
+      "lane": "worker",
+      "col": 3,
+      "type": "backend",
+      "label": "HelloTripWorkflow",
+      "sublabel": "looks up two airports",
+      "width": 160
+    },
+    {
+      "id": "lookup",
+      "lane": "worker",
+      "col": 5,
+      "type": "backend",
+      "label": "lookup_airport",
+      "sublabel": "FLAKY=1: tries 1–4 fail",
+      "width": 160
+    }
+  ],
+  "edges": [
+    {
+      "id": "start",
+      "from": "starter",
+      "to": "history",
+      "label": "start workflow",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "reads",
+      "from": "ui",
+      "to": "history",
+      "label": "reads",
+      "variant": "default"
+    },
+    {
+      "id": "tasks",
+      "from": "history",
+      "to": "trip",
+      "label": "tasks · replay",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "execute",
       "from": "trip",
       "to": "lookup",
       "label": "execute_activity",
       "variant": "emphasis"
     },
     {
-      "id": "read",
-      "from": "ui",
-      "to": "server",
-      "label": "reads the history"
+      "id": "result",
+      "from": "lookup",
+      "to": "history",
+      "label": "try 5: result recorded",
+      "variant": "dashed",
+      "role": "return",
+      "fromSide": "top",
+      "toSide": "right"
     }
   ],
   "cards": [

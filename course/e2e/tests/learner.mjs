@@ -195,23 +195,15 @@ export class Learner {
   // The worker is stopped first (the dock's toggle): with it running, Start over types Ctrl-C
   // and then its command 900 ms later, and the travel worker takes longer than that to stop, so
   // the command is lost and reset.sh never runs (TerminalDock's type()).
+  // ↺ Start over (its confirm accepted): the sandbox deleted, and a new one ready with the
+  // exercise as it starts.
   async startOver(exercise) {
-    await this.view("Code"); // the dock, with its toggle, is under Code
-    const dockToggle = this.page.locator(".dock-bar button.worker-toggle").first();
-    // Stopped, and staying stopped: opening an exercise catches up earlier ones still open (a
-    // walkthrough that failed), and the page restarts a running worker for that, a few seconds in.
-    for (let attempt = 0; attempt < 3; attempt++) {
-      await expect.poll(() => this.workerState(), { timeout: MINUTE }).not.toMatch(/pending|unknown/);
-      if ((await this.workerState()) === "running") {
-        await dockToggle.click();
-        await expect.poll(() => this.workerState(), { message: "the worker didn't stop", timeout: MINUTE }).toBe("stopped");
-      }
-      await sleep(6 * SECOND);
-      if ((await this.workerState()) === "stopped") break;
-    }
+    const pill = this.page.locator(".sandbox-pill");
     await this.guide.getByRole("button", { name: /Start over/ }).click();
-    await expect(this.terminalText("worker"), `${exercise}'s reset.sh didn't finish`).toContainText("Sessions ended and bookings cleared.", { timeout: 3 * MINUTE });
-    await expect.poll(() => this.workerState(), { timeout: MINUTE }).not.toBe("pending");
+    await expect(pill, `${exercise}: the old sandbox wasn't deleted`).not.toHaveText(/Sandbox ready/, { timeout: MINUTE });
+    await expect(pill, `${exercise}: the new sandbox isn't ready`).toHaveText(/Sandbox ready/, { timeout: 5 * MINUTE });
+    await this.view("Code"); // the dock, with its toggle, is under Code
+    await expect.poll(() => this.workerState(), { message: "the new sandbox's worker state is unknown", timeout: MINUTE }).toBe("stopped");
     await expect(this.guide.locator(".guide-heading-title .passed-badge")).toHaveCount(0);
   }
 

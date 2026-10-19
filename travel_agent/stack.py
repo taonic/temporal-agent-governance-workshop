@@ -134,10 +134,24 @@ def verifier() -> None:
         print("  verifier: NOT BUILT. Run scripts/setup_dogwood.sh. Until then, auto mode sends every call to you.")
         return
     STORE.parent.mkdir(parents=True, exist_ok=True)
+    log = LOGS / "verifier.log"
+    start = log.stat().st_size if log.exists() else 0
     _spawn("verifier", [sys.executable, "-m", "travel_agent.stack", "watch-verifier"])
-    time.sleep(1.5)
-    if not _pid("verifier"):
-        sys.exit("the verifier stopped right away; see .logs/verifier.log (a policy that doesn't validate?)")
+    # Up once it has installed the policies. A policy that doesn't validate stops it first, and
+    # its log says why. (The log, not the pid: an exited child of ours still has one until we go.)
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        time.sleep(0.3)
+        with open(log) as f:
+            f.seek(start)
+            text = f.read()
+        if "Dogwood policies installed" in text:
+            print(f"  verifier: loaded {settings.policy_dir.name}/travel.dw")
+            return
+        if "the verifier exited" in text:
+            errors = [line for line in text.splitlines() if line.startswith("Error:")]
+            sys.exit(f"the verifier stopped: {errors[0] if errors else 'see .logs/verifier.log'}")
+    sys.exit("the verifier didn't load the policies within 30s; see .logs/verifier.log")
 
 
 # The verifier reads the policies once, when it starts. `watch-verifier` (what the verifier

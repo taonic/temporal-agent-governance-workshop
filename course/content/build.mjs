@@ -63,7 +63,7 @@ const MODES = ["browser", "local"];
 
 // Inline code that's a command to run as it stands: no <placeholder> to fill in first.
 export function isInlineCommand(text) {
-  return /^(?:\w+=\S+\s+)*(?:uv run |temporal |\.\/challenges\/|cat )/.test(text) && !/[<>]/.test(text);
+  return /^(?:\w+=\S+\s+)*(?:uv run |temporal [a-z]|\.\/challenges\/|cat )/.test(text) && !/[<>]/.test(text);
 }
 
 // "Stop the worker (Ctrl-C)", "restart the worker", "start the travel agent's worker", "Start
@@ -642,8 +642,8 @@ function buildExercise(md, dir) {
     id: dir,
     number,
     slug: meta.slug ?? dir,
-    title: title.replace(/\s*\(optional\)\s*$/i, ""),
-    optional: /\(optional\)/i.test(title),
+    title: title.replace(/\s*\(bonus\)\s*$/i, ""),
+    bonus: /\(bonus\)/i.test(title),
     teaser: meta.teaser ?? "",
     minutes: meta.timelimit ? Math.round(meta.timelimit / 60) : null,
     worker: config.worker,

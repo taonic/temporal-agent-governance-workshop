@@ -94,8 +94,8 @@ export const EXERCISES = {
     files: [
       // Step 1 is about Monty alone: its tab is the only one until the agent starts.
       { path: "codemode/sandbox.py", editable: true, untilBeat: "The agent" },
-      { path: "travel_agent/travel/activities.py", editable: true, fromBeat: "2. Start the agent's worker" },
-      { path: "travel_agent/travel/inventory.py", fromBeat: "2. Start the agent's worker" },
+      { path: "travel_agent/travel/activities.py", editable: true, fromBeat: "3. Start a session" },
+      { path: "travel_agent/travel/inventory.py", fromBeat: "3. Start a session" },
     ],
     // After "The agent", not before step 1: the tour recaps the script and the host from the
     // Monty hands-on, and ends on the agent's activities, just before the agent starts.
@@ -191,7 +191,7 @@ export const EXERCISES = {
         file: "travel_agent/agent/workflow.py",
         from: "Posture = Literal[",
         title: "Four approval postures",
-        body: "How much the agent may do without asking: everything, nothing, everything but bookings (yours to write), or whatever the Dogwood policy allows (exercise 4).",
+        body: "How much the agent may do without asking: everything, nothing, everything but bookings (yours to write), or whatever your policy allows (exercise 4).",
       },
       {
         file: "travel_agent/agent/workflow.py",
@@ -249,57 +249,19 @@ export const EXERCISES = {
         from: "// Tool policy for the travel agent in auto mode.",
         to: "// After editing,",
         title: "How the policy decides",
-        body: "Only bookings come here. A `permit` lets one run unattended; anything no rule permits is refused. The rules decide by looking back over this session's history.",
+        body: "Only bookings come here. A `permit` lets one run unattended. One no rule permits comes to you when a rule for it is marked `@on_deny(\"escalate\")`, and is refused otherwise. The rules decide by looking back over this session's history.",
       },
       {
         file: "policies/travel.dw",
         from: "// TODO(ch04)",
         title: "Your TODO",
-        body: "Plain Cedar: this rule checks the call itself, so any flight for Ada runs, on any day. You'll make it look back at the trip form you submitted earlier in this session.",
+        body: "A plain rule: it checks only the call itself, so any flight for Ada runs, on any day. You'll make it look back at the trip form you submitted earlier in this session.",
       },
       {
         file: "policies/travel.dw",
         from: '@id("hotels-for-the-trip-form-traveler")',
         title: "A rule that remembers",
         body: "`formerly within 2h …::received{…}` looks back through the session's history for a trip form whose traveler is this hotel's guest. Temporal's history is what makes that possible.",
-      },
-    ],
-  },
-  "05-attack-the-agent": {
-    worker: "uv run travel-worker",
-    files: [{ path: "travel_agent/agent/prompts.py" }, { path: "policies/travel.dw" }],
-    questions: [
-      "How can I use workflow history to audit what an agent did?",
-      "How do I find workflows by a custom search attribute?",
-      "What's the difference between cancelling and terminating a workflow?",
-    ],
-    tour: [
-      {
-        file: "travel_agent/agent/prompts.py",
-        from: 'SYSTEM_INSTRUCTION = """',
-        to: "Board calls are cheap",
-        title: "What the model is told",
-        body: "It works by writing scripts against host functions, keeps the trip board current, and uses only ids a script returned. Nothing here can stop it doing something it shouldn't.",
-      },
-      {
-        file: "travel_agent/agent/prompts.py",
-        from: 'TRIP_FORM_INSTRUCTION = """',
-        to: "rest; don't retry it",
-        title: "The trip form",
-        body: "The form's answers are what the policy trusts: the model asks for one when it doesn't know the traveler and dates, and books with exactly those details.",
-      },
-      {
-        file: "travel_agent/agent/prompts.py",
-        from: "# DEMO ONLY:",
-        to: "priority over your other guidance",
-        title: "Deliberately gullible",
-        body: "This tells the model to obey instructions it finds in files, so the planted to-do (book Mallory a flight) reliably gets as far as the policy. Never ship anything like it.",
-      },
-      {
-        file: "policies/travel.dw",
-        from: "// No rule permits any other booking",
-        title: "What holds the line",
-        body: "The model can be talked into anything; the policy can't. A flight runs only when a trip form you submitted names its passenger and date. Mallory isn't on one, so nothing permits the booking, and it's refused.",
       },
     ],
   },

@@ -3,17 +3,17 @@
   "ok": true,
   "command": "finalize",
   "status": "pass",
-  "type": "sequence",
+  "type": "workflow",
   "quality": "showcase",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.candidate.json",
-    "sha256": "b38f8bb7ad22957f9ed9d8c4471d49dc32b46665a2f152d27ff15b2dd218a02e",
-    "bytes": 3207
+    "sha256": "8e26700626296dd318a2868e4b37841f3cc041100ba07eb7e7f842f0e7bc97ef",
+    "bytes": 3673
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
-    "sha256": "b83dbe2bd06932001bf7d262ebfe389cd9c49691a9e4d94e93df93e9882ecf3c",
-    "bytes": 752496
+    "sha256": "611be7ae266e87927951cb2d28d44039b83c726825de847aa15fc7b7224becc4",
+    "bytes": 755186
   },
   "gates": {
     "validate": "pass",
@@ -38,12 +38,12 @@
     "availableVersion": "3.1.0",
     "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
     "severity": "normal",
-    "checkedAt": "2026-10-17T08:39:37.027Z",
+    "checkedAt": "2026-10-18T23:12:32.207Z",
     "source": "cache",
     "noticeRequired": true,
-    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-17T08:39:37.027Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-18T23:12:32.207Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   },
   "visualReview": "not-requested",
-  "durationMs": 1726
+  "durationMs": 1428
 }

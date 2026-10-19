@@ -92,8 +92,31 @@ const VIEWS = [
   { key: "diagram", label: "Diagram", title: "This part of the exercise, as a diagram you can zoom and explore" },
 ];
 // The diagram as the course shows it: without archify's Export menu (it's on this origin, so a
-// stylesheet of the page's own goes in on every load).
-const DIAGRAM_STYLE = ".export-wrap{display:none!important}";
+// stylesheet of the page's own goes in on every load). A diagram with a trace (meta.animation:
+// "trace") plays it on a loop, not archify's one pass on load, which is over before the learner
+// opens the Diagram view. archify's Still, focus, reduced motion and a hidden page still stop it
+// (their rules are !important). The keyframes are archify's classic preset's, which every
+// diagram here uses.
+const LIVE_TRACE = 'html[data-motion="live"] svg[data-animation="trace"]';
+const DIAGRAM_STYLE = `.export-wrap{display:none!important}
+${LIVE_TRACE} [data-animate="edge"],
+${LIVE_TRACE} [data-graph-role="automatic-crossover"]:has(> [data-animate="edge"]) > [data-graph-role="automatic-crossover-underlay"] {
+  animation: archify-edge-flow 2.4s linear infinite;
+  animation-delay: calc(var(--step, 0) * 160ms);
+}
+${LIVE_TRACE} [data-animate="node"] {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: archify-node-pulse 3.6s ease-in-out infinite;
+  animation-delay: calc(var(--step, 0) * 160ms);
+}`;
+// The diagram, always in archify's dark theme (?theme=dark), whatever the site's.
+const diagramSrc = computed(() => {
+  if (!store.guideDiagram) return null;
+  const [page, hash = ""] = store.guideDiagram.split("#");
+  return `${page}${page.includes("?") ? "&" : "?"}theme=dark${hash ? `#${hash}` : ""}`;
+});
+
 function onDiagramLoad(event) {
   try {
     const doc = event.target.contentDocument;
@@ -236,7 +259,7 @@ async function poll() {
 
 function celebrate() {
   store.celebrated = [...store.celebrated, props.id];
-  toast(`✓ ${exercise.value.optional ? "Capstone" : `Exercise ${exercise.value.number}`} passed`, 3500);
+  toast(`✓ Exercise ${exercise.value.number} passed`, 3500);
   try {
     launchConfetti();
   } catch {
@@ -340,7 +363,7 @@ onBeforeUnmount(() => {
         </button>
         <div class="workspace-actions" @dblclick.stop>
           <button v-if="paneMaximized && store.workspaceView === 'console' && live" class="icon-btn workspace-tour" type="button" title="A tour of the Agent UI" @click="agentTourOpen = true">Tour</button>
-          <a v-if="store.workspaceView === 'diagram' && store.guideDiagram" class="icon-btn" :href="store.guideDiagram" target="_blank" rel="noopener" title="Open in a new tab">↗</a>
+          <a v-if="store.workspaceView === 'diagram' && store.guideDiagram" class="icon-btn" :href="diagramSrc" target="_blank" rel="noopener" title="Open in a new tab">↗</a>
           <template v-if="needsSandbox(store.workspaceView) && live">
             <button class="icon-btn" type="button" title="Reload this view" @click="panes?.reload()">↻</button>
             <a class="icon-btn" :class="{ disabled: !panes?.newTabHref }" :href="panes?.newTabHref || undefined" target="_blank" rel="noopener" title="Open in a new tab">↗</a>
@@ -369,7 +392,7 @@ onBeforeUnmount(() => {
           v-if="mode === 'browser' && store.guideDiagram"
           v-show="store.workspaceView === 'diagram'"
           class="diagram-frame"
-          :src="store.guideDiagram"
+          :src="diagramSrc"
           title="The exercise's diagram"
           @load="onDiagramLoad"
         />

@@ -32,7 +32,7 @@ async def test_trip_form_then_bookings(client, task_queue):
 
 
 async def test_notes_play_follows_the_planted_instruction(client, task_queue, ledger):
-    """With no approvals, the injected to-do item books a flight for a stranger. Exercise 5's point."""
+    """With no approvals, the injected to-do item books a flight for a stranger."""
     session = await Session.start(client, task_queue=task_queue)
     await session.send("Take care of everything in my notes/todo.md")
     form = await session.wait_for(E.CALLBACK_REQUESTED)

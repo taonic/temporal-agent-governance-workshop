@@ -3,18 +3,18 @@
   "ok": true,
   "command": "finalize",
   "status": "pass",
-  "type": "sequence",
+  "type": "workflow",
   "quality": "showcase",
-  "startedAt": "2026-10-18T00:13:09.947Z",
+  "startedAt": "2026-10-19T05:42:11.792Z",
   "specification": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.candidate.json",
-    "sha256": "b38f8bb7ad22957f9ed9d8c4471d49dc32b46665a2f152d27ff15b2dd218a02e",
-    "bytes": 3207
+    "sha256": "8e26700626296dd318a2868e4b37841f3cc041100ba07eb7e7f842f0e7bc97ef",
+    "bytes": 3673
   },
   "artifact": {
     "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
-    "sha256": "b83dbe2bd06932001bf7d262ebfe389cd9c49691a9e4d94e93df93e9882ecf3c",
-    "bytes": 752496
+    "sha256": "611be7ae266e87927951cb2d28d44039b83c726825de847aa15fc7b7224becc4",
+    "bytes": 755186
   },
   "stages": {
     "validate": {
@@ -26,7 +26,7 @@
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
-        "sequence",
+        "workflow",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
         "--quality",
@@ -38,8 +38,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "b38f8bb7ad22957f9ed9d8c4471d49dc32b46665a2f152d27ff15b2dd218a02e",
-          "bytes": 3207
+          "sha256": "8e26700626296dd318a2868e4b37841f3cc041100ba07eb7e7f842f0e7bc97ef",
+          "bytes": 3673
         },
         "validation": {
           "checksPassed": 9,
@@ -54,12 +54,12 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 254,
+      "durationMs": 277,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
         "deliver",
-        "sequence",
+        "workflow",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.candidate.json",
         "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
         "--quality",
@@ -68,19 +68,19 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "ed55a72b-c9a3-4cc7-9215-68aa0824e156",
+        "receiptId": "7b0443be-33be-4a3a-b5b2-7e9207544327",
         "ok": true,
         "command": "deliver",
-        "type": "sequence",
+        "type": "workflow",
         "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.candidate.json",
         "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
         "specification": {
-          "sha256": "b38f8bb7ad22957f9ed9d8c4471d49dc32b46665a2f152d27ff15b2dd218a02e",
-          "bytes": 3207
+          "sha256": "8e26700626296dd318a2868e4b37841f3cc041100ba07eb7e7f842f0e7bc97ef",
+          "bytes": 3673
         },
         "artifact": {
-          "sha256": "b83dbe2bd06932001bf7d262ebfe389cd9c49691a9e4d94e93df93e9882ecf3c",
-          "bytes": 752496
+          "sha256": "611be7ae266e87927951cb2d28d44039b83c726825de847aa15fc7b7224becc4",
+          "bytes": 755186
         },
         "validation": {
           "checksPassed": 9,
@@ -106,7 +106,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 151,
+      "durationMs": 120,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -118,8 +118,8 @@
         "ok": true,
         "file": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
         "artifact": {
-          "sha256": "b83dbe2bd06932001bf7d262ebfe389cd9c49691a9e4d94e93df93e9882ecf3c",
-          "bytes": 752496
+          "sha256": "611be7ae266e87927951cb2d28d44039b83c726825de847aa15fc7b7224becc4",
+          "bytes": 755186
         },
         "checks": [
           {
@@ -186,16 +186,16 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 10,
+            "minLabelRouteClearance": 27,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
-            "minProjectedNodeTextPx": 6.027777777777779,
-            "maxBends": 0,
+            "minProjectedNodeTextPx": 7.717842323651452,
+            "maxBends": 2,
             "routesOverSuggestedBends": 0,
             "maxStretch": 1,
             "routesOverSuggestedStretch": 0,
-            "minSegmentPx": 248.7,
-            "minInteriorSegmentPx": null,
+            "minSegmentPx": 21,
+            "minInteriorSegmentPx": 120,
             "shortSegmentCount": 0,
             "shortEndpointSegmentCount": 0,
             "shortInteriorSegmentCount": 0,
@@ -215,18 +215,6 @@
             "measured": false,
             "reviewSuggested": false
           },
-          "sequenceColumnSpace": {
-            "measured": true,
-            "columnFit": "spread",
-            "participantCount": 4,
-            "occupiedRight": 1040,
-            "viewBoxLeft": 0,
-            "canvasWidth": 1080,
-            "emptyRightPx": 40,
-            "emptyRightRatio": 0.037,
-            "typicalParticipantWidth": 190,
-            "reviewSuggested": false
-          },
           "desktopReadability": {
             "budgetBasis": "legacy-930",
             "readerContract": "declared-wide-v1",
@@ -241,20 +229,20 @@
               "kind": "node",
               "id": "starter"
             },
-            "minimumSourceTextPx": 7,
-            "minimumProjectedTextPx": 6.027777777777779,
-            "semanticTextCount": 15
+            "minimumSourceTextPx": 8,
+            "minimumProjectedTextPx": 7.717842323651452,
+            "semanticTextCount": 18
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "ed55a72b-c9a3-4cc7-9215-68aa0824e156"
+        "deliveryReceiptId": "7b0443be-33be-4a3a-b5b2-7e9207544327"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1152,
+      "durationMs": 852,
       "command": [
         "/Users/tao/.asdf/installs/nodejs/25.9.0/bin/node",
         "/Users/tao/.agents/skills/archify/bin/archify.mjs",
@@ -272,11 +260,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "ed55a72b-c9a3-4cc7-9215-68aa0824e156",
+        "deliveryReceiptId": "7b0443be-33be-4a3a-b5b2-7e9207544327",
         "artifact": {
           "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.html",
-          "sha256": "b83dbe2bd06932001bf7d262ebfe389cd9c49691a9e4d94e93df93e9882ecf3c",
-          "bytes": 752496
+          "sha256": "611be7ae266e87927951cb2d28d44039b83c726825de847aa15fc7b7224becc4",
+          "bytes": 755186
         },
         "state": {
           "detail": "read",
@@ -307,20 +295,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1373,
-              "diagramWidth": 1343,
+              "readerWidth": 1376,
+              "diagramWidth": 1346,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 746,
+                "svgPx": 737,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 145,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 145,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 145,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -357,20 +383,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1434,
-              "diagramWidth": 1404,
+              "readerWidth": 1454,
+              "diagramWidth": 1424,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 154,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 154,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 154,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -407,20 +471,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1578,
-              "diagramWidth": 1548,
+              "readerWidth": 1600,
+              "diagramWidth": 1570,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 169,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 169,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 169,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -463,14 +565,52 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 1039,
+                "svgPx": 1024,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 202,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 202,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 202,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -560,20 +700,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1373,
-              "diagramWidth": 1343,
+              "readerWidth": 1376,
+              "diagramWidth": 1346,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 746,
+                "svgPx": 737,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 145,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 145,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 145,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -610,20 +788,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1434,
-              "diagramWidth": 1404,
+              "readerWidth": 1454,
+              "diagramWidth": 1424,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 154,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 154,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 154,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -660,20 +876,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1578,
-              "diagramWidth": 1548,
+              "readerWidth": 1600,
+              "diagramWidth": 1570,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 169,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 169,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 169,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -716,14 +970,52 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 1039,
+                "svgPx": 1024,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 202,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 202,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 202,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -765,20 +1057,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1373,
-              "diagramWidth": 1343,
+              "readerWidth": 1376,
+              "diagramWidth": 1346,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 746,
+                "svgPx": 737,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 145,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 145,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 145,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 73,
+                  "spaceAboveNodesPx": 57,
+                  "spaceBelowNodesPx": 15
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -815,20 +1145,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1434,
-              "diagramWidth": 1404,
+              "readerWidth": 1454,
+              "diagramWidth": 1424,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 780,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 154,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 154,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 154,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 77,
+                  "spaceAboveNodesPx": 61,
+                  "spaceBelowNodesPx": 16
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -865,20 +1233,58 @@
               "readerOverflow": null,
               "readerFit": null,
               "ok": true,
-              "readerWidth": 1578,
-              "diagramWidth": 1548,
+              "readerWidth": 1600,
+              "diagramWidth": 1570,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
                 "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 169,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 169,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 169,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 85,
+                  "spaceAboveNodesPx": 67,
+                  "spaceBelowNodesPx": 18
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -921,14 +1327,52 @@
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
                 "diagramChromePx": 94,
-                "svgPx": 1039,
+                "svgPx": 1024,
                 "cardsPx": 0,
-                "viewBoxHeight": 600
+                "viewBoxHeight": 528
               },
-              "viewBoxWidth": 1080,
-              "minimumProjectedNodeTextPx": 7,
-              "minimumProjectedNonEdgeTextPx": 7,
-              "minimumProjectedEdgeTextPx": 11,
+              "viewBoxWidth": 964,
+              "workflowLanes": [
+                {
+                  "frameId": "lane-0",
+                  "heightPx": 202,
+                  "nodeCount": 2,
+                  "nodeIds": [
+                    "starter",
+                    "result"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                },
+                {
+                  "frameId": "lane-1",
+                  "heightPx": 202,
+                  "nodeCount": 3,
+                  "nodeIds": [
+                    "history",
+                    "queue",
+                    "recorded"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                },
+                {
+                  "frameId": "lane-2",
+                  "heightPx": 202,
+                  "nodeCount": 1,
+                  "nodeIds": [
+                    "worker"
+                  ],
+                  "nodeSpanPx": 101,
+                  "spaceAboveNodesPx": 80,
+                  "spaceBelowNodesPx": 21
+                }
+              ],
+              "minimumProjectedNodeTextPx": 8,
+              "minimumProjectedNonEdgeTextPx": 8,
+              "minimumProjectedEdgeTextPx": 8,
               "minimumProjectedNodeText": "hello-start SEA LHR",
               "minimumProjectedNodeTextDetail": "context",
               "minimumProjectedNodeTextOwner": {
@@ -970,18 +1414,18 @@
     "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex1-no-worker.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-18T00:13:11.673Z",
-  "durationMs": 1726,
+  "finishedAt": "2026-10-19T05:42:13.221Z",
+  "durationMs": 1428,
   "update": {
     "status": "update_available",
     "installedVersion": "3.0.1",
     "availableVersion": "3.1.0",
     "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.1.0",
     "severity": "normal",
-    "checkedAt": "2026-10-17T08:39:37.027Z",
+    "checkedAt": "2026-10-18T23:12:32.207Z",
     "source": "cache",
     "noticeRequired": true,
-    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-17T08:39:37.027Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "noticeText": "Archify update: 3.0.1 → 3.1.0. A previous check at 2026-10-18T23:12:32.207Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.1.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
     "eventKey": "archify@sha256:ffedc53390c9da6e859f41e432c5d2d0615a23cf00a503181f07efbba88a7ce8"
   }
 }

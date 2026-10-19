@@ -15,7 +15,7 @@ import {
   verifySessionToken,
 } from "../runner/auth.mjs";
 import { RateLimiter } from "../runner/ratelimit.mjs";
-import { envDiffers, isSafePath, parseLlmMode, parseTrip, SandboxManager, sandboxEnv } from "../runner/sandboxes.mjs";
+import { APP_LABEL, envDiffers, isSafePath, parseLlmMode, parseTrip, SandboxManager, sandboxEnv } from "../runner/sandboxes.mjs";
 
 const SECRET = "test-secret";
 
@@ -121,12 +121,42 @@ test("a sandbox .env is stale when it names another model address, model, key or
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function fakeDaytona({ hangList = false } = {}) {
+// With `lagging`, a deleted sandbox is still listed as it was, as Daytona's list can be for a
+// while after a delete, and anything asked of it fails as Daytona's API does.
+function fakeDaytona({ hangList = false, lagging = false } = {}) {
   const sandboxes = [];
   const pending = [];
+  const make = (labels) => {
+    const sandbox = {
+      id: `sbx-${sandboxes.length + 1}`,
+      labels,
+      state: "started",
+      deleted: false,
+      gone() {
+        if (this.deleted) throw new Error(`not found: sandbox ${this.id} not found (it has been deleted)`);
+      },
+      async refreshData() {
+        this.gone();
+      },
+      async delete() {
+        this.gone();
+        this.deleted = true;
+        if (!lagging) this.state = "destroyed";
+      },
+      process: {
+        executeCommand: async () => {
+          sandbox.gone();
+          return { exitCode: 0, result: "" };
+        },
+      },
+    };
+    sandboxes.push(sandbox);
+    return sandbox;
+  };
   return {
     sandboxes,
     pending,
+    make,
     async *list({ labels }) {
       if (hangList) await new Promise(() => {});
       for (const s of sandboxes) if (Object.entries(labels).every(([k, v]) => s.labels[k] === v)) yield s;
@@ -134,21 +164,7 @@ function fakeDaytona({ hangList = false } = {}) {
     // Creation waits until the test lets it finish.
     create({ labels }) {
       return new Promise((resolve) => {
-        pending.push(() => {
-          const sandbox = {
-            id: `sbx-${sandboxes.length + 1}`,
-            labels,
-            state: "started",
-            deleted: false,
-            async refreshData() {},
-            async delete() {
-              this.deleted = true;
-              this.state = "destroyed";
-            },
-          };
-          sandboxes.push(sandbox);
-          resolve(sandbox);
-        });
+        pending.push(() => resolve(make(labels)));
       });
     },
   };
@@ -185,6 +201,30 @@ test("starting over abandons a start in progress, and its sandbox", async () => 
 
   // Let the second start go too, so nothing is left waiting.
   while (!daytona.pending.length) await settle();
+  await manager.reset("learner-1");
+  daytona.pending.shift()();
+  for (let i = 0; i < 5; i++) await settle();
+});
+
+test("starting over makes a new sandbox, even while Daytona still lists the deleted one", async () => {
+  const manager = new SandboxManager({ maxSandboxes: 5 });
+  const daytona = fakeDaytona({ lagging: true });
+  manager.daytona = daytona;
+  const old = daytona.make({ app: APP_LABEL, learner: "learner-1" });
+  await manager.find("learner-1");
+
+  assert.equal((await manager.reset("learner-1"))?.id, old.id);
+  assert.equal(old.deleted, true);
+  // A second Start over (another tab, a double click) finds nothing left to delete.
+  assert.equal(await manager.reset("learner-1"), null);
+  assert.equal((await manager.describe("learner-1")).state, "none");
+
+  manager.ensure("learner-1", {});
+  for (let i = 0; i < 50 && !daytona.pending.length && manager.progress.get("learner-1")?.state !== "error"; i++) await settle();
+  assert.notEqual(manager.progress.get("learner-1")?.state, "error", manager.progress.get("learner-1")?.message);
+  assert.equal(daytona.pending.length, 1, "it should be creating a new sandbox");
+
+  // Nothing left waiting.
   await manager.reset("learner-1");
   daytona.pending.shift()();
   for (let i = 0; i < 5; i++) await settle();

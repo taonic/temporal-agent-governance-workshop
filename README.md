@@ -1,6 +1,6 @@
 # Build Reliable AI Agents With Temporal
 
-A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://temporal.io). You build up one travel agent: first as raw Temporal, then as a durable agent session on [Monty](https://github.com/pydantic/monty) and the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), then with human approval, and finally with a [Dogwood](https://github.com/dogwood-policy/dogwood) policy that lets it act on its own only when an action matches what you already asked for. Then you attack it with a prompt injection.
+A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://temporal.io). You build up one travel agent: first as raw Temporal, then as a durable agent session on [Monty](https://github.com/pydantic/monty) and the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), then with human approval, and, as a bonus, with a policy that lets it act on its own only when an action matches what you already asked for.
 
 > **The model decides what to try. The policy decides what is allowed.**
 
@@ -9,8 +9,7 @@ A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://te
 | 1 | [Hello Temporal](challenges/01-hello-temporal/assignment.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries; a count nobody saved survives a restart | Call an activity with a timeout and a retry policy |
 | 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | A script in the Monty sandbox stops at every tool call; in the agent those calls are activities; kill the worker and the conversation carries on | Running the script in Monty, and the `search_flights` tool |
 | 3 | [Human approval mode](challenges/03-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
-| 4 | [Dogwood auto mode](challenges/04-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others are refused | Turn a plain Cedar flight rule into a temporal one that looks back at the trip form |
-| ★ | [Attack the agent](challenges/05-attack-the-agent/assignment.md) | A planted to-do item fools the model; the policy refuses the booking | Nothing |
+| 4 (bonus) | [Auto mode](challenges/04-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others come to you | Turn a plain flight rule into one that looks back at the trip form |
 
 **In your browser:** the [course site](course/README.md) has every exercise, and with your event's access code, a cloud sandbox with all of this installed and running: an editor, two terminals, the console and the Temporal UI. Nothing to set up.
 
