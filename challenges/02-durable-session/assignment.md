@@ -170,7 +170,7 @@ It's built from the Temporal you wrote in exercise 1:
 | Worker | Agent runtime |
 | Retry / timer | Durable waiting and recovery |
 
-**In the agent, the host is the workflow.** In `sandbox.py` it was a few lines of Python; here it's the TravelAgent workflow:
+**In the agent, the host is the workflow.** In `sandbox.py` it was a few lines of Python; here it's the TravelAgent workflow, in `travel_agent/agent/workflow.py`:
 
 - Each call the script makes pauses it. The harness takes the call through the session's **approval posture**, runs it as an **activity** (several at once, if the script started several), and records the result in the session's history. The posture is how exercises 3 and 4 put you, and then a policy, between the script and the world.
 - The script itself isn't an activity: it runs inside the workflow, and only computes between calls. That's why it has a time limit.
@@ -299,7 +299,7 @@ Send:
 
 > Book the cheapest one.
 
-It books it. No question asked: the posture is `dangerously_skip_all`, and [the harness's approval check](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L507-L520) returns before anything else: every call goes through, unasked. The booking lands on the trip board, and in the bookings ledger: `cat .data/bookings.json` shows it. An agent that can spend money in your name, unattended, on its own judgment. Exercise 3 adds a human to the loop.
+It books it. No question asked: the posture is `dangerously_skip_all` (see `approval_policy` in `travel_agent/agent/workflow.py`), and [the harness's approval check](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L507-L520) returns before anything else: every call goes through, unasked. The booking lands on the trip board, and in the bookings ledger: `cat .data/bookings.json` shows it. An agent that can spend money in your name, unattended, on its own judgment. Exercise 3 adds a human to the loop.
 
 ## Check
 

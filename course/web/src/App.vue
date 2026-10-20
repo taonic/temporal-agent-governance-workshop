@@ -1,5 +1,5 @@
 <script setup>
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import Tour from "./Tour.vue";
 import AccessForm from "./components/AccessForm.vue";
@@ -17,6 +17,7 @@ import {
   resetSandbox,
   resumeSandbox,
   runInTerminal,
+  sandboxLostView,
   save,
   setLlmMode,
   signOut,
@@ -52,7 +53,25 @@ const SANDBOX_LABELS = {
   none: "No sandbox yet",
   unknown: "Sandbox",
 };
-const sandboxLabel = computed(() => (store.authenticated ? SANDBOX_LABELS[store.sandbox.state] ?? store.sandbox.state : "Browser sandbox"));
+const sandboxLabel = computed(() => {
+  if (!store.authenticated) return "Browser sandbox";
+  if (store.sandboxLost) return sandboxLostView().pill;
+  return SANDBOX_LABELS[store.sandbox.state] ?? store.sandbox.state;
+});
+const sandboxPillState = computed(() => (!store.authenticated ? "signed-out" : store.sandboxLost ? "none" : store.sandbox.state));
+
+// The popup that asks to start a lost sandbox again. Not now leaves it to the page's own
+// Start buttons; losing it again later asks again.
+const lostDismissed = ref(false);
+watch(() => store.sandboxLost, () => (lostDismissed.value = false));
+const lostPromptOpen = computed(() => store.sandboxLost && !lostDismissed.value && !store.gateOpen);
+const lostStartButton = ref(null);
+watch(lostPromptOpen, (open) => open && nextTick(() => lostStartButton.value?.focus()));
+
+function startLostSandbox() {
+  startSandbox();
+  toast("Starting your sandbox…");
+}
 
 watch(
   () => store.theme,
@@ -209,7 +228,7 @@ watch(() => store.authenticated, () => refreshHelper());
           </label>
           <button class="button button-secondary" type="button" :disabled="position >= pages.length - 1" @click="go(1)">Next</button>
           <div v-if="store.runtime.enabled" class="sandbox-menu" data-tour="sandbox-menu">
-            <button class="button sandbox-pill" :class="`state-${store.authenticated ? store.sandbox.state : 'signed-out'}`" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
+            <button class="button sandbox-pill" :class="`state-${sandboxPillState}`" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
               <span class="sandbox-dot" aria-hidden="true" />{{ sandboxLabel }}
             </button>
             <div v-if="menuOpen" class="menu" role="menu" @keydown.escape="menuOpen = false">
@@ -217,8 +236,8 @@ watch(() => store.authenticated, () => refreshHelper());
                 <AccessForm @done="menuOpen = false" />
               </template>
               <template v-else>
-                <p class="menu-note">{{ store.sandbox.message || "Your own cloud sandbox for the workshop." }}</p>
-                <button v-if="store.sandbox.state === 'none' || store.sandbox.state === 'error'" class="menu-item" type="button" role="menuitem" @click="startSandbox(); menuOpen = false">Start my sandbox</button>
+                <p class="menu-note">{{ store.sandboxLost ? sandboxLostView().title + "." : store.sandbox.message || "Your own cloud sandbox for the workshop." }}</p>
+                <button v-if="store.sandboxLost || store.sandbox.state === 'none' || store.sandbox.state === 'error'" class="menu-item" type="button" role="menuitem" @click="startSandbox(); menuOpen = false">Start my sandbox</button>
                 <button class="menu-item" type="button" role="menuitem" :disabled="store.sandbox.state !== 'ready'" @click="toggleModel">
                   Model: <strong>{{ store.llmMode === "scripted" ? "scripted" : "Gemini" }}</strong> · switch to {{ store.llmMode === "scripted" ? "Gemini" : "the scripted agent" }}
                 </button>
@@ -256,6 +275,17 @@ watch(() => store.authenticated, () => refreshHelper());
       <h3>Run the workshop in your browser</h3>
       <p>Enter the access code your instructor gave you.</p>
       <AccessForm @done="store.gateOpen = false" />
+    </div>
+  </div>
+
+  <div v-if="lostPromptOpen" class="modal-backdrop" @click.self="lostDismissed = true" @keydown.escape="lostDismissed = true">
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="sandbox-lost-title" aria-describedby="sandbox-lost-body">
+      <h3 id="sandbox-lost-title">{{ sandboxLostView().title }}</h3>
+      <p id="sandbox-lost-body">{{ sandboxLostView().body }}</p>
+      <div class="status-actions">
+        <button ref="lostStartButton" class="button button-primary" type="button" @click="startLostSandbox">Start my sandbox</button>
+        <button class="button" type="button" @click="lostDismissed = true">Not now</button>
+      </div>
     </div>
   </div>
 

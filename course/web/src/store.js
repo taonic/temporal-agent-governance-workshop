@@ -53,6 +53,9 @@ export const store = reactive({
 
   // The learner's sandbox: none | finding | creating | waking | bootstrapping | ready | error | full
   sandbox: { state: "unknown", message: "", sandboxId: null },
+  // The sandbox was ready on this page, then went away (stopped while idle, deleted, the runner
+  // lost track of it or can't be reached): App.vue asks the learner to start it again.
+  sandboxLost: false,
   llmMode: "openai",
 
   // What the workspace (the left column, over the terminals) shows: "code" (the editor),
@@ -287,10 +290,19 @@ export function tripView(key, live) {
   };
 }
 
+// What the page says about a lost sandbox (the popup, and the card under the terminals).
+export function sandboxLostView() {
+  if (store.sandbox.state === "error") {
+    return { title: "Lost the connection to your sandbox", pill: "Sandbox disconnected", body: `${store.sandbox.message} Your sandbox keeps your work: start it again to reconnect.` };
+  }
+  return { title: "Your sandbox stopped", pill: "Sandbox stopped", body: "It stops when you're idle, and keeps your work. Start it again to carry on where you left off (about a minute)." };
+}
+
 // How the guide's Start my sandbox button shows the sandbox.
 const SANDBOX_BUSY = { finding: "Finding your sandbox…", creating: "Creating your sandbox…", waking: "Waking your sandbox…", bootstrapping: "Starting its services…", stopped: "Waking your sandbox…", starting: "Waking your sandbox…" };
 export function sandboxStartView() {
   const { state } = store.sandbox;
+  if (store.sandboxLost) return { state: "idle", label: "Start my sandbox", disabled: false };
   if (store.authenticated && state === "ready") return { state: "ready", label: "✓ Your sandbox is ready", disabled: true };
   if (store.authenticated && SANDBOX_BUSY[state]) return { state: "busy", label: SANDBOX_BUSY[state], disabled: true };
   if (store.authenticated && (state === "error" || state === "full")) return { state: "error", label: "Try again", disabled: false };
@@ -417,9 +429,15 @@ export function uiProxyOrigin() {
 
 const SETTLED = new Set(["ready", "error", "full", "none"]);
 let sandboxPoll = 0;
+// Whether this page has had a ready sandbox: one that isn't any more was lost, not never started.
+let wasReady = false;
 
 function applySandbox(data) {
   store.sandbox = { state: data.state, message: data.message ?? "", sandboxId: data.sandboxId ?? null };
+  if (data.state === "ready") {
+    wasReady = true;
+    store.sandboxLost = false;
+  }
 }
 
 async function pollSandbox() {
@@ -429,7 +447,8 @@ async function pollSandbox() {
     applySandbox(await api(`/api/sandbox?exercise=${encodeURIComponent(exercise)}`));
   } catch (err) {
     if (err.status === 401) store.authenticated = false;
-    store.sandbox = { state: "error", message: err.message, sandboxId: null };
+    // No status: the request never got an answer (the runner, or the network, is down).
+    store.sandbox = { state: "error", message: err.status ? err.message : "The course runner can't be reached.", sandboxId: null };
     return;
   }
   if (!SETTLED.has(store.sandbox.state)) sandboxPoll = setTimeout(pollSandbox, 1500);
@@ -441,6 +460,7 @@ export async function startSandbox() {
     store.gateOpen = true;
     return;
   }
+  store.sandboxLost = false;
   try {
     applySandbox(await api("/api/sandbox/start", { method: "POST" }));
   } catch (err) {
@@ -450,24 +470,29 @@ export async function startSandbox() {
   pollSandbox();
 }
 
-// A signed-in learner always has a sandbox on the way: on load, after signing in, and whenever
-// the page finds it isn't ready (none yet, stopped while idle, the runner restarted), it starts
-// one. Not after an error, or with the pool full: those wait for the learner's Start.
+// A signed-in learner always has a sandbox on the way: on load and after signing in, the page
+// starts one if it isn't ready. Not after an error, or with the pool full: those wait for the
+// learner's Start. One this page was using that isn't ready any more (stopped while idle, the
+// runner restarted or can't be reached) isn't started unasked: the learner gets asked.
 export async function resumeSandbox() {
   if (!store.authenticated) return;
   await pollSandbox();
-  if (!["ready", "error", "full"].includes(store.sandbox.state)) startSandbox();
+  if (store.sandbox.state === "ready") return;
+  if (wasReady && store.authenticated) {
+    clearTimeout(sandboxPoll);
+    store.sandboxLost = true;
+  } else if (!["error", "full"].includes(store.sandbox.state)) startSandbox();
 }
 
-// Keeps it that way while the page is in front of the learner: checks again when the tab comes
-// back, and every couple of minutes, so a sandbox that stopped while idle is started before the
-// learner needs it. A hidden tab wakes nothing.
+// Keeps an eye on it while the page is in front of the learner: checks again when the tab comes
+// back, and every couple of minutes, so a sandbox that stopped while idle is noticed before the
+// learner needs it. A hidden tab checks nothing.
 const WATCH_MS = 2 * 60_000;
 let sandboxWatch = 0;
 
 export function watchSandbox() {
   const check = () => {
-    if (document.visibilityState === "visible" && store.authenticated && store.runtime.enabled) resumeSandbox();
+    if (document.visibilityState === "visible" && store.authenticated && store.runtime.enabled && !store.sandboxLost) resumeSandbox();
   };
   document.addEventListener("visibilitychange", check);
   clearInterval(sandboxWatch);
@@ -480,6 +505,8 @@ export function watchSandbox() {
 // files, the editor, Ask Temporal's answers), or comes back from a write as the page unloads.
 export async function resetSandbox({ restart = false } = {}) {
   clearTimeout(sandboxPoll);
+  wasReady = false;
+  store.sandboxLost = false;
   store.sandbox = { state: "finding", message: "Deleting your sandbox…", sandboxId: null };
   try {
     applySandbox(await api("/api/sandbox/reset", { method: "POST" }));
@@ -505,6 +532,8 @@ export async function signIn(code) {
 export async function signOut() {
   await api("/api/session", { method: "DELETE" }).catch(() => {});
   store.authenticated = false;
+  wasReady = false;
+  store.sandboxLost = false;
   store.sandbox = { state: "unknown", message: "", sandboxId: null };
 }
 

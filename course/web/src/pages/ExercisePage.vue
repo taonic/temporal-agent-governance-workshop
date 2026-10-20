@@ -252,6 +252,10 @@ async function poll() {
         resumeSandbox();
         return;
       }
+      // Anything else may be a sandbox that stopped, or a runner that's gone: ask the runner.
+      // Still ready, and the poll carries on; if not, the learner is asked to start it again.
+      await resumeSandbox();
+      if (!live.value) return;
     }
   }
   pollTimer = setTimeout(poll, 4000);

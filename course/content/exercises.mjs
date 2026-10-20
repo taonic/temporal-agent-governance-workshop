@@ -96,9 +96,12 @@ export const EXERCISES = {
       { path: "codemode/sandbox.py", editable: true, untilBeat: "The agent" },
       { path: "travel_agent/travel/activities.py", editable: true, fromBeat: "3. Start a session" },
       { path: "travel_agent/travel/inventory.py", fromBeat: "3. Start a session" },
+      // Read-only here: its approval posture is what step 7 is about, and exercise 3 edits it.
+      { path: "travel_agent/agent/workflow.py", fromBeat: "The agent" },
     ],
     // After "The agent", not before step 1: the tour recaps the script and the host from the
-    // Monty hands-on, and ends on the agent's activities, just before the agent starts.
+    // Monty hands-on, shows the workflow as the agent's host, and ends on the agent's
+    // activities, just before the agent starts.
     tourAfter: "The agent",
     questions: [
       "Why does the agent write a script instead of calling tools one at a time?",
@@ -120,6 +123,12 @@ export const EXERCISES = {
         from: "def run(script: str):",
         title: "One inside the other",
         body: "A fresh sandbox, type-checked against `STUBS`, with a time limit. `HOST_FUNCTIONS` is everything the script can reach: functions defined on the host, called from inside the sandbox. In the agent, the workflow is the host: it runs each call as an **activity**.",
+      },
+      {
+        file: "travel_agent/agent/workflow.py",
+        from: "def approval_policy(posture: Posture)",
+        title: "The host decides what runs",
+        body: "Before the workflow runs a call, the session's **approval posture** decides whether it may: each posture becomes a `ToolApprovalPolicy`. This exercise's sessions start on `dangerously_skip_all`, so every call runs, bookings too. Exercise 3 fills in `approve_bookings`.",
       },
       {
         file: "travel_agent/travel/activities.py",

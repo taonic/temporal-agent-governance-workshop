@@ -4,10 +4,11 @@
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import AccessForm from "./AccessForm.vue";
-import { resetSandbox, resumeSandbox, startSandbox, store } from "../store.js";
+import { resetSandbox, resumeSandbox, sandboxLostView, startSandbox, store } from "../store.js";
 
 const busy = computed(() => ["finding", "creating", "waking", "bootstrapping", "stopped", "starting", "stopping"].includes(store.sandbox.state));
-const waiting = computed(() => store.runtime.enabled && store.authenticated && (busy.value || store.sandbox.state === "unknown"));
+// A lost sandbox isn't on its way back until the learner starts it: no spinner for it.
+const waiting = computed(() => store.runtime.enabled && store.authenticated && !store.sandboxLost && (busy.value || store.sandbox.state === "unknown"));
 
 // Finding a sandbox takes a second or two; creating, waking or starting the services, up to a
 // minute. Each step gets its own clock, so a start that's moving along never looks stuck.
@@ -58,6 +59,11 @@ function startOver() {
         <h3>Run the workshop in your browser</h3>
         <p>You get your own cloud sandbox with everything installed: Temporal, the agent, the policy verifier, two terminals, an editor and the Agent UI. It stops when you're idle and keeps your work for a day.</p>
         <AccessForm />
+      </template>
+      <template v-else-if="store.sandboxLost">
+        <h3>{{ sandboxLostView().title }}</h3>
+        <p>{{ sandboxLostView().body }}</p>
+        <button class="button button-primary" type="button" @click="startSandbox">Start my sandbox</button>
       </template>
       <template v-else-if="waiting">
         <div class="status-line"><span class="pane-spinner" aria-hidden="true" /> {{ store.sandbox.message || "Looking for your sandbox…" }}</div>
