@@ -12,10 +12,12 @@ Talking points and demo scripts for the instructor blocks of the 4-hour workshop
 | 0:55 | Introduce Monty | Map raw Temporal to the agent | |
 | 1:00 | Exercise 2: Durable session | Float; it opens with Code Mode, hands-on | `challenges/02-durable-session` |
 | 1:45 | Break | | |
-| 1:55 | The human approval pattern | Why safe-but-manual doesn't scale | |
-| 2:10 | Exercise 3: Human approval | Float | `challenges/03-human-approval` |
-| 2:45 | Introduce Dogwood | Policy over tool calls and history | |
-| 3:00 | Bonus exercise 4: Auto mode | Float; run it as a demo if time is short | `challenges/04-auto-mode` |
+| 1:55 | Introduce Nexus | Other teams, other namespaces, durable calls | |
+| 2:00 | Exercise 3: Agents across teams | Float | `challenges/03-nexus` |
+| 2:30 | The human approval pattern | Why safe-but-manual doesn't scale | |
+| 2:40 | Exercise 4: Human approval | Float | `challenges/04-human-approval` |
+| 3:10 | Introduce Dogwood | Policy over tool calls and history | |
+| 3:20 | Bonus exercise 5: Auto mode | Float; run it as a demo if time is short | `challenges/05-auto-mode` |
 | 3:55 | Wrap | Reusable architecture, next steps | |
 
 The arc to keep repeating: **make it run, make it durable, make it safe, then make it autonomous.** Don't explain Dogwood before learners have seen the agent run.
@@ -40,7 +42,7 @@ The arc to keep repeating: **make it run, make it durable, make it safe, then ma
 3. **Audit.** Afterwards: what did the agent try, what was allowed, and why?
 4. **Safe autonomy.** Approving everything doesn't scale. We want the agent to act on its own exactly when the action matches what the user already asked for.
 
-**The plan.** One travel agent, built up over three exercises and a bonus: raw Temporal, then the agent as a durable session, then human approval, and as a bonus, a policy that lets it act alone.
+**The plan.** One travel agent, built up over four exercises and a bonus: raw Temporal, then the agent as a durable session, then calling another team's agent and workflow over Nexus, then human approval, and as a bonus, a policy that lets it act alone.
 
 ## Temporal debrief (10)
 
@@ -83,14 +85,27 @@ Under the hood, Monty here means the [Temporal Agent Harness](https://github.com
 
 Then hand over: exercise 2 opens with **Run a script in Monty** (section 1, about 5 minutes, nothing running, no model). In `codemode/sandbox.py`, learners add the model's script as a string (`MODEL_SCRIPT`, marked as the code an LLM writes; they play the model), write the few lines of Monty that run it, see it refused with no host functions, then add `search_flights`, defined on the host and called from the sandbox; run it with `uv run code-mode` and see the search run on the host.
 
-While you float, the point to land with each table: **a script can't do anything the host doesn't do for it.** In the agent the host is the workflow, so every stop is where the approval posture, an activity and the history come in. Exercises 3 and 4 put a person, then a policy, at exactly that point.
+While you float, the point to land with each table: **a script can't do anything the host doesn't do for it.** In the agent the host is the workflow, so every stop is where the approval posture, an activity and the history come in. Exercises 4 and 5 put a person, then a policy, at exactly that point.
+
+## Introduce Nexus (5)
+
+> "Your agent won't be the only one. Other teams run agents and workflows in their own namespaces, deploy them on their own schedule, and won't hand you their code."
+
+- **Namespaces are team boundaries:** their own workflows, history, access. You can't start another team's workflows from yours.
+- **Nexus connects them:** a **service** (the contract: operations and their types), an **endpoint** (a name that routes to their namespace and task queue), and a **handler** on their worker. From a workflow, a Nexus call looks like an activity call: awaited, recorded, retried, timed out.
+- **Workflow-backed operations** are what let an agent sit behind one: the handler starts a workflow and returns at once; the operation completes when the workflow does.
+- **The durable guarantee** is the line to land: once a workflow makes the call, an answer, a failure or a timeout comes back, and lands in its history. Temporal delivers the call (retrying while the handler is away) and the answer (through a callback, recorded even while the caller's worker is down). Nobody runs a queue or polls.
+- **Three directions in the exercise**, all through one endpoint into the concierge's namespace: agent → agent (`ask`), agent → workflow (`reserve_table`), workflow → agent (`TripBriefing` calling `ask`). Land that the caller can't tell an agent from a workflow, and doesn't need to.
+- **Set up exercise 5:** the policy verifier is behind a Nexus endpoint too (`tool-verifier`).
+
+While you float: step 4 stops the concierge's worker. The call waits (`NexusOperationScheduled`, no `Started`), and resumes within about a minute of `uv run travel-stack restart concierge` (the server backs off while the handler is away; the longer the outage, the longer it takes to notice it's over). The concierge's runs are in the other namespace: pick `concierge` in the Temporal UI's namespace menu.
 
 ## The human approval pattern (10)
 
 - After exercise 2: "it booked without asking you". Who wants that in production?
 - Human-in-the-loop is easy to draw and hard to build: an unknown wait, redeploys in the middle, double clicks, late clicks.
 - On Temporal it's an Update plus a durable wait. The validator rejects stale and duplicate clicks before anything is recorded. Waiting costs nothing.
-- The harness gives you the mechanism; you choose the **policy**: which calls need a person. That's exercise 3's TODO.
+- The harness gives you the mechanism; you choose the **policy**: which calls need a person. That's exercise 4's TODO.
 - Set up the punchline: count the clicks in `human_approval_only`.
 
 ## Introduce Dogwood (10)
@@ -99,8 +114,8 @@ While you float, the point to land with each table: **a script can't do anything
 
 - **Structured intent.** The trip form is the user saying, in a form the system can check: this person, this route, these dates.
 - **Dogwood is Cedar plus temporal conditions** over a history of events. Put the `flights-on-the-trip-form` rule on screen and read it aloud: permit `book_flight` when, earlier in *this session*, a trip form result was received with this passenger and this date.
-- **Architecture.** The verifier is a separate service, reached over a Temporal Nexus endpoint. Before each gated call the agent records what the session received (messages, the form, tool results) and asks for a decision. The agent can't edit the policy or the history; the model never sees either.
-- **Three outcomes:** permit (runs unattended); not permitted, by a rule marked `@on_deny("escalate")` (comes to a person, as in exercise 3, with the rule's `@reason`); anything else (refused, and the model is told why). Every booking rule is marked, so in the walkthrough an off-form booking comes to you. The verifier decides permit or deny; the agent's evaluator (`travel_agent/agent/policy.py`) reads `@on_deny` and `@reason` from the policy file, the way the harness's Playpen does.
+- **Architecture.** The verifier is a separate service, reached over a Temporal Nexus endpoint, like the concierge in exercise 3. Before each gated call the agent records what the session received (messages, the form, tool results) and asks for a decision. The agent can't edit the policy or the history; the model never sees either.
+- **Three outcomes:** permit (runs unattended); not permitted, by a rule marked `@on_deny("escalate")` (comes to a person, as in exercise 4, with the rule's `@reason`); anything else (refused, and the model is told why). Every booking rule is marked, so in the walkthrough an off-form booking comes to you. The verifier decides permit or deny; the agent's evaluator (`travel_agent/agent/policy.py`) reads `@on_deny` and `@reason` from the policy file, the way the harness's Playpen does.
 - **What the policy sees:** not the script, which runs unattended, but each travel call the script makes, one at a time, with its real arguments. A booking is judged as a booking, however the code got there.
 - **Fail closed:** if the verifier is down, calls come to a person, never "allow".
 

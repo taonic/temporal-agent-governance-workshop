@@ -13,7 +13,7 @@ export const sandboxRepo = "/workshop";
 
 const FILES = ["pyproject.toml", "uv.lock", "agents.toml", "README.md", "DESIGN.md", ".env.example", ".gitignore"];
 const DIRS = [
-  "hello", "codemode", "travel_agent", "policies", "challenges", "scripts", "tests",
+  "hello", "codemode", "travel_agent", "concierge", "policies", "challenges", "scripts", "tests",
   "authoring", "starter", "solutions", "docs",
 ];
 const SKIP = /(^|\/)(__pycache__|\.DS_Store|\.pytest_cache|\.ruff_cache)(\/|$)|\.pyc$/;

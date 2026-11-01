@@ -60,7 +60,7 @@ class Settings:
     # search happen; the checks set it to 0.
     tool_latency_s: float = field(default_factory=lambda: float(_env("TOOL_LATENCY_S", "1.5")))
 
-    # Dogwood: the CLI (exercise 4 check) and the verifier (`travel-stack up`), built by
+    # Dogwood: the CLI (exercise 5 check) and the verifier (`travel-stack up`), built by
     # scripts/setup_dogwood.sh.
     dogwood_cli: Path = field(default_factory=lambda: Path(_env("DOGWOOD_CLI", str(ROOT / ".dogwood/bin/dogwood"))))
     dogwood_verifier: Path = field(
@@ -74,7 +74,7 @@ settings = Settings()
 
 def session_id() -> str:
     """A new session's workflow id, named for the exercise you're on, so it's easy to find in the
-    Temporal UI: ``ex3-human-approval-1a2b3c4d``. The exercise is in .course/exercise (the browser
+    Temporal UI: ``ex4-human-approval-1a2b3c4d``. The exercise is in .course/exercise (the browser
     course and the exercises' setup scripts write it); without one, ``travel-1a2b3c4d``."""
     try:
         exercise = (ROOT / ".course" / "exercise").read_text().strip()

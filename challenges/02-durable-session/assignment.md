@@ -32,7 +32,7 @@ Four model calls for one request, each slower and costlier than the last, becaus
 - **One model call instead of four.** The model writes one script that searches both dates, compares and books.
 - **Results stay out of the model's context.** They pass from call to call inside the script; the model sees only what the script returns.
 - **Code does the bookkeeping.** Comparing prices and passing an id to the next call are a line of code each, and models write code well: they've seen far more of it than tool-call transcripts.
-- **Every call still goes through the host.** The script runs in a sandbox that can only compute; each tool call is handed back to the program running the sandbox, which decides whether to run it. That's where approvals (exercise 3) and policies (exercise 4) come in.
+- **Every call still goes through the host.** The script runs in a sandbox that can only compute; each tool call is handed back to the program running the sandbox, which decides whether to run it. That's where approvals (exercise 4) and policies (exercise 5) come in.
 
 <details>
 <summary>A quick example: a script the model wrote, run in the sandbox</summary>
@@ -51,7 +51,7 @@ cheapest = min(fri + sat, key=lambda f: f["price_cents"])
 cheapest
 ```
 
-Two searches and a comparison took one model call. The model never touched the travel API: the sandbox ran its code, and the host ran each call the code asked for. Booking it is one more line, `book_flight(...)`, once the host passes a `book_flight` in: the agent's host does, and that call is where exercises 3 and 4 put an approval and then a policy.
+Two searches and a comparison took one model call. The model never touched the travel API: the sandbox ran its code, and the host ran each call the code asked for. Booking it is one more line, `book_flight(...)`, once the host passes a `book_flight` in: the agent's host does, and that call is where exercises 4 and 5 put an approval and then a policy.
 
 </details>
 
@@ -156,7 +156,7 @@ That's Code Mode and Monty. Now the agent that uses them: the [Temporal Agent Ha
 **Why Temporal?** Monty keeps the model's code in a box. It doesn't make the agent last, and it doesn't decide what the code may do in the world. Temporal does both:
 
 - **Durability.** A session runs for minutes or days: model calls, tool calls, waits for a person. As a workflow it survives crashes, deploys and restarts, and picks up where it left off, without booking anything twice.
-- **Governance from outside the code.** Every call the model's script makes comes back to the workflow before it runs. That's one place to check it, against an approval posture or a policy the model can't see or change (exercises 3 and 4), and the history records what was tried and what was allowed.
+- **Governance from outside the code.** Every call the model's script makes comes back to the workflow before it runs. That's one place to check it, against an approval posture or a policy the model can't see or change (exercises 4 and 5), and the history records what was tried and what was allowed.
 
 It's built from the Temporal you wrote in exercise 1:
 
@@ -172,7 +172,7 @@ It's built from the Temporal you wrote in exercise 1:
 
 **In the agent, the host is the workflow.** In `sandbox.py` it was a few lines of Python; here it's the TravelAgent workflow, in `travel_agent/agent/workflow.py`:
 
-- Each call the script makes pauses it. The harness takes the call through the session's **approval posture**, runs it as an **activity** (several at once, if the script started several), and records the result in the session's history. The posture is how exercises 3 and 4 put you, and then a policy, between the script and the world.
+- Each call the script makes pauses it. The harness takes the call through the session's **approval posture**, runs it as an **activity** (several at once, if the script started several), and records the result in the session's history. The posture is how exercises 4 and 5 put you, and then a policy, between the script and the world.
 - The script itself isn't an activity: it runs inside the workflow, and only computes between calls. That's why it has a time limit.
 - If the worker dies mid-script, a new worker runs the script again from the top and answers each call from history. The script sees nothing but those results, so it makes the same calls in the same order, and none of them runs twice.
 - A type error, or an exception the script doesn't catch, goes back to the model as the tool's result, so it can fix the script and try again.
@@ -211,7 +211,7 @@ uv run travel-worker
 
 Then start a new **Travel agent** session<!-- browser
  <button class="pane-button" type="button" data-new-session="Travel agent" data-posture="dangerously_skip_all" title="Open the Travel agent's start form in the Agent UI, with dangerously_skip_all chosen">New session ▸</button>
--->. The start form asks for an **approval posture**: leave it at `dangerously_skip_all` for now. (Exercise 3 is about why that name is a warning.)
+-->. The start form asks for an **approval posture**: leave it at `dangerously_skip_all` for now. (Exercise 4 is about why that name is a warning.)
 
 Send:
 
@@ -299,7 +299,7 @@ Send:
 
 > Book the cheapest one.
 
-It books it. No question asked: the posture is `dangerously_skip_all` (see `approval_policy` in `travel_agent/agent/workflow.py`), and [the harness's approval check](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L507-L520) returns before anything else: every call goes through, unasked. The booking lands on the trip board, and in the bookings ledger: `cat .data/bookings.json` shows it. An agent that can spend money in your name, unattended, on its own judgment. Exercise 3 adds a human to the loop.
+It books it. No question asked: the posture is `dangerously_skip_all` (see `approval_policy` in `travel_agent/agent/workflow.py`), and [the harness's approval check](https://github.com/temporal-community/temporal-agent-harness/blob/15da54ee8e2baff0370ca245e9da1e29ba831ab8/temporal_agent_harness/harness/agent_protocol/agent_interface.py#L507-L520) returns before anything else: every call goes through, unasked. The booking lands on the trip board, and in the bookings ledger: `cat .data/bookings.json` shows it. An agent that can spend money in your name, unattended, on its own judgment. Exercise 4 adds a human to the loop. First, exercise 3 connects your agent to another team's.
 
 ## Check
 

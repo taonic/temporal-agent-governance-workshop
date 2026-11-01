@@ -171,9 +171,74 @@ export const WALKTHROUGHS = {
     await l.check("02-durable-session");
   },
 
-  // --- 3 · Human approval mode ----------------------------------------------------------------
-  "03-human-approval": async (l) => {
-    await l.startOver("03-human-approval");
+  // --- 3 · Agents across teams, with Nexus ----------------------------------------------------
+  "03-nexus": async (l) => {
+    await l.startOver("03-nexus");
+    // The concierge's namespace, in the Temporal UI pane, from the step's link: a run of this
+    // type is there.
+    const inConcierge = async (type) => {
+      await l.body.locator('a[data-pane="temporal"][data-path="/namespaces/concierge/workflows"]').first().click();
+      await expect(l.temporal.getByText(type).first(), `no ${type} in the concierge's namespace`).toBeVisible({ timeout: MINUTE });
+    };
+
+    await l.step("Meet the other team");
+    expect(await l.runButton("uv run travel-stack status"), "travel-stack status failed").toBe(0);
+    expect(l.flatOutput, "the concierge's worker isn't running").toMatch(/concierge\s+running/);
+    expect(await l.runButton("temporal operator nexus endpoint list"), "listing the Nexus endpoints failed").toBe(0);
+    expect(l.flatOutput, "there's no concierge endpoint").toContain("concierge");
+    await l.openFile("concierge/service.py");
+    await l.openFile("concierge/handler.py");
+
+    await l.step("Call the concierge's agent");
+    await l.openFile("travel_agent/agent/concierge.py");
+    await l.insert();
+    await l.restartWorker();
+    await l.newSession("dangerously_skip_all");
+    const answered = await ask(l, "Ask the concierge what Ada should pack for New York on 2026-11-01.", (h) => h.reply !== "", {
+      nudge: "Please ask the concierge with ask_concierge, and tell me its answer.",
+    });
+    expect(answered.approvals, "dangerously_skip_all asked for approval").toEqual([]);
+    await l.openInTemporal("button[data-session-tab='history?category=nexus']");
+    await inConcierge("ConciergeAgent");
+
+    await l.step("Call the concierge's workflow");
+    await l.openFile("travel_agent/agent/concierge.py");
+    await l.insert();
+    await l.restartWorker();
+    const reserved = await ask(l, "Reserve a table for Ada Lovelace in New York on 2026-11-01 at 19:30.", (h) => /TBL-[0-9A-F]{6}/.test(h.reply), {
+      nudge: "Please reserve the table with reserve_table now, and tell me its confirmation code.",
+    });
+    expect(reserved.reply, "no confirmation code in the agent's reply").toMatch(/TBL-[0-9A-F]{6}/);
+    await inConcierge("TableReservation");
+
+    await l.step("When the other team is down");
+    expect(await l.runButton("uv run travel-stack stop concierge"), "stopping the concierge failed").toBe(0);
+    await l.send("Ask the concierge what's on in Chicago on 2026-12-24.");
+    // The call waits for the concierge: the turn stays open.
+    await sleep(20 * SECOND);
+    expect(await l.busy(), "the turn ended with the concierge down: it should wait for it").toBe(true);
+    await l.openInTemporal("button[data-session-tab='history?category=nexus']");
+    expect(await l.runButton("uv run travel-stack restart concierge"), "restarting the concierge failed").toBe(0);
+    const back = await l.untilQuiet({ timeout: 4 * MINUTE });
+    expect(back.reply, "the session didn't carry on once the concierge was back").not.toBe("");
+
+    await l.step("A workflow calls the agent");
+    await l.openFile("travel_agent/briefing.py");
+    // The step's link opens the trip briefing form, filled in with Ada's trip.
+    await l.body.locator('a[data-pane="briefing"]').first().click();
+    await l.briefing.getByRole("button", { name: "Get a briefing" }).click();
+    await expect(l.briefing.getByText("Trip briefing for Ada Lovelace: New York, 2026-11-01"), "the form never showed the briefing").toBeVisible({ timeout: 3 * MINUTE });
+    // Its workflow id opens the workflow in the Temporal UI view.
+    await l.briefing.locator("a[data-workflow]").click();
+    await expect(l.page.getByRole("tab", { name: "Temporal UI", exact: true })).toHaveAttribute("aria-selected", "true");
+    await expect(l.temporal.getByText("Trip briefing for Ada Lovelace").first(), "no briefing on the workflow's page").toBeVisible({ timeout: MINUTE });
+
+    await l.check("03-nexus");
+  },
+
+  // --- 4 · Human approval mode ----------------------------------------------------------------
+  "04-human-approval": async (l) => {
+    await l.startOver("04-human-approval");
     const booking = "Book the cheapest flight from SFO to JFK on 2026-11-01 for Ada Lovelace.";
 
     await l.step("Approve everything");
@@ -226,12 +291,12 @@ export const WALKTHROUGHS = {
     expect(returned.approvals.some(isBooking), "the return booking didn't wait for approval").toBe(true);
     expect((await l.bookings()).filter(isReturn).length, "the approval didn't go through once the worker was back").toBeGreaterThan(0);
 
-    await l.check("03-human-approval");
+    await l.check("04-human-approval");
   },
 
-  // --- 4 · Auto mode --------------------------------------------------------------------------
-  "04-auto-mode": async (l) => {
-    await l.startOver("04-auto-mode");
+  // --- 5 · Auto mode --------------------------------------------------------------------------
+  "05-auto-mode": async (l) => {
+    await l.startOver("05-auto-mode");
 
     await l.step("Read the policy");
     await l.openFile("policies/travel.dw");
@@ -276,6 +341,6 @@ export const WALKTHROUGHS = {
     expect(moved.approvals.some((t) => /book_flight/.test(t)), "a flight on a day no form named didn't come to you: the rule should escalate it").toBe(true);
     expect(await adaFlights(XMAS), "a flight on a day no form named was booked: the temporal rule should hold it for you").toBe(xmasBefore);
 
-    await l.check("04-auto-mode");
+    await l.check("05-auto-mode");
   },
 };

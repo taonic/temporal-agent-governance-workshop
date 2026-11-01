@@ -1,6 +1,6 @@
 # Build Reliable AI Agents With Temporal
 
-A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://temporal.io). You build up one travel agent: first as raw Temporal, then as a durable agent session on [Monty](https://github.com/pydantic/monty) and the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), then with human approval, and, as a bonus, with a policy that lets it act on its own only when an action matches what you already asked for.
+A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://temporal.io). You build up one travel agent: first as raw Temporal, then as a durable agent session on [Monty](https://github.com/pydantic/monty) and the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness), then calling another team's agent and workflow over [Nexus](https://docs.temporal.io/nexus), then with human approval, and, as a bonus, with a policy that lets it act on its own only when an action matches what you already asked for.
 
 > **The model decides what to try. The policy decides what is allowed.**
 
@@ -8,8 +8,9 @@ A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://te
 |---|---|---|---|
 | 1 | [Hello Temporal](challenges/01-hello-temporal/assignment.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries; a count nobody saved survives a restart | Call an activity with a timeout and a retry policy |
 | 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | A script in the Monty sandbox stops at every tool call; in the agent those calls are activities; kill the worker and the conversation carries on | Running the script in Monty, and the `search_flights` tool |
-| 3 | [Human approval mode](challenges/03-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
-| 4 (bonus) | [Auto mode](challenges/04-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others come to you | Turn a plain flight rule into one that looks back at the trip form |
+| 3 | [Agents across teams, with Nexus](challenges/03-nexus/assignment.md) | The agent asks another team's agent, and reserves through its workflow, in another namespace; a plain workflow asks that agent too; the other team's outage is a wait, not an error | The Nexus calls in the agent's `ask_concierge` and `reserve_table` tools |
+| 4 | [Human approval mode](challenges/04-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
+| 5 (bonus) | [Auto mode](challenges/05-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others come to you | Turn a plain flight rule into one that looks back at the trip form |
 
 **In your browser:** the [course site](course/README.md) has every exercise, and with your event's access code, a cloud sandbox with all of this installed and running: an editor, two terminals, the console and the Temporal UI. Nothing to set up.
 
@@ -24,6 +25,7 @@ For an interactive version you can zoom, trace paths and export, open [docs/arch
 - **A session is a workflow** (`travel_agent/agent/workflow.py`), on the [Temporal Agent Harness](https://github.com/temporal-community/temporal-agent-harness). Messages and approvals are Updates, its status is a Query, and its history is the audit trail.
 - **The model writes code.** Its one travel tool is `run_travel_code`: the [Monty](https://github.com/pydantic/monty) sandbox runs the script, and each travel function the script calls (`travel_agent/travel/activities.py`) is a Temporal activity, gated by the session's approval posture.
 - **The model is any OpenAI-compatible endpoint**, called from the `call_llm` activity (`travel_agent/agent/llm.py`), which streams the reply into the console. `LLM_MODE=scripted` swaps in a fixed travel agent (`travel_agent/agent/scripted.py`).
+- **Other teams are a Nexus call away.** The concierge team (`concierge/`) runs in its own namespace, `concierge`, behind the `concierge` Nexus endpoint: an agent (`ConciergeAgent`) answers its `ask` operation, and a plain workflow (`TableReservation`) its `reserve_table`. The travel agent's scripts call both (`travel_agent/agent/concierge.py`), and so does a plain workflow, `TripBriefing` (`travel_agent/briefing.py`).
 - **In auto mode, a Dogwood policy decides.** The harness's `dogwood_evaluator` records what the session received (your messages, the trip form, tool results) with the Dogwood verifier over Nexus and asks it about each call. The verifier is a separate Rust service with its own durable store.
 
 ## Set up
@@ -58,7 +60,7 @@ Cursor and VS Code take the same URL as an HTTP MCP server.
 ## Run it
 
 ```bash
-uv run travel-stack up               # Temporal, the Nexus endpoint, the Dogwood verifier, the console
+uv run travel-stack up               # Temporal, the Nexus endpoints, the Dogwood verifier, the concierge, the console
 uv run travel-worker                 # the agent's worker: in its own terminal, so you can restart it
 ```
 
@@ -69,7 +71,7 @@ uv run travel-worker                 # the agent's worker: in its own terminal, 
 
 ### Starter or solution
 
-The repo ships **solved**. To do the exercises, switch the four exercise files to the starter:
+The repo ships **solved**. To do the exercises, switch the exercise files to the starter:
 
 ```bash
 uv run python scripts/switch.py starter    # every TODO open
@@ -85,12 +87,17 @@ Each exercise has a check (`./challenges/NN-*/check.sh`), a solve (`solve.sh`, w
 hello/                 exercise 1: a tiny workflow, activity, worker and starter
 codemode/              exercise 2's warm-up: sandbox.py runs a model's script in Monty (uv run code-mode)
 travel_agent/
-  agent/               TravelAgent workflow, call_llm, scripted model, prompts, trip form, travel notes
+  agent/               TravelAgent workflow, call_llm, scripted model, prompts, trip form, travel notes,
+                       the concierge's tools (Nexus calls)
   travel/              travel tools (activities), seeded inventory, trip board
+  briefing.py          TripBriefing, a plain workflow that asks the concierge's agent (uv run trip-briefing)
+  briefing_app.py      its web form, served by the console at http://localhost:8000/briefing
   worker.py stack.py console.py client.py schema.py config.py
+concierge/             exercise 3's other team, in its own namespace: its Nexus service, handler, agent,
+                       reservations workflow and worker
 policies/              travel.dw (the Dogwood policy), schema.cedarschema (generated), events.dwschema
 agents.toml            the agents the console can start
-authoring/             MASTER copies of the four files with TODOs (edit these, then render)
+authoring/             MASTER copies of the files with TODOs (edit these, then render)
 starter/ solutions/    generated: the TODO files at stage 0, and with exercises 1..N solved
 challenges/            assignment.md + setup/check/solve/cleanup.sh per exercise (Instruqt-shaped)
 instructor/            run of show and talking points
@@ -100,7 +107,7 @@ scripts/               render, switch, verify_stages, setup_dogwood.sh, gpu_endp
 
 ## Authoring
 
-Four files contain TODOs: `hello/workflow.py`, `travel_agent/travel/activities.py`, `travel_agent/agent/workflow.py` and `policies/travel.dw`. Their masters live in `authoring/`, with markers (`//` in the policy):
+Six files contain TODOs: `hello/workflow.py`, `codemode/sandbox.py`, `travel_agent/travel/activities.py`, `travel_agent/agent/concierge.py`, `travel_agent/agent/workflow.py` and `policies/travel.dw`. Their masters live in `authoring/`, with markers (`//` in the policy):
 
 ```python
 # @@solution ch02
@@ -120,12 +127,13 @@ uv run python scripts/verify_stages.py        # each check fails before its solu
 ```
 
 ```
-stage  base  ch01  ch02  ch03  ch04  walk
-  0    pass  FAIL  FAIL  FAIL  FAIL  FAIL
-  1    pass  pass  FAIL  FAIL  FAIL  FAIL
-  2    pass  pass  pass  FAIL  FAIL  pass
-  3    pass  pass  pass  pass  FAIL  pass
-  4    pass  pass  pass  pass  pass  pass
+stage  base  ch01  ch02  ch03  ch04  ch05  walk
+  0    pass  FAIL  FAIL  FAIL  FAIL  FAIL  FAIL
+  1    pass  pass  FAIL  FAIL  FAIL  FAIL  FAIL
+  2    pass  pass  pass  FAIL  FAIL  FAIL  pass
+  3    pass  pass  pass  pass  FAIL  FAIL  pass
+  4    pass  pass  pass  pass  pass  FAIL  pass
+  5    pass  pass  pass  pass  pass  pass  pass
 ```
 
 After changing the agent's tools or messages, regenerate the policy schema with `uv run python -m travel_agent.schema` and restart the verifier.

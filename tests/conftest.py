@@ -17,7 +17,10 @@ from temporal_agent_harness.plugin import AgentHarnessPlugin  # noqa: E402
 
 @pytest_asyncio.fixture(scope="session")
 async def env():
-    async with await WorkflowEnvironment.start_local() as env:
+    from concierge.service import NAMESPACE
+
+    # Two namespaces, as `travel-stack up` makes: the travel agent's, and the concierge's.
+    async with await WorkflowEnvironment.start_local(dev_server_extra_args=["--namespace", NAMESPACE]) as env:
         yield env
 
 
@@ -49,3 +52,30 @@ async def task_queue(client):
     queue = f"test-{uuid.uuid4().hex[:8]}"
     async with build_worker(client, queue):
         yield queue
+
+
+@pytest_asyncio.fixture
+async def concierge(env):
+    """The concierge team's worker, in its own namespace, behind the `concierge` Nexus endpoint.
+    Yields a client on the concierge's namespace."""
+    from temporalio.api.nexus.v1 import EndpointSpec, EndpointTarget
+    from temporalio.api.operatorservice.v1 import CreateNexusEndpointRequest
+    from temporalio.contrib.pydantic import pydantic_data_converter
+    from temporalio.service import RPCError, RPCStatusCode
+
+    from concierge.service import ENDPOINT, NAMESPACE, TASK_QUEUE
+    from concierge.worker import build_worker
+
+    target = EndpointTarget(worker=EndpointTarget.Worker(namespace=NAMESPACE, task_queue=TASK_QUEUE))
+    try:
+        await env.client.operator_service.create_nexus_endpoint(
+            CreateNexusEndpointRequest(spec=EndpointSpec(name=ENDPOINT, target=target))
+        )
+    except RPCError as e:
+        if e.status != RPCStatusCode.ALREADY_EXISTS:
+            raise
+    client = await Client.connect(
+        env.client.service_client.config.target_host, namespace=NAMESPACE, data_converter=pydantic_data_converter
+    )
+    async with build_worker(client):
+        yield client

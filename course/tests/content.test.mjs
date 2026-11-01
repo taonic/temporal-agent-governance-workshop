@@ -35,7 +35,7 @@ test("snippet commands drop comments and join continuations", () => {
 
 test("the built course covers every exercise in both modes", () => {
   const course = buildCourse();
-  assert.equal(course.exercises.length, 4);
+  assert.equal(course.exercises.length, 5);
   for (const exercise of course.exercises) {
     for (const mode of ["browser", "local"]) {
       const html = [exercise.modes[mode].intro, ...exercise.modes[mode].sections.map((s) => s.html)].join("\n");
@@ -143,7 +143,7 @@ test("in the browser, every new session the instructions ask for is a button wit
   const exercises = buildCourse().exercises;
   const all = (mode) => exercises.map((e) => e.modes[mode].sections.map((s) => s.html).join("\n")).join("\n");
   const postures = [...all("browser").matchAll(/data-new-session="Travel agent" data-posture="(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(postures, ["dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode", "auto_mode"]);
+  assert.deepEqual(postures, ["dangerously_skip_all", "dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode", "auto_mode"]);
   assert.ok(!all("local").includes("data-new-session"), "local pages have no session buttons");
   assert.match(all("local"), /Then start a new <strong>Travel agent<\/strong> session\. The start form/);
 });

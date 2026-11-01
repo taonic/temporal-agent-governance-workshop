@@ -194,7 +194,7 @@ function advance({ codeTour = offersCodeTour.value } = {}) {
 
 // The check step, once it passed: a big 🎉, the way on to the next exercise, and the check.
 // When it passes now (ExercisePage celebrates it), the guide goes there, once the learner has
-// reached the last step: a step can run the check itself (exercise 4's "Write the rule"), and
+// reached the last step: a step can run the check itself (exercise 5's "Write the rule"), and
 // jumping from there would skip the steps after it.
 const showPassed = computed(() => beat.value.kind === "check" && passed.value);
 watch(
@@ -263,11 +263,11 @@ watch(
 // The step's first button that does something in the workspace, and the tab it shows.
 const ACTION_VIEWS = [
   [/^data-(?:worker-toggle|trip|run)\b/, "code"], // the terminals, under Code
-  [/^data-pane="(console|temporal)"/, null],
+  [/^data-pane="(console|temporal|briefing)"/, null],
   [/^data-(?:send|new-session|agent-tour)\b/, "console"],
   [/^data-(?:session-tab|workflow-open)\b/, "temporal"],
 ];
-const ACTION = /data-(?:worker-toggle|trip|run|send|new-session|agent-tour|session-tab|workflow-open)\b|data-pane="(?:console|temporal)"/;
+const ACTION = /data-(?:worker-toggle|trip|run|send|new-session|agent-tour|session-tab|workflow-open)\b|data-pane="(?:console|temporal|briefing)"/;
 function firstAction(html) {
   const found = html.match(ACTION)?.[0];
   if (!found) return null;
@@ -299,6 +299,12 @@ function briefingDiagram(b) {
   if (firstStep < 0 || beats.value.indexOf(b) > firstStep) return null;
   return beats.value.slice(0, firstStep).map(diagramOf).find(Boolean) ?? null;
 }
+// The Diagram tab's diagram on any beat, so the tab stays for the whole exercise: the last one
+// up to this beat, or the exercise's first.
+function exerciseDiagram(b) {
+  const diagrams = beats.value.map(diagramOf);
+  return diagrams.slice(0, beats.value.indexOf(b) + 1).findLast(Boolean) ?? diagrams.find(Boolean) ?? null;
+}
 const diagramOnLeft = computed(() => mode.value === "browser" && store.workspaceView === "diagram" && store.guideDiagram === diagramOf(beat.value));
 
 // The exercise too: every exercise's intro is "intro", so opening another one doesn't change the
@@ -308,8 +314,9 @@ watch(
   () => {
     const b = beat.value;
     const shown = mode.value === "browser" ? briefingDiagram(b) : null;
-    // A step's own diagram is on offer too, as the Diagram tab, without taking the workspace.
-    store.guideDiagram = shown ?? (mode.value === "browser" ? diagramOf(b) : null);
+    // On a step, the exercise's diagram is on offer too, as the Diagram tab, without taking the
+    // workspace.
+    store.guideDiagram = shown ?? (mode.value === "browser" ? exerciseDiagram(b) : null);
     if (shown) {
       store.workspaceView = "diagram";
       return;

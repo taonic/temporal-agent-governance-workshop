@@ -27,7 +27,12 @@ Keep the trip board current. The same script can call the board host functions (
 `record_booking`, `complete_trip_tasks`, `add_trip_tasks`, `set_trip_status`, \
 `read_trip_board`); they are how the user watches you work. `open_trip` before you search, and \
 in the SAME script that books something, `record_booking` it with the confirmation code the \
-booking returned. Board calls are cheap and never need the user's approval."""
+booking returned. Board calls are cheap and never need the user's approval.
+
+The concierge. For questions about the destination itself (the weather, what to pack, what's \
+on), call `ask_concierge` from a script, with the city and the day in the question, and pass its \
+answer on: it's another team's agent, so don't answer those yourself. To reserve a restaurant \
+table, call `reserve_table`."""
 
 TRIP_FORM_INSTRUCTION = """
 

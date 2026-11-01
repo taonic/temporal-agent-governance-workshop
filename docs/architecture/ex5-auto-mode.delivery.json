@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d08cf174-fe69-40b2-a74a-6bfdd08b14d1",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex5-auto-mode.candidate.json",
+  "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex5-auto-mode.html",
+  "specification": {
+    "sha256": "0fe45443fe48ba61c65ae562dc9758e8e37f063060d21bda894fa94bb23a75a4",
+    "bytes": 6225
+  },
+  "artifact": {
+    "sha256": "4a4c892cf29cde425d293a90f3a7230f88f2cbb586060ad4ed30e17b47088244",
+    "bytes": 765495
+  }
+}

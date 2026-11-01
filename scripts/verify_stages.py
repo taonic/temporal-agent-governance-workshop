@@ -1,6 +1,6 @@
 """Prove every TODO matters and every solution works.
 
-For each stage N (0 = starter, 4 = all solved), render the code into a temp copy and run each
+For each stage N (0 = starter, 5 = all solved), render the code into a temp copy and run each
 exercise's check. Exercise K's check must pass exactly when K <= N. The provided-code tests
 (test_base.py) must always pass, and the scripted walkthroughs (test_walkthroughs.py) from
 stage 2 on, since they need search_flights.
@@ -23,11 +23,12 @@ CHECKS = {
     "base": ("tests/test_base.py", 0),
     "ch01": ("tests/test_ch01_hello.py", 1),
     "ch02": ("tests/test_ch02_session.py", 2),
-    "ch03": ("tests/test_ch03_approval.py", 3),
-    "ch04": ("tests/test_ch04_policy.py", 4),
+    "ch03": ("tests/test_ch03_nexus.py", 3),
+    "ch04": ("tests/test_ch04_approval.py", 4),
+    "ch05": ("tests/test_ch05_policy.py", 5),
     "walk": ("tests/test_walkthroughs.py", 2),
 }
-COPY = ["travel_agent", "hello", "codemode", "tests", "policies"]
+COPY = ["travel_agent", "hello", "codemode", "concierge", "tests", "policies"]
 
 
 def build(stage: int) -> Path:
@@ -54,7 +55,7 @@ async def run_check(stage: int, tmp: Path, check: str) -> tuple[int, str, bool]:
 
 async def main() -> None:
     if not (ROOT / ".dogwood/bin/dogwood").exists():
-        sys.exit("the exercise 4 check needs the dogwood CLI: run scripts/setup_dogwood.sh")
+        sys.exit("the exercise 5 check needs the dogwood CLI: run scripts/setup_dogwood.sh")
     dirs = {stage: build(stage) for stage in range(CHAPTERS + 1)}
     gate = asyncio.Semaphore(6)  # each check starts its own Temporal dev server
 

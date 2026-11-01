@@ -9,6 +9,7 @@ doesn't have is rejected, rather than silently never matching.
 
 from temporal_agent_harness.harness.dogwood_approvals.schema import dogwood_schema
 
+from .agent.concierge import CONCIERGE_TOOLS
 from .agent.trip_form import ask_trip_details
 from .agent.workflow import ACTION_PREFIX, TravelAgentWorkflow, build_code_tool
 from .config import settings
@@ -18,11 +19,11 @@ SCHEMA_FILE = settings.policy_dir / "schema.cedarschema"
 
 
 def render() -> str:
-    """The script tool, the trip form, each travel tool a script's host calls reach the policy
-    as, their results, and the agent's messages. The board and file tools are pre-approved and
-    no policy reads their results, so they're left out."""
+    """The script tool, the trip form, each travel and concierge tool a script's host calls
+    reach the policy as, their results, and the agent's messages. The board and file tools are
+    pre-approved and no policy reads their results, so they're left out."""
     return dogwood_schema(
-        [build_code_tool(), ask_trip_details, *activities.ALL_TOOLS],
+        [build_code_tool(), ask_trip_details, *activities.ALL_TOOLS, *CONCIERGE_TOOLS],
         action_prefix=ACTION_PREFIX,
         agent_class=TravelAgentWorkflow,
     )

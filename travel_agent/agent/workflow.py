@@ -4,13 +4,14 @@ The model replies, asks for the trip on a form (`ask_trip_details`), or writes a
 `run_travel_code` runs in a Monty sandbox, where each `search_flights(...)`, `book_flight(...)`…
 is a Temporal activity, judged first by the session's approval posture:
 
-    dangerously_skip_all   everything runs (exercise 2)
+    dangerously_skip_all   everything runs (exercises 2 and 3)
     human_approval_only    every call asks you first
-    approve_bookings       searches run; bookings wait for you (exercise 3)
-    auto_mode              your policy decides each booking (exercise 4)
+    approve_bookings       searches run; bookings wait for you (exercise 4)
+    auto_mode              your policy decides each booking (exercise 5)
 
 Chosen when the session starts; `set_approval_policy` changes it. The model is called from the
-`call_llm` activity.
+`call_llm` activity. A script can also call the concierge, another team's agent and workflow, over
+Nexus (`concierge.py`).
 """
 
 from __future__ import annotations
@@ -49,6 +50,7 @@ with workflow.unsafe.imports_passed_through():
     )
 
     from ..travel import activities, trip_board
+    from .concierge import CONCIERGE_TOOLS, ask_concierge
     from .llm import call_llm
     from .models import LLMRequest, LLMResponse, ToolCall
     from .policy import policy_evaluator
@@ -65,20 +67,21 @@ POLICY_ENDPOINT = "tool-verifier"
 # How many model calls one message may take before the agent stops and says so.
 MAX_MODEL_CALLS = 12
 
-# The tools a script can call: the travel tools, and the trip board so a script can record a
-# booking in the same breath as making it.
-SCRIPT_TOOLS = [*activities.ALL_TOOLS, *trip_board.BOARD_TOOLS]
+# The tools a script can call: the travel tools, the concierge's, and the trip board so a
+# script can record a booking in the same breath as making it.
+SCRIPT_TOOLS = [*activities.ALL_TOOLS, *CONCIERGE_TOOLS, *trip_board.BOARD_TOOLS]
 
 # The file operations a script's open() becomes, on the /notes mount.
 FILE_TOOLS = [fs_seed, fs_stat, fs_read, fs_list, fs_write, fs_mkdir, fs_delete, fs_rename]
 
 # Safe to run without asking in every posture but `human_approval_only`: the board tools write
-# the agent's own notes, the file tools touch only the user's in-memory travel notes, and the
-# trip form only asks the user.
+# the agent's own notes, the file tools touch only the user's in-memory travel notes, the trip
+# form only asks the user, and the concierge only answers questions.
 PRE_APPROVED_TOOLS = [
     *trip_board.BOARD_TOOL_NAMES,
     *(tool.__name__ for tool in FILE_TOOLS),
     ask_trip_details.__name__,
+    ask_concierge.__name__,
 ]
 
 Posture = Literal["dangerously_skip_all", "human_approval_only", "approve_bookings", "auto_mode"]

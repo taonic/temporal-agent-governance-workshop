@@ -16,17 +16,15 @@
 // Each rule is marked @on_deny("escalate"), so a booking none of them permits comes to you,
 // however the model came by it. Nothing runs on its own that no rule permits.
 
-// A flight booking runs unattended when you put its passenger and date on a trip form
-// (`ask_trip_details`) earlier in this session. Any other flight comes to you.
-@id("flights-on-the-trip-form")
+// TODO(ch05): this rule checks only the call itself, so any flight for Ada runs, on any day.
+// Make flight bookings look back at the trip form submitted earlier in this session instead.
+@id("flights-for-ada")
 @on_deny("escalate")
-@reason("A flight runs on its own only for the traveler and dates on your trip form.")
+@reason("A flight runs on its own only for Ada Lovelace.")
 permit (principal, action == Temporal::Action::"travel-agent/book_flight", resource)
-when temporal {
-  formerly within 2h Temporal::Action::"travel-agent/ask_trip_details/result"::received{
-    input.arg0.traveler_name: context.input.arg0.request.passenger_name,
-    input.arg0.departure_date: context.input.arg0.request.date
-  }
+when {
+  context.input has arg0.request.passenger_name &&
+  context.input.arg0.request.passenger_name == "Ada Lovelace"
 };
 
 // The flight back: the same, with the form's return date.

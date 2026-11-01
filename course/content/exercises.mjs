@@ -96,7 +96,7 @@ export const EXERCISES = {
       { path: "codemode/sandbox.py", editable: true, untilBeat: "The agent" },
       { path: "travel_agent/travel/activities.py", editable: true, fromBeat: "3. Start a session" },
       { path: "travel_agent/travel/inventory.py", fromBeat: "3. Start a session" },
-      // Read-only here: its approval posture is what step 7 is about, and exercise 3 edits it.
+      // Read-only here: its approval posture is what step 7 is about, and exercise 4 edits it.
       { path: "travel_agent/agent/workflow.py", fromBeat: "The agent" },
     ],
     // After "The agent", not before step 1: the tour recaps the script and the host from the
@@ -128,7 +128,7 @@ export const EXERCISES = {
         file: "travel_agent/agent/workflow.py",
         from: "def approval_policy(posture: Posture)",
         title: "The host decides what runs",
-        body: "Before the workflow runs a call, the session's **approval posture** decides whether it may: each posture becomes a `ToolApprovalPolicy`. This exercise's sessions start on `dangerously_skip_all`, so every call runs, bookings too. Exercise 3 fills in `approve_bookings`.",
+        body: "Before the workflow runs a call, the session's **approval posture** decides whether it may: each posture becomes a `ToolApprovalPolicy`. This exercise's sessions start on `dangerously_skip_all`, so every call runs, bookings too. Exercise 4 fills in `approve_bookings`.",
       },
       {
         file: "travel_agent/travel/activities.py",
@@ -179,7 +179,95 @@ export const EXERCISES = {
       },
     ],
   },
-  "03-human-approval": {
+  "03-nexus": {
+    worker: "uv run travel-worker",
+    files: [
+      { path: "travel_agent/agent/concierge.py", editable: true },
+      { path: "travel_agent/agent/workflow.py" },
+      { path: "concierge/service.py" },
+      { path: "concierge/handler.py" },
+      { path: "concierge/agent.py" },
+      { path: "concierge/reservations.py" },
+      { path: "travel_agent/briefing.py" },
+      { path: "travel_agent/briefing_app.py" },
+    ],
+    questions: [
+      "What is Temporal Nexus, and when would I use it instead of an activity?",
+      "What's the difference between a Nexus endpoint, a service and an operation?",
+      "How does a workflow-backed Nexus operation deliver its result to the caller?",
+      "What happens to a Nexus call while the handler's worker is down?",
+      "How do Nexus endpoints work across namespaces in Temporal Cloud?",
+    ],
+    tour: [
+      {
+        file: "concierge/service.py",
+        from: '@nexusrpc.service(name="concierge")',
+        title: "The contract",
+        body: "The concierge team's Nexus **service**: two **operations**, each with its input and output types. It's all a caller depends on: not their code, not their namespace, not whether an agent or a workflow answers.",
+      },
+      {
+        file: "concierge/service.py",
+        from: 'ENDPOINT = "concierge"',
+        to: 'TASK_QUEUE = "concierge"',
+        title: "Where it's served",
+        body: "Callers use the **endpoint**'s name. The endpoint (`travel-stack up` created it) routes to the concierge's namespace and task queue, where their worker listens, so callers never name those.",
+      },
+      {
+        file: "concierge/handler.py",
+        from: "async def ask(",
+        to: 'id=f"concierge-ask-',
+        title: "The other side: a handler",
+        body: "Each operation starts a workflow in the concierge's namespace and returns at once; the operation completes when the workflow does. The id comes from the Nexus request id, so a retried call finds the workflow it already started.",
+      },
+      {
+        file: "concierge/agent.py",
+        from: "async def run(self, question: ConciergeQuestion)",
+        to: "return ConciergeAnswer(answer=\"I couldn't",
+        title: "Their agent",
+        body: "The concierge's agent: call the model, run the tools it asks for as activities, repeat until it answers. A plain loop, no harness and no Code Mode: their choice, invisible to callers.",
+      },
+      {
+        file: "concierge/reservations.py",
+        from: "async def run(self, request: TableRequest)",
+        title: "Their workflow",
+        body: "No model, no choices: find a table, hold it, each step an activity. Called exactly like the agent.",
+      },
+      {
+        file: "travel_agent/agent/workflow.py",
+        from: "# The tools a script can call:",
+        to: "SCRIPT_TOOLS = [",
+        title: "Your agent: what its scripts can call",
+        body: "The travel agent's code. Its scripts call tools as functions: the travel tools, the trip board, and `CONCIERGE_TOOLS`, the two from `concierge.py`. To the model, `ask_concierge` is a function like `search_flights`; what's behind it is the next stop.",
+      },
+      {
+        file: "travel_agent/agent/concierge.py",
+        from: "async def ask_concierge(",
+        title: "Your TODO: agent → agent",
+        body: "A tool the agent's scripts call, run in the workflow. Its body is a Nexus call: a client for the concierge's service on its endpoint, then the `ask` operation, awaited like an activity.",
+      },
+      {
+        file: "travel_agent/agent/concierge.py",
+        from: "async def reserve_table(",
+        title: "And agent → workflow",
+        body: "The same call to the other operation, served by a plain workflow. A reservation is a booking, so unlike `ask_concierge` it isn't marked safe: exercise 4 makes it wait for you.",
+      },
+      {
+        file: "travel_agent/briefing.py",
+        from: "class TripBriefing:",
+        to: "return f\"Trip briefing",
+        title: "Workflow → agent",
+        body: "A plain workflow in your namespace, with no model, calling the concierge's agent over the same `ask` operation. To the concierge, it's the same call.",
+      },
+      {
+        file: "travel_agent/briefing_app.py",
+        from: '@router.post("/api/briefings")',
+        to: 'return {"status": "failed"',
+        title: "And a UI to start it",
+        body: "The trip briefing form's server: `start_workflow` when someone submits a trip, then the workflow's status and `result()` until it has one. A plain Temporal client, as any app would use.",
+      },
+    ],
+  },
+  "04-human-approval": {
     worker: "uv run travel-worker",
     files: [{ path: "travel_agent/agent/workflow.py", editable: true }],
     questions: [
@@ -192,15 +280,15 @@ export const EXERCISES = {
       {
         file: "travel_agent/agent/workflow.py",
         from: "# Safe to run without asking",
-        to: "ask_trip_details.__name__,",
+        to: "ask_concierge.__name__,",
         title: "What's always safe",
-        body: "The trip board, the in-memory notes and the trip form only touch the agent's own state or ask you, so every posture but `human_approval_only` lets them run.",
+        body: "The trip board, the in-memory notes, the trip form and the concierge's answers only touch the agent's own state, ask you, or ask a question, so every posture but `human_approval_only` lets them run.",
       },
       {
         file: "travel_agent/agent/workflow.py",
         from: "Posture = Literal[",
         title: "Four approval postures",
-        body: "How much the agent may do without asking: everything, nothing, everything but bookings (yours to write), or whatever your policy allows (exercise 4).",
+        body: "How much the agent may do without asking: everything, nothing, everything but bookings (yours to write), or whatever your policy allows (exercise 5).",
       },
       {
         file: "travel_agent/agent/workflow.py",
@@ -243,7 +331,7 @@ export const EXERCISES = {
       },
     ],
   },
-  "04-auto-mode": {
+  "05-auto-mode": {
     worker: "uv run travel-worker",
     files: [{ path: "policies/travel.dw", editable: true }],
     questions: [
@@ -262,7 +350,7 @@ export const EXERCISES = {
       },
       {
         file: "policies/travel.dw",
-        from: "// TODO(ch04)",
+        from: "// TODO(ch05)",
         title: "Your TODO",
         body: "A plain rule: it checks only the call itself, so any flight for Ada runs, on any day. You'll make it look back at the trip form you submitted earlier in this session.",
       },

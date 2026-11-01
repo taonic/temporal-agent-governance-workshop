@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Workshop pre-work: build the two Rust pieces of Dogwood into .dogwood/ (git-ignored).
 #
-#   .dogwood/bin/dogwood            the Dogwood CLI. The exercise 4 check replays your policy with it.
+#   .dogwood/bin/dogwood            the Dogwood CLI. The exercise 5 check replays your policy with it.
 #   .dogwood/bin/dogwood-verifier   the Dogwood verifier: a Nexus service the agent asks about each
 #                                   tool call. `travel-stack up` runs it.
 #

@@ -13,7 +13,7 @@ if [ "$(basename "$0")" = check.sh ]; then
 fi
 
 # Setting an exercise up (or starting it over) records it in .course/exercise, so new agent
-# sessions are named for it (ex3-human-approval-…, see travel_agent/config.py).
+# sessions are named for it (ex4-human-approval-…, see travel_agent/config.py).
 case "$(basename "$0")" in
   setup.sh | reset.sh) mkdir -p "$REPO/.course" && basename "$(dirname "$0")" >"$REPO/.course/exercise" ;;
 esac
@@ -35,7 +35,8 @@ run_check() {
 # edited and broken), the official solution for 1..N goes in.
 catch_up() {
   local upto="$1"
-  local checks=(tests/test_ch01_hello.py tests/test_ch02_session.py tests/test_ch03_approval.py tests/test_ch04_policy.py)
+  local checks=(tests/test_ch01_hello.py tests/test_ch02_session.py tests/test_ch03_nexus.py tests/test_ch04_approval.py
+    tests/test_ch05_policy.py)
   [ "$upto" -ge 1 ] || return 0
   report_caught_up "$(uv run python scripts/switch.py catch-up "$((upto + 1))")"
   if ! run_check "${checks[@]:0:$upto}" >/dev/null 2>&1; then
@@ -61,7 +62,7 @@ fresh_start() {
 # .learner-backup/ first), fresh sessions, an empty ledger, and its check no longer passed.
 start_over() {
   local exercise="$1"
-  if [ "$exercise" -le 4 ]; then uv run python scripts/switch.py restart "$exercise"; fi
+  if [ "$exercise" -le 5 ]; then uv run python scripts/switch.py restart "$exercise"; fi
   report_caught_up "$(uv run python scripts/switch.py catch-up "$exercise")"
   fresh_start
   rm -f "$REPO/.course/passed/$(basename "$(dirname "$0")")"

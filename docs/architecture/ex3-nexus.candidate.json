@@ -1,0 +1,526 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Two teams, reliable handoff",
+    "animation": "trace",
+    "quality_profile": "standard",
+    "output": "docs/architecture/ex3-nexus.html",
+    "legend": {
+      "entries": {
+        "external": {
+          "label": "End user"
+        },
+        "frontend": {
+          "label": "Agent"
+        },
+        "backend": {
+          "label": "Workflow"
+        },
+        "cloud": {
+          "label": "Tools"
+        },
+        "security": {
+          "label": "Activities"
+        },
+        "messagebus": {
+          "label": "Nexus"
+        },
+        "database": {
+          "label": "Durable execution"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "you",
+      "type": "external",
+      "label": "End user",
+      "sublabel": "Conversation UI or Web Forms",
+      "pos": [
+        400,
+        40
+      ],
+      "size": [
+        280,
+        56
+      ]
+    },
+    {
+      "id": "trip-briefing",
+      "type": "backend",
+      "label": "TripBriefing",
+      "sublabel": "a plain workflow, no model",
+      "pos": [
+        40,
+        190
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "icon": "backend"
+    },
+    {
+      "id": "travel-agent",
+      "type": "frontend",
+      "label": "TravelAgent",
+      "sublabel": "an agent · its script calls",
+      "pos": [
+        460,
+        190
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "icon": "active"
+    },
+    {
+      "id": "endpoint",
+      "type": "messagebus",
+      "label": "Nexus Endpoint - concierge",
+      "sublabel": "durable route → namespace + task queue concierge",
+      "pos": [
+        300,
+        360
+      ],
+      "size": [
+        280,
+        76
+      ]
+    },
+    {
+      "id": "history",
+      "type": "database",
+      "label": "Event history",
+      "sublabel": "each namespace its own",
+      "pos": [
+        960,
+        368
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "service",
+      "type": "messagebus",
+      "label": "Nexus Service - concierge",
+      "sublabel": "the contract · service.py",
+      "pos": [
+        470,
+        590
+      ],
+      "size": [
+        220,
+        60
+      ]
+    },
+    {
+      "id": "op-ask",
+      "type": "messagebus",
+      "label": "ask",
+      "sublabel": "Operation · one call",
+      "pos": [
+        260,
+        590
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "op-reserve",
+      "type": "messagebus",
+      "label": "reserve_table",
+      "sublabel": "Operation · one call",
+      "pos": [
+        740,
+        590
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "agent-steps",
+      "type": "cloud",
+      "label": "Model and tools",
+      "sublabel": "get_weather · find_events",
+      "pos": [
+        70,
+        770
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "concierge-agent",
+      "type": "frontend",
+      "label": "ConciergeAgent",
+      "sublabel": "an agent · returns an answer",
+      "pos": [
+        260,
+        770
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "icon": "active"
+    },
+    {
+      "id": "table-steps",
+      "type": "security",
+      "label": "Two activities",
+      "sublabel": "find_table, hold_table",
+      "pos": [
+        500,
+        770
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "table-reservation",
+      "type": "backend",
+      "label": "TableReservation",
+      "sublabel": "no model · returns a code",
+      "pos": [
+        740,
+        770
+      ],
+      "size": [
+        160,
+        60
+      ],
+      "icon": "backend"
+    },
+    {
+      "id": "dispatch",
+      "type": "database",
+      "label": "Queue dispatch",
+      "sublabel": "task queues · workers pull from them",
+      "pos": [
+        700,
+        360
+      ],
+      "size": [
+        160,
+        76
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "01 / End user",
+      "wraps": [
+        "you"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "02 / Travel team · namespace default",
+      "wraps": [
+        "trip-briefing",
+        "travel-agent"
+      ],
+      "pad": 16
+    },
+    {
+      "kind": "region",
+      "label": "03 / Temporal",
+      "wraps": [
+        "endpoint",
+        "history",
+        "dispatch"
+      ],
+      "pad": 36
+    },
+    {
+      "kind": "security-group",
+      "label": "Nexus",
+      "wraps": [
+        "endpoint"
+      ],
+      "pad": 12
+    },
+    {
+      "kind": "region",
+      "label": "Durable execution",
+      "wraps": [
+        "history",
+        "dispatch"
+      ],
+      "pad": 12
+    },
+    {
+      "kind": "region",
+      "label": "04 / Concierge team · namespace concierge",
+      "wraps": [
+        "op-ask",
+        "service",
+        "op-reserve",
+        "agent-steps",
+        "concierge-agent",
+        "table-steps",
+        "table-reservation"
+      ],
+      "pad": 36
+    },
+    {
+      "kind": "region",
+      "label": "Temporal worker",
+      "wraps": [
+        "op-ask",
+        "service",
+        "op-reserve"
+      ],
+      "pad": 12
+    }
+  ],
+  "connections": [
+    {
+      "id": "chat",
+      "from": "you",
+      "to": "travel-agent",
+      "label": "chat",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        540,
+        131
+      ]
+    },
+    {
+      "id": "start",
+      "from": "you",
+      "to": "trip-briefing",
+      "label": "start",
+      "fromSide": "left",
+      "toSide": "top",
+      "via": [
+        [
+          120,
+          68
+        ]
+      ]
+    },
+    {
+      "id": "agent-to-agent",
+      "from": "travel-agent",
+      "to": "endpoint",
+      "label": "ask_concierge: ask · agent → agent",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "agent-to-workflow",
+      "from": "travel-agent",
+      "to": "endpoint",
+      "label": "reserve_table · agent → workflow",
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "workflow-to-agent",
+      "from": "trip-briefing",
+      "to": "endpoint",
+      "label": "ask · workflow → agent",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "routes-to",
+      "from": "endpoint",
+      "to": "dispatch",
+      "label": "routes to",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "worker-pulls",
+      "from": "dispatch",
+      "to": "service",
+      "label": "worker pulls the job",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "offers-ask",
+      "from": "service",
+      "to": "op-ask",
+      "label": "offers",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "offers-reserve",
+      "from": "service",
+      "to": "op-reserve",
+      "label": "offers",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "starts-agent",
+      "from": "op-ask",
+      "to": "concierge-agent",
+      "label": "starts",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        314,
+        710
+      ]
+    },
+    {
+      "id": "starts-reservation",
+      "from": "op-reserve",
+      "to": "table-reservation",
+      "label": "starts",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "route": "straight",
+      "labelAt": [
+        795,
+        710
+      ]
+    },
+    {
+      "id": "agent-loop",
+      "from": "concierge-agent",
+      "to": "agent-steps",
+      "label": "a loop",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "table-activities",
+      "from": "table-reservation",
+      "to": "table-steps",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "answer-back",
+      "from": "concierge-agent",
+      "to": "history",
+      "label": "answer · callback",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "via": [
+        [
+          340,
+          900
+        ],
+        [
+          1040,
+          900
+        ]
+      ]
+    },
+    {
+      "id": "confirmation-back",
+      "from": "table-reservation",
+      "to": "history",
+      "label": "confirmation · callback",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "bottom",
+      "via": [
+        [
+          1040,
+          800
+        ]
+      ]
+    },
+    {
+      "id": "history-to-dispatch",
+      "from": "history",
+      "to": "dispatch",
+      "label": "workflow task",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "result-to-agent",
+      "from": "dispatch",
+      "to": "travel-agent",
+      "label": "result · NexusOperationCompleted",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "right",
+      "via": [
+        [
+          780,
+          220
+        ]
+      ]
+    },
+    {
+      "id": "result-to-briefing",
+      "from": "dispatch",
+      "to": "trip-briefing",
+      "label": "result",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "right",
+      "via": [
+        [
+          780,
+          150
+        ],
+        [
+          230,
+          150
+        ],
+        [
+          230,
+          220
+        ]
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Three directions, one endpoint",
+      "items": [
+        "Agent → agent: TravelAgent's ask_concierge calls ask, and ConciergeAgent answers",
+        "Agent → workflow: TravelAgent's reserve_table calls reserve_table, served by TableReservation",
+        "Workflow → agent: TripBriefing, with no model, calls the same ask",
+        "Solid arrows: the call going out; dashed violet arrows: the result coming back through the history and the task queue"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "The durable guarantee",
+      "items": [
+        "Once a workflow makes the call, an answer, a failure or a timeout comes back and lands in its history",
+        "Temporal delivers the call, retrying while the concierge is away; the endpoint is a durable route, registered once",
+        "The answer comes back through a callback, recorded as NexusOperationCompleted even while the caller's worker is down; queue dispatch delivers it once a worker polls",
+        "The caller's history records the call; the concierge's history holds the whole run",
+        "Nexus Endpoint → task queue → the concierge's worker → Nexus Service → operation: where calls go, who pulls them, the contract, one call"
+      ]
+    }
+  ]
+}

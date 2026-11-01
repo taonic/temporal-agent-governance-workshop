@@ -23,6 +23,7 @@ export class Learner {
     this.testInfo = testInfo;
     this.agent = page.frameLocator("iframe[title='The Agent UI']");
     this.temporal = page.frameLocator("iframe[title='The Temporal UI']");
+    this.briefing = page.frameLocator("iframe[title='The trip briefing form']");
   }
 
   // Something the instructions say that the page doesn't do as written: in the report, without
@@ -160,7 +161,7 @@ export class Learner {
 
   // On to the step with this title (as the assignment's heading has it, without its number),
   // with the guide's replies, as a learner goes. Fails if the guide gets to the check without it.
-  // A check that passes mid-exercise (exercise 4 runs check.sh in a step) sends the guide to its
+  // A check that passes mid-exercise (exercise 5 runs check.sh in a step) sends the guide to its
   // 🎉: then back to the step by its segment in the step bar, as a learner would.
   async step(title) {
     for (let i = 0; i < 40; i++) {

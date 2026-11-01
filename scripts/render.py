@@ -27,7 +27,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 AUTHORING = ROOT / "authoring"
-CHAPTERS = 4
+CHAPTERS = 5
 MARKER = re.compile(r"^\s*(?:#|//) @@(solution ch(\d+)|starter|end)\s*$")
 SUFFIXES = {".py", ".dw"}
 

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "standard",
+  "specification": {
+    "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.candidate.json",
+    "sha256": "885df44111f5592f3b514fb768a74289f9845e1f886eab49e3fab3ca8f765f6d",
+    "bytes": 10791
+  },
+  "artifact": {
+    "path": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.html",
+    "sha256": "a9d3910a3c99367fa8de9c1c03b6cf5f1fd7f453f0c33d707c7461073e5b7c14",
+    "bytes": 782674
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.finalize.json",
+    "summaryReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.finalize-summary.json",
+    "browserCheckReceipt": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.browser-check.json"
+  },
+  "update": {
+    "status": "update_available",
+    "installedVersion": "3.0.1",
+    "availableVersion": "3.2.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.2.0",
+    "severity": "normal",
+    "checkedAt": "2026-11-01T00:28:19.487Z",
+    "source": "cache",
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.0.1 → 3.2.0. A previous check at 2026-11-01T00:28:19.487Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.2.0. The installed Skill has not changed; ask to snooze or ignore this reminder.",
+    "eventKey": "archify@sha256:70e210265c59f24dcbdf2a502ff671104b5454e7ee7d3554aecd86bad32384f5"
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1388,
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "result-to-briefing",
+            "from": "dispatch",
+            "to": "trip-briefing",
+            "label": "result",
+            "collectionIndex": 17,
+            "artifactIndex": 18
+          },
+          "bends": 3,
+          "stretch": 1.194
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "dispatch → trip-briefing needs 3 bends: move node dispatch or trip-briefing so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

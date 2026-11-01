@@ -5,7 +5,8 @@
 `travel-stack up` runs it. It's `temporal-agent-harness serve agents.toml`, except that its
 session manager (the workflow that tracks sessions for the console) has a workshop-specific
 id and task queue, so it can't collide with another harness app on the same Temporal server,
-and a new session's workflow id is named for the exercise you're on (`ex3-human-approval-…`).
+a new session's workflow id is named for the exercise you're on (`ex4-human-approval-…`), and it
+also serves the trip briefing form (`/briefing`, see `briefing_app.py`).
 """
 
 import argparse
@@ -18,6 +19,7 @@ from temporal_agent_harness.web import create_agent_harness_app
 from temporal_agent_harness.web.client import verify_temporal_reachable
 from temporal_agent_harness.web.registry import load_agent_registries
 
+from . import briefing_app
 from .config import ROOT, session_id
 
 SESSION_MANAGER = "travel-session-manager"
@@ -70,6 +72,8 @@ def main() -> None:
         manager_workflow_id=SESSION_MANAGER,
         manager_task_queue=SESSION_MANAGER,
     )
+    # Ahead of the console's own routes: its catch-all would serve /briefing as a missing asset.
+    app.router.routes[:0] = briefing_app.router.routes
     asyncio.run(verify_temporal_reachable())
     uvicorn.run(NamedSessions(app), host=args.host, port=args.port)
 

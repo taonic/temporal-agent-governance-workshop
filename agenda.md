@@ -1,8 +1,8 @@
-Here’s the shape I’d use: **3 core exercises + 1 bonus exercise**, in a 4-hour workshop.
+Here’s the shape I’d use: **4 core exercises + 1 bonus exercise**, in a 4-hour workshop.
 
 The spine is:
 
-> Raw Temporal → Monty agent session → human approval → Dogwood auto mode (bonus).
+> Raw Temporal → Monty agent session → agents across teams with Nexus → human approval → Dogwood auto mode (bonus).
 
 **Workshop Title**
 **Governed Agents With Temporal, Monty, And Dogwood**
@@ -20,10 +20,12 @@ By the end, participants understand how Temporal makes agent sessions durable, h
 | 0:55-1:00 | Introduce Monty | Instructor | “Monty is the agent-shaped harness on top of Temporal” |
 | 1:00-1:45 | **Exercise 2: Durable Travel Agent Session** | Hands-on | Run a script in the Monty sandbox (Code Mode), then a Monty travel agent session, and inspect it in Temporal |
 | 1:45-1:55 | Break |  |  |
-| 1:55-2:10 | Human Approval Pattern | Instructor/demo | Explain why safe-but-manual approval does not scale |
-| 2:10-2:45 | **Exercise 3: Human Approval Mode** | Hands-on | Add/trigger approval for risky bookings |
-| 2:45-3:00 | Introduce Dogwood | Instructor/demo | Policy over tool calls and prior session history |
-| 3:00-3:55 | **Bonus Exercise 4: Dogwood Auto Mode** | Hands-on | Let safe actions run, block mismatched bookings |
+| 1:55-2:00 | Introduce Nexus | Instructor | Other teams' agents and workflows, in other namespaces, as durable calls |
+| 2:00-2:30 | **Exercise 3: Agents Across Teams, With Nexus** | Hands-on | Agent → agent, agent → workflow and workflow → agent, across two namespaces |
+| 2:30-2:40 | Human Approval Pattern | Instructor/demo | Explain why safe-but-manual approval does not scale |
+| 2:40-3:10 | **Exercise 4: Human Approval Mode** | Hands-on | Add/trigger approval for risky bookings |
+| 3:10-3:20 | Introduce Dogwood | Instructor/demo | Policy over tool calls and prior session history |
+| 3:20-3:55 | **Bonus Exercise 5: Dogwood Auto Mode** | Hands-on | Let safe actions run, block mismatched bookings |
 | 3:55-4:00 | Wrap | Instructor | Reusable architecture and next steps |
 
 **Exercise 1: Hello Temporal**
@@ -81,7 +83,35 @@ The “aha”:
 
 > The agent is not a request/response bot. It is a recoverable process.
 
-**Exercise 3: Human Approval Mode**
+**Exercise 3: Agents Across Teams, With Nexus**
+Another team's agent and workflow, in another namespace.
+
+Short explanation before the lab:
+
+> “Your agent won't be the only one. Other teams run agents and workflows in their own namespaces. Nexus is how you call them: a contract, an endpoint, and a call as durable as an activity.”
+
+Learners do:
+
+- Meet the concierge team: its namespace, its Nexus service (`ask`, `reserve_table`) and the endpoint that routes to it.
+- Write the travel agent's two Nexus calls (the TODO).
+- Ask the concierge a question: agent → agent. See the call in their session's history and the concierge's whole run in the other namespace.
+- Reserve a table: agent → workflow, the same call to a plain workflow.
+- Stop the concierge's worker, ask again, watch the call wait, and bring it back.
+- Run a trip briefing: workflow → agent.
+
+Concepts covered:
+
+- Namespaces as team boundaries.
+- Nexus service, operation, endpoint, handler.
+- Workflow-backed operations: as long as they need.
+- Durable cross-team calls: retries, timeouts, history on both sides.
+- Callers can't tell, or need to, whether an agent or a workflow answers.
+
+The “aha”:
+
+> Another team's agent is a durable call away, and its outage is a wait, not an error.
+
+**Exercise 4: Human Approval Mode**
 This is the safety baseline.
 
 Learners do:
@@ -111,7 +141,7 @@ The “aha”:
 
 > Human approval is safe, but it gets noisy fast.
 
-**Bonus Exercise 4: Dogwood Auto Mode**
+**Bonus Exercise 5: Dogwood Auto Mode**
 This is the payoff, for those with the time.
 
 Short explanation before the lab:
@@ -163,7 +193,7 @@ Don’t explain Dogwood deeply before learners have seen Monty run. Also don’t
 **Exercise Count**
 For a 4-hour workshop:
 
-- **3 mandatory exercises**
+- **4 mandatory exercises**
 - **1 bonus exercise** (Dogwood auto mode)
 - Each exercise should have one primary TODO
 - Each should have a check script

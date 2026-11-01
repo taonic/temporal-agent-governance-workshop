@@ -1,8 +1,9 @@
 <script setup>
-// The sandbox's two web UIs, each in one long-lived iframe, as views of the workspace beside
-// Code (ExercisePage's tabs choose one): the Agent UI (the harness's console, proxied under
-// /sbx/console/ on this origin) and the Temporal UI (on the UI proxy's port). A view that isn't
-// showing is only hidden, so neither reloads or loses its place.
+// The sandbox's web UIs, each in one long-lived iframe, as views of the workspace beside Code
+// (ExercisePage's tabs choose one): the Agent UI (the harness's console, proxied under
+// /sbx/console/ on this origin), the Temporal UI (on the UI proxy's port), and in exercise 3 the
+// trip briefing form (the console's server serves it, at /sbx/console/briefing). A view that
+// isn't showing is only hidden, so none reloads or loses its place.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import { registerHook, store, toast, uiProxyOrigin } from "../store.js";
@@ -11,13 +12,17 @@ const props = defineProps({
   live: { type: Boolean, default: false },
 });
 
-// "console" or "temporal" while one of them shows; "code" hides both.
+// "console", "temporal" or "briefing" while one of them shows; "code" hides them.
 const active = computed(() => store.workspaceView);
+const FRAMES = ["console", "temporal", "briefing"];
+const LABELS = { console: "Agent UI", temporal: "Temporal UI", briefing: "trip briefing form" };
 const consoleFrame = ref(null);
 const temporalFrame = ref(null);
-const loaded = ref({ console: false, temporal: false });
+const briefingFrame = ref(null);
+const loaded = ref({ console: false, temporal: false, briefing: false });
 const consoleSrc = ref("");
 const temporalSrc = ref("");
+const briefingSrc = ref("");
 let temporalReady = false;
 let pending = null; // where the Temporal UI should go once it's ready: { path } or { workflow, tab }
 let navFallback = 0;
@@ -28,11 +33,14 @@ function mountFrames() {
   if (!props.live) {
     consoleSrc.value = "";
     temporalSrc.value = "";
+    briefingSrc.value = "";
     temporalReady = false;
     return;
   }
   if (!consoleSrc.value) consoleSrc.value = "/sbx/console/";
   if (!temporalSrc.value && origin.value) temporalSrc.value = `${origin.value}/`;
+  // Only the exercise that has it opens it: loaded the first time its tab shows.
+  if (!briefingSrc.value && active.value === "briefing") briefingSrc.value = "/sbx/console/briefing";
 }
 
 // The Temporal UI navigates client-side on request (see the loader the runner injects), so a
@@ -172,6 +180,22 @@ function onConsoleLoad() {
   }
 }
 
+// The form links each briefing's workflow to the Temporal UI, in a new tab; here it opens in the
+// Temporal UI view instead. Same origin, so the course listens in the form's page.
+function onBriefingLoad() {
+  loaded.value.briefing = true;
+  try {
+    briefingFrame.value?.contentDocument?.addEventListener("click", (event) => {
+      const link = event.target.closest?.("a[data-workflow]");
+      if (!link) return;
+      event.preventDefault();
+      open("temporal", { workflow: link.dataset.workflow });
+    });
+  } catch {
+    /* not reachable: the link opens a new tab */
+  }
+}
+
 // The bottom drawer (each turn's timeline of model and tool calls) stays open: a new session
 // starts with it shut, and a learner can shut it by mistake. Checked once a second, cheaply:
 // when the console shows the drawer's Open button, it's clicked.
@@ -204,14 +228,22 @@ function reload() {
     loaded.value.temporal = false;
     temporalReady = false;
     temporalFrame.value?.contentWindow?.location.reload();
+  } else if (active.value === "briefing") {
+    loaded.value.briefing = false;
+    briefingFrame.value?.contentWindow?.location.reload();
   }
 }
 
-const newTabHref = computed(() => (active.value === "console" ? "/sbx/console/" : active.value === "temporal" && origin.value ? `${origin.value}/` : ""));
+const newTabHref = computed(() => {
+  if (active.value === "console") return "/sbx/console/";
+  if (active.value === "briefing") return "/sbx/console/briefing";
+  return active.value === "temporal" && origin.value ? `${origin.value}/` : "";
+});
 defineExpose({ reload, newTabHref });
 
-watch(() => [props.live, origin.value], mountFrames, { immediate: true });
+watch(() => [props.live, origin.value, active.value], mountFrames, { immediate: true });
 watch(consoleSrc, () => (loaded.value.console = false));
+watch(briefingSrc, () => (loaded.value.briefing = false));
 watch(temporalSrc, () => {
   loaded.value.temporal = false;
   temporalReady = false;
@@ -241,7 +273,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section v-show="active === 'console' || active === 'temporal'" class="panes-view" :aria-label="active === 'console' ? 'The Agent UI' : 'The Temporal UI'" data-tour="panes">
+  <section v-show="FRAMES.includes(active)" class="panes-view" :aria-label="`The ${LABELS[active]}`" data-tour="panes">
     <div class="pane-body">
       <template v-if="live">
         <iframe
@@ -261,9 +293,18 @@ onBeforeUnmount(() => {
           title="The Temporal UI"
           @load="loaded.temporal = true"
         />
-        <div v-if="active !== 'code' && !loaded[active]" class="pane-loading" role="status">
+        <iframe
+          v-if="briefingSrc"
+          v-show="active === 'briefing'"
+          ref="briefingFrame"
+          class="pane-frame"
+          :src="briefingSrc"
+          title="The trip briefing form"
+          @load="onBriefingLoad"
+        />
+        <div v-if="FRAMES.includes(active) && !loaded[active]" class="pane-loading" role="status">
           <span class="pane-spinner" aria-hidden="true" />
-          <span>Loading the {{ active === "console" ? "Agent UI" : "Temporal UI" }}…</span>
+          <span>Loading the {{ LABELS[active] }}…</span>
         </div>
       </template>
       <div v-else class="pane-empty">

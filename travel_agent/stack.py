@@ -3,7 +3,7 @@
     uv run travel-stack up                  # start what isn't running
     uv run travel-stack status
     uv run travel-stack restart verifier
-    uv run travel-stack stop verifier
+    uv run travel-stack stop concierge      # the concierge team's outage, until you start it again
     uv run travel-stack logs verifier       # follow one service's log
     uv run travel-stack down                # stop everything travel-stack started
     uv run travel-stack reset-store         # forget the verifier's history (stop it first)
@@ -11,8 +11,10 @@
 The services, in start order:
 
     temporal          the Temporal dev server            UI on http://localhost:8233
-    endpoint          the `tool-verifier` Nexus endpoint (created once, nothing to run)
+    endpoint          the Nexus endpoints, created once, nothing to run: `tool-verifier`, and
+                      `concierge`, into the concierge team's own namespace, `concierge`
     verifier          the Dogwood verifier, serving policies/travel.dw (reloaded when you save it)
+    concierge         the concierge team's worker: its agent and its reservations, over Nexus
     session-manager   the harness worker that tracks sessions for the console
     console           the harness's web console          http://localhost:8000
 
@@ -28,6 +30,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+from concierge import service as concierge_service
 
 from .config import ROOT, settings
 from .console import SESSION_MANAGER
@@ -105,25 +109,36 @@ def temporal() -> None:
         *(["--ip", BIND, "--ui-ip", BIND] if BIND else []),
         # Sessions survive `travel-stack down`/`up`.
         "--db-filename", str(STACK / "temporal.db"),
+        # The concierge team's namespace, beside yours (`default`).
+        "--namespace", concierge_service.NAMESPACE,
         # A workflow task that failed (a bug you're fixing) is retried within seconds, not minutes.
         "--dynamic-config-value", 'history.workflowTaskRetryMaxInterval="5s"',
     ])
     _wait_for(settings.temporal_address, "Temporal")
 
 
-def endpoint() -> None:
-    result = subprocess.run(
-        ["temporal", "operator", "nexus", "endpoint", "create", "--address", settings.temporal_address,
-         "--name", ENDPOINT, "--target-namespace", settings.temporal_namespace,
-         "--target-task-queue", "tool-verifier"],
-        capture_output=True, text=True,
-    )
+def _create(what: str, args: list[str]) -> None:
+    """A `temporal operator ... create`; one that already exists is fine."""
+    result = subprocess.run(["temporal", "operator", *args, "--address", settings.temporal_address],
+                            capture_output=True, text=True)
     if result.returncode == 0:
-        print(f"  endpoint: created {ENDPOINT}")
-    elif "already" in (result.stdout + result.stderr):
-        print(f"  endpoint: {ENDPOINT} exists")
-    else:
-        sys.exit(f"couldn't create the Nexus endpoint:\n{result.stdout}{result.stderr}")
+        print(f"  endpoint: created {what}")
+    elif "already" not in (result.stdout + result.stderr):
+        sys.exit(f"couldn't create {what}:\n{result.stdout}{result.stderr}")
+
+
+def endpoint() -> None:
+    _create(f"the Nexus endpoint {ENDPOINT}",
+            ["nexus", "endpoint", "create", "--name", ENDPOINT, "--target-namespace", settings.temporal_namespace,
+             "--target-task-queue", "tool-verifier"])
+    # A Temporal that travel-stack didn't start (or started before there was a concierge) may
+    # not have the concierge's namespace yet.
+    _create(f"the namespace {concierge_service.NAMESPACE}",
+            ["namespace", "create", "--namespace", concierge_service.NAMESPACE])
+    _create(f"the Nexus endpoint {concierge_service.ENDPOINT}",
+            ["nexus", "endpoint", "create", "--name", concierge_service.ENDPOINT,
+             "--target-namespace", concierge_service.NAMESPACE, "--target-task-queue", concierge_service.TASK_QUEUE])
+    print(f"  endpoint: {ENDPOINT} and {concierge_service.ENDPOINT} ready")
 
 
 def verifier() -> None:
@@ -225,6 +240,28 @@ def watch_verifier() -> None:
     sys.exit(f"the verifier exited ({child.returncode})")
 
 
+def concierge() -> None:
+    if _pid("concierge"):
+        print("  concierge: already running")
+        return
+    log = LOGS / "concierge.log"
+    start = log.stat().st_size if log.exists() else 0
+    _spawn("concierge", [sys.executable, "-m", "concierge.worker"])
+    deadline = time.monotonic() + 45
+    while time.monotonic() < deadline:
+        time.sleep(0.3)
+        with open(log) as f:
+            f.seek(start)
+            text = f.read()
+        if "Concierge worker ready" in text:
+            print(f"  concierge: serving the {concierge_service.ENDPOINT} endpoint, "
+                  f"in namespace {concierge_service.NAMESPACE}")
+            return
+        if "Traceback" in text:
+            break
+    sys.exit("the concierge's worker didn't start; see .logs/concierge.log")
+
+
 def session_manager() -> None:
     if _pid("session-manager"):
         print("  session-manager: already running")
@@ -247,10 +284,11 @@ SERVICES = {
     "temporal": temporal,
     "endpoint": endpoint,
     "verifier": verifier,
+    "concierge": concierge,
     "session-manager": session_manager,
     "console": console,
 }
-PROCESSES = ["console", "session-manager", "verifier", "temporal"]  # stop order
+PROCESSES = ["console", "session-manager", "concierge", "verifier", "temporal"]  # stop order
 
 
 def stop(name: str) -> None:

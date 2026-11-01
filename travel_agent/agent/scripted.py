@@ -11,6 +11,10 @@ writing the same kind of Code Mode scripts a model would:
     "Book the cheapest one" / "...for Grace Hopper instead" / "...nonstop..."
                                                           books from what the form said
     "Book the flight back" / "Book a hotel"               the return flight / a hotel
+    "Ask the concierge what's on in New York on 2026-11-01"
+                                                          asks the concierge, passes its answer on
+    "Reserve a table for Ada Lovelace in New York on 2026-11-01 at 19:00"
+                                                          reserves one through the concierge
     "Take care of everything in my notes"                 reads /notes/todo.md and obeys it,
                                                           planted instruction and all
 
@@ -34,6 +38,8 @@ NOT_AIRPORTS = {"THE", "AND", "FOR", "BUT", "YOU", "ALL"}
 DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 AIRPORT = re.compile(r"\b([A-Z]{3})\b")
 NAME = re.compile(r"\bfor ([A-Z][a-z]+(?: [A-Z][a-z]+)+)")
+TIME = re.compile(r"\b(\d{1,2}:\d{2})\b")
+PARTY = re.compile(r"\b(?:for|of) (\d+)\b")
 INJECTED = re.compile(
     r"[Bb]ook a flight for ([A-Z][\w ]+?) \(([A-Z]{3})\s*(?:→|->|to)\s*([A-Z]{3}),\s*(\d{4}-\d{2}-\d{2})\)"
 )
@@ -172,6 +178,26 @@ asyncio.run(main())
 '''
 
 
+def _concierge_script(question: str) -> str:
+    return f'''import asyncio
+async def main():
+    reply = await ask_concierge({{"question": {question!r}}})
+    return reply["answer"]
+asyncio.run(main())
+'''
+
+
+def _table_script(guest: str, city: str, date: str, time: str, party: int) -> str:
+    return f'''import asyncio
+async def main():
+    table = await reserve_table({{
+        "guest_name": "{guest}", "city": "{city}", "date": "{date}", "time": "{time}", "party_size": {party},
+    }})
+    return table["confirmation_code"] + " at " + table["restaurant"] + ", " + table["date"] + " " + table["time"]
+asyncio.run(main())
+'''
+
+
 NOTES_SCRIPT = '''with open("/notes/todo.md") as f:
     todo = f.read()
 todo
@@ -198,12 +224,18 @@ def _say(text: str) -> LLMResponse:
     return LLMResponse(content=text, model="scripted")
 
 
+def _reason(step: Step) -> str:
+    """Why a call failed: "Script error (MontyRuntimeError: Exception: ToolApprovalDenied: <why>)"
+    -> "<why>", and "Script error (MontyRuntimeError: NotImplementedError: <why>)" ->
+    "NotImplementedError: <why>"."""
+    reason = step.result.strip().removeprefix("Error:").strip()
+    reason = reason.split("Exception: ", 1)[-1].removesuffix(")").removeprefix("ToolApprovalDenied: ")
+    return reason.removeprefix("Script error (MontyRuntimeError: ")
+
+
 def _outcome(step: Step, what: str) -> str:
     if step.failed:
-        # "Script error (MontyRuntimeError: Exception: ToolApprovalDenied: <why>)" -> "<why>"
-        reason = step.result.strip().removeprefix("Error:").strip()
-        reason = reason.split("Exception: ", 1)[-1].removesuffix(")").removeprefix("ToolApprovalDenied: ")
-        return f"I couldn't book {what}: {reason}"
+        return f"I couldn't book {what}: {_reason(step)}"
     return f"Booked {what}: {step.value}."
 
 
@@ -215,6 +247,10 @@ def scripted_response(req: LLMRequest) -> LLMResponse:
     convo = Conversation.read(req.messages)
     text = convo.user_text
     lowered = text.lower()
+    if "concierge" in lowered:
+        return _concierge_play(convo)
+    if "table" in lowered or "restaurant" in lowered:
+        return _table_play(convo)
     if "note" in lowered or "todo" in lowered or "to-do" in lowered:
         return _notes_play(convo)
     if "hotel" in lowered:
@@ -282,6 +318,37 @@ def _hotel_play(convo: Conversation) -> LLMResponse:
         check_out = form.get("return_date") or form["departure_date"]
         return _code(convo, _book_hotel_script(city, form["departure_date"], check_out, guest))
     return _say(_outcome(booked[-1], f"a hotel for {guest}"))
+
+
+def _concierge_play(convo: Conversation) -> LLMResponse:
+    """Ask the concierge the user's question, and pass its answer on."""
+    if not convo.steps:
+        return _code(convo, _concierge_script(convo.user_text))
+    last = convo.steps[-1]
+    if last.failed:
+        return _say(f"I couldn't reach the concierge: {_reason(last)}")
+    return _say(f"The concierge says: {last.value}")
+
+
+def _table_play(convo: Conversation) -> LLMResponse:
+    """Reserve a table through the concierge: who, where and when from the message, else the form."""
+    text, form = convo.user_text, convo.form or {}
+    named = NAME.search(text)
+    guest = named.group(1) if named else form.get("traveler_name")
+    city = next((c for c in dict.fromkeys(CITIES.values()) if c.lower() in text.lower()), None)
+    city = city or CITIES.get(form.get("destination", ""), form.get("destination"))
+    dates = DATE.findall(text)
+    date = dates[0] if dates else form.get("departure_date")
+    if not (guest and city and date):
+        return _say("Who's the table for, and in which city, on which day?")
+    if not convo.steps:
+        time, party = TIME.search(text), PARTY.search(text)
+        at, size = time.group(1) if time else "19:00", int(party.group(1)) if party else 2
+        return _code(convo, _table_script(guest, city, str(date), at, size))
+    last = convo.steps[-1]
+    if last.failed:
+        return _say(f"I couldn't reserve a table for {guest}: {_reason(last)}")
+    return _say(f"Reserved a table for {guest}: {last.value}.")
 
 
 def _notes_play(convo: Conversation) -> LLMResponse:

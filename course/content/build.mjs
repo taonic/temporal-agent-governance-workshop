@@ -177,6 +177,7 @@ const HARNESS_PIN = fs
 
 const LOCAL_PANES = [
   [/^https?:\/\/localhost:8233(\/.*)?$/, "temporal"],
+  [/^https?:\/\/localhost:8000\/briefing$/, "briefing"],
   [/^https?:\/\/localhost:8000(\/.*)?$/, "console"],
 ];
 

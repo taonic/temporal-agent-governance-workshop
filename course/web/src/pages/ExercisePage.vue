@@ -89,6 +89,7 @@ const VIEWS = [
   { key: "code", label: "Code" },
   { key: "console", label: "Agent UI", title: "The Agent UI: talk to the agent here" },
   { key: "temporal", label: "Temporal UI", title: "Your sandbox's Temporal UI: workflows and their histories" },
+  { key: "briefing", label: "Trip briefing", title: "The travel team's trip briefing form: it starts a TripBriefing workflow" },
   { key: "diagram", label: "Diagram", title: "This part of the exercise, as a diagram you can zoom and explore" },
 ];
 // The diagram as the course shows it: without archify's Export menu (it's on this origin, so a
@@ -128,15 +129,23 @@ function onDiagramLoad(event) {
   }
 }
 // Views that need the sandbox: the diagram doesn't.
-const needsSandbox = (key) => key === "console" || key === "temporal";
+const needsSandbox = (key) => key === "console" || key === "temporal" || key === "briefing";
+// The trip briefing form, only in the exercise that links to it (exercise 3).
+const hasBriefing = computed(() => exercise.value.modes.browser.sections.some((s) => s.html.includes('data-pane="briefing"')));
 // No Agent UI before there's an agent (exercise 1).
 const views = computed(() =>
-  VIEWS.filter((view) => (view.key !== "console" || exercise.value.agentUi) && (view.key !== "diagram" || store.guideDiagram)),
+  VIEWS.filter(
+    (view) =>
+      (view.key !== "console" || exercise.value.agentUi) &&
+      (view.key !== "diagram" || store.guideDiagram) &&
+      (view.key !== "briefing" || hasBriefing.value),
+  ),
 );
 watch(
   () => props.id,
   () => {
     if (store.workspaceView === "console" && !exercise.value.agentUi) store.workspaceView = "code";
+    if (store.workspaceView === "briefing" && !hasBriefing.value) store.workspaceView = "code";
   },
   { immediate: true },
 );

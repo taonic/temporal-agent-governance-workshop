@@ -3,16 +3,17 @@
     uv run python scripts/switch.py starter    # every TODO open, to do the workshop locally
     uv run python scripts/switch.py solution   # back to the finished workshop
     uv run python scripts/switch.py status     # which one is in place?
-    uv run python scripts/switch.py restart 3  # exercise 3's file back as the exercise starts
-    uv run python scripts/switch.py catch-up 4 # exercises 1-3 solved, wherever their TODO is still open
+    uv run python scripts/switch.py restart 4  # exercise 4's file back as the exercise starts
+    uv run python scripts/switch.py catch-up 5 # exercises 1-4 solved, wherever their TODO is still open
 
 Only the files with TODOs change:
 
     hello/workflow.py                  exercise 1
     codemode/sandbox.py                exercise 2 (step 1)
     travel_agent/travel/activities.py  exercise 2
-    travel_agent/agent/workflow.py     exercise 3
-    policies/travel.dw                 exercise 4
+    travel_agent/agent/concierge.py    exercise 3
+    travel_agent/agent/workflow.py     exercise 4
+    policies/travel.dw                 exercise 5
 
 `restart N` changes only exercise N's file, back to how exercise N starts (its TODO open, the
 earlier exercises' work in place), and leaves the others as they are.

@@ -406,7 +406,7 @@ export class SandboxManager {
   // whether a hello-start is still waiting for one in the commands terminal.
   async poll(learner, files, { trips = false, origins = null, exercise = null } = {}) {
     const safe = files.filter(isSafePath).slice(0, 20);
-    // The exercise on the page, for the console to name new sessions after (ex3-human-approval-…).
+    // The exercise on the page, for the console to name new sessions after (ex4-human-approval-…).
     // When it changes, or the sandbox started over from its snapshot with every TODO open, the
     // earlier exercises' TODOs get their solutions: an exercise never depends on the earlier ones.
     const mark = /^\d\d-[a-z0-9-]+$/.test(exercise ?? "")

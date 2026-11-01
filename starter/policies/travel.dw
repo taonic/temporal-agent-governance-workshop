@@ -16,7 +16,7 @@
 // Each rule is marked @on_deny("escalate"), so a booking none of them permits comes to you,
 // however the model came by it. Nothing runs on its own that no rule permits.
 
-// TODO(ch04): this rule checks only the call itself, so any flight for Ada runs, on any day.
+// TODO(ch05): this rule checks only the call itself, so any flight for Ada runs, on any day.
 // Make flight bookings look back at the trip form submitted earlier in this session instead.
 @id("flights-for-ada")
 @on_deny("escalate")

@@ -2,8 +2,8 @@
 
     uv run travel-worker
 
-It hosts the TravelAgent workflow, the model activity (`call_llm`), the policy reader
-(`read_policy`) and the travel tools' activities. Stop it whenever you like: sessions wait in
+It hosts the TravelAgent workflow, the TripBriefing workflow, the model activity (`call_llm`), the
+policy reader (`read_policy`) and the travel tools' activities. Stop it whenever you like: sessions wait in
 Temporal, and carry on from where they were when a worker comes back.
 """
 
@@ -21,6 +21,7 @@ from temporal_agent_harness.plugin import AgentHarnessPlugin
 from .agent.llm import call_llm
 from .agent.policy import read_policy
 from .agent.workflow import TravelAgentWorkflow
+from .briefing import TripBriefing
 from .config import Settings, settings
 from .travel import activities
 
@@ -41,7 +42,8 @@ async def connect(s: Settings = settings) -> Client:
 # editor that saves as you type) without the restart the exercises are about. Passing the
 # workshop's own modules through costs the sandbox's checks on them: keep workflow code
 # deterministic by hand.
-# (annotated_types: pydantic's, which the SDK passes through, imports it later.)
+# (annotated_types: pydantic's, which the SDK passes through, imports it later; concierge: the
+# concierge's Nexus contract, which the workflows import.)
 _resolve_nexus_start = _WorkflowInstanceImpl._apply_resolve_nexus_operation_start
 
 
@@ -58,7 +60,7 @@ def _apply_resolve_nexus_operation_start(self: _WorkflowInstanceImpl, job: Any) 
 _WorkflowInstanceImpl._apply_resolve_nexus_operation_start = _apply_resolve_nexus_operation_start  # type: ignore[method-assign]
 
 RUNNER = SandboxedWorkflowRunner(
-    restrictions=SandboxRestrictions.default.with_passthrough_modules("travel_agent", "annotated_types")
+    restrictions=SandboxRestrictions.default.with_passthrough_modules("travel_agent", "concierge", "annotated_types")
 )
 
 
@@ -66,7 +68,7 @@ def build_worker(client: Client, task_queue: str = settings.task_queue) -> Worke
     return Worker(
         client,
         task_queue=task_queue,
-        workflows=[TravelAgentWorkflow],
+        workflows=[TravelAgentWorkflow, TripBriefing],
         activities=[call_llm, read_policy],
         workflow_runner=RUNNER,
     )

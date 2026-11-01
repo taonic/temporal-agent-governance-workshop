@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trip briefing</title>
+<!--
+  The travel team's trip briefing form (briefing_app.py serves it). Submitting starts a
+  TripBriefing workflow; the page then asks for its result until there is one. Relative URLs
+  only, so it works wherever the console's server is mounted.
+-->
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #dfe3ea;
+    --accent: #4f46e5; --accent-text: #ffffff; --ok: #15803d; --bad: #b91c1c; --run: #a16207;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141519; --card: #1d1f25; --text: #e7ebf2; --muted: #9aa3b2; --line: #2e323b;
+      --accent: #818cf8; --accent-text: #111827; --ok: #4ade80; --bad: #f87171; --run: #facc15;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0; font-size: 22px; }
+  .lede { margin: 4px 0 24px; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+  label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  label.wide { grid-column: 1 / -1; }
+  input {
+    font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 6px; padding: 8px 10px; color-scheme: light dark;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button {
+    grid-column: 1 / -1; justify-self: start; font: inherit; font-weight: 600; cursor: pointer;
+    color: var(--accent-text); background: var(--accent); border: 0; border-radius: 6px; padding: 9px 18px;
+  }
+  button:disabled { opacity: .6; cursor: default; }
+  #result { margin-top: 16px; }
+  #result[hidden] { display: none; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 13px; color: var(--muted); }
+  .meta a { color: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .status { font-weight: 700; }
+  .status.running { color: var(--run); }
+  .status.completed { color: var(--ok); }
+  .status.failed { color: var(--bad); }
+  #briefing { margin: 14px 0 0; white-space: pre-wrap; }
+  #briefing:empty { display: none; }
+  @media (max-width: 480px) { form { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Trip briefing</h1>
+  <p class="lede">Where is your traveler going? The concierge will tell them the weather, what to pack and what's on.</p>
+
+  <div class="card">
+    <form id="trip">
+      <label class="wide">Traveler <input name="traveler" value="Ada Lovelace" required></label>
+      <label>City <input name="city" value="New York" required></label>
+      <label>Date <input name="date" type="date" value="2026-11-01" required></label>
+      <button type="submit">Get a briefing</button>
+    </form>
+  </div>
+
+  <div id="result" class="card" hidden aria-live="polite">
+    <div class="meta">
+      <span>TripBriefing</span>
+      <a id="workflow" target="_blank" rel="noopener"></a>
+      <span id="status" class="status"></span>
+    </div>
+    <p id="briefing"></p>
+  </div>
+</main>
+<script>
+  const form = document.getElementById("trip");
+  const result = document.getElementById("result");
+  const link = document.getElementById("workflow");
+  const status = document.getElementById("status");
+  const briefing = document.getElementById("briefing");
+  let polling = 0;
+
+  function show(state, text = "") {
+    status.className = `status ${state}`;
+    status.textContent = { running: "Asking the concierge…", completed: "Completed", failed: "Failed" }[state];
+    briefing.textContent = text;
+  }
+
+  async function poll(id) {
+    const mine = ++polling;
+    while (mine === polling) {
+      const res = await fetch(`api/briefings/${encodeURIComponent(id)}`);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) return show("failed", body.detail || res.statusText);
+      if (body.status === "completed") return show("completed", body.briefing);
+      if (body.status === "failed") return show("failed", body.error);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const button = form.querySelector("button");
+    button.disabled = true;
+    try {
+      const res = await fetch("api/briefings", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+      });
+      const body = await res.json().catch(() => ({}));
+      result.hidden = false;
+      if (!res.ok) {
+        link.textContent = "";
+        return show("failed", typeof body.detail === "string" ? body.detail : "Couldn't start the briefing.");
+      }
+      link.textContent = `${body.workflow_id} ↗`;
+      link.href = body.url;
+      link.dataset.workflow = body.workflow_id;
+      show("running");
+      poll(body.workflow_id);
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

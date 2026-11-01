@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0c5f9e09-e832-41de-a78b-dda6bec77956",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.candidate.json",
+  "output": "/Users/tao/code/taonic/temporal-agent-governance-workshop/docs/architecture/ex3-nexus.html",
+  "specification": {
+    "sha256": "885df44111f5592f3b514fb768a74289f9845e1f886eab49e3fab3ca8f765f6d",
+    "bytes": 10791
+  },
+  "artifact": {
+    "sha256": "a9d3910a3c99367fa8de9c1c03b6cf5f1fd7f453f0c33d707c7461073e5b7c14",
+    "bytes": 782674
+  }
+}

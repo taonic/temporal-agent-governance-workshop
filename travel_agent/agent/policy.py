@@ -2,7 +2,7 @@
 
 The verifier decides whether a rule permits a booking. When none does, the rules themselves are
 read (policy_file.py): if one for that booking is marked `@on_deny("escalate")`, the booking
-comes to you, as in exercise 3, instead of being refused. Either way the reason the model is
+comes to you, as in exercise 4, instead of being refused. Either way the reason the model is
 told, and passes on to you, is reworded: the verifier's is for engineers ("tool
 travel-agent/book_flight not permitted by any Dogwood policy"), so it becomes the rule's
 `@reason`. The verifier's own verdict and wording stay in the decision's details.
