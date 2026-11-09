@@ -9,7 +9,7 @@ import time
 
 import pydantic_monty as monty
 
-# TODO(ch02): the model's script, as a string. Step 1 of exercise 2 has it.
+# TODO(ch02): the model's script, as a string. Step 6 of exercise 2 has it.
 MODEL_SCRIPT = ""
 
 
@@ -21,7 +21,7 @@ STUBS = ""
 def run(script: str):
     """Start a fresh sandbox, run ``script`` in it, and return its last expression's value."""
     # TODO(ch02): start a Monty sandbox and run `script` in it, with HOST_FUNCTIONS as all it
-    # can call. Step 1 of exercise 2 has the code.
+    # can call. Step 6 of exercise 2 has the code.
     raise NotImplementedError("TODO(ch02): run the script in Monty")
 
 

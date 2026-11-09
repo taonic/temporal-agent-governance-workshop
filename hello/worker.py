@@ -15,10 +15,24 @@ from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxR
 
 from travel_agent.config import settings
 
-from .activities import lookup_airport
+from . import activities
 from .board import BoardingWorkflow
+from .hold import FareHoldWorkflow
+from .itinerary import ItineraryWorkflow
+from .saga import BookTripWorkflow
 from .shared import TASK_QUEUE
 from .workflow import HelloTripWorkflow
+
+WORKFLOWS = [HelloTripWorkflow, BoardingWorkflow, FareHoldWorkflow, ItineraryWorkflow, BookTripWorkflow]
+ACTIVITIES = [
+    activities.lookup_airport,
+    activities.send_hold_email,
+    activities.reserve_flight,
+    activities.reserve_hotel,
+    activities.charge_card,
+    activities.cancel_flight,
+    activities.cancel_hotel,
+]
 
 
 async def connect() -> Client:
@@ -40,8 +54,8 @@ def build_worker(client: Client, task_queue: str = TASK_QUEUE) -> Worker:
     return Worker(
         client,
         task_queue=task_queue,
-        workflows=[HelloTripWorkflow, BoardingWorkflow],
-        activities=[lookup_airport],
+        workflows=WORKFLOWS,
+        activities=ACTIVITIES,
         workflow_runner=RUNNER,
     )
 

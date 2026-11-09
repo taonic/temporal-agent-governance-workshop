@@ -1,6 +1,6 @@
 # Deploying the course site
 
-One [Fly.io](https://fly.io) app, `temporal-agent-governance-workshop`, runs the site and its runner in one Node process: the site and `/api` on port 443 (8080 inside), and the Temporal UI proxy on port 8081. Learners' sandboxes run on Daytona; Fly only proxies to them, so the machine stays small.
+One [Fly.io](https://fly.io) app, `temporal-quest`, runs the site and its runner in one Node process: the site and `/api` on port 443 (8080 inside), and the Temporal UI proxy on port 8081. Learners' sandboxes run on Daytona; Fly only proxies to them, so the machine stays small.
 
 ## What it needs
 
@@ -26,8 +26,8 @@ Ask Temporal's, also in `runner/config.mjs`: `HELPER_MODEL` (defaults to `LLM_MO
 cd course && npm install && npm run snapshot
 
 # 2. The app and its secrets
-fly apps create temporal-agent-governance-workshop
-fly secrets set --app temporal-agent-governance-workshop \
+fly apps create temporal-quest
+fly secrets set --app temporal-quest \
   DAYTONA_API_KEY=... GEMINI_API_KEY=... \
   ACCESS_CODE=... INSTRUCTOR_CODE=... SESSION_SECRET="$(openssl rand -hex 32)"
 
@@ -37,7 +37,7 @@ npm run deploy
 
 `npm run deploy` is `fly deploy . --config course/fly.toml --dockerfile course/Dockerfile --ignorefile course/.dockerignore --ha=false`, run from the repo root. Keep it to **one machine** (`--ha=false`; `fly scale count 1` if a second appears): the runner keeps each sandbox's terminal connections and the rate limits in memory. Nothing that matters is lost on a restart, because sandboxes are found again by their Daytona labels, but two machines would each hold half the terminals.
 
-Then open `https://temporal-agent-governance-workshop.fly.dev`, enter the code, and start a sandbox. `GET /api/health` reports whether the runtime is on.
+Then open `https://temporal-quest.fly.dev`, enter the code, and start a sandbox. `GET /api/health` reports whether the runtime is on.
 
 ## The e2e tests and their email
 
@@ -46,7 +46,7 @@ Playwright tests of the live site ([e2e/README.md](e2e/README.md)) run every day
 ```bash
 # 1. A code of the tests' own, kept in the app's list beside the event's codes
 E2E_CODE="e2e-$(openssl rand -hex 6)"
-fly secrets set --app temporal-agent-governance-workshop ACCESS_CODE="<the event's codes>,$E2E_CODE"
+fly secrets set --app temporal-quest ACCESS_CODE="<the event's codes>,$E2E_CODE"
 gh secret set E2E_ACCESS_CODE --body "$E2E_CODE"
 gh secret set E2E_INSTRUCTOR_CODE        # optional: the app's INSTRUCTOR_CODE, for the admin test
 
@@ -73,7 +73,7 @@ gh workflow run e2e.yml -f tier=all -f email=always
 - **Quiet the tests during the event.** The daily E2E run starts a sandbox of its own. Set the repository variable `E2E_SKIP_SANDBOX=1` for the event's days, and delete it afterwards: the quick tiers keep running.
 - **The snapshot is current.** `node course/snapshot/build.mjs --name` should name a snapshot that exists. The **Deploy** workflow builds it before each deploy from `main` (with the repository secret `DAYTONA_API_KEY`); `npm run snapshot` says whether it exists, or builds it. A deploy whose snapshot is missing fails at "Creating your sandbox" with that name in the error.
 - **Warm it.** `min_machines_running = 0` lets Fly stop the machine when nobody's using it; the first visitor waits a few seconds for it to start. For the event, `fly scale count 1` and set `min_machines_running = 1`.
-- **Who's in.** `curl -H "x-instructor-code: $INSTRUCTOR_CODE" https://temporal-agent-governance-workshop.fly.dev/api/admin/sandboxes` lists sandboxes, their state and the exercise each learner last had open.
+- **Who's in.** `curl -H "x-instructor-code: $INSTRUCTOR_CODE" https://temporal-quest.fly.dev/api/admin/sandboxes` lists sandboxes, their state and the exercise each learner last had open.
 
 ## After
 

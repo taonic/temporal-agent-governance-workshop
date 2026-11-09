@@ -32,11 +32,18 @@ function initialTheme() {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+// #/ (the map), #/setup, #/module/A4 (the exercise page that has it, at its first beat),
+// #/exercise/02-durable-session. A module that isn't playable yet opens the map, on its card.
 function parseRoute() {
   const hash = window.location.hash.replace(/^#\/?/, "");
   const [page, id] = hash.split("/");
   if (page === "setup") return { page: "setup" };
   if (page === "exercise" && course.exercises.some((e) => e.id === id)) return { page: "exercise", id };
+  if (page === "module") {
+    const exercise = course.exercises.find((e) => e.modules.includes(id));
+    if (exercise) return { page: "exercise", id: exercise.id, module: id };
+    if (course.modules.some((m) => m.id === id)) return { page: "home", focus: id };
+  }
   return { page: "home" };
 }
 
@@ -262,8 +269,10 @@ export function openTrip(key) {
 
 // The latest of exercise 1's workflows whose id starts with prefix ("hello-sfo-jfk-",
 // "board-sfo-jfk-"), in the Temporal UI pane, on one of its tabs ("history"…) with tab.
+// The latest workflow whose id is the prefix and one more part (hello-sfo-jfk-1a2b): not an
+// itinerary's legs (itinerary-sfo-jfk-lhr-1a2b-leg-1), which start the same way.
 export function openWorkflow(prefix, tab = null) {
-  const workflow = store.trips.list?.find((t) => t.id.startsWith(prefix));
+  const workflow = store.trips.list?.find((t) => t.id.startsWith(prefix) && !t.id.slice(prefix.length).includes("-"));
   if (!workflow) return toast("Start it first: it isn't in Temporal yet");
   openPane("temporal", tab ? { workflow: workflow.id, tab } : `/namespaces/default/workflows/${encodeURIComponent(workflow.id)}`);
 }
@@ -356,6 +365,15 @@ export async function insertIntoEditor(path, code, mode) {
   if (!hooks.insert) return toast("Open the exercise's editor first.");
   store.workspaceView = "code";
   toast(await hooks.insert(path, code, mode), 3600);
+}
+
+// A challenge's choice into its file, in place of whichever of `blocks` is there (CodeEditor's
+// swapBlock): { ok, message, replaced }. With quiet, the view stays as it is (the Temporal UI, say),
+// and a hidden editor makes the change at once.
+export async function swapInEditor(path, code, blocks, { quiet = false } = {}) {
+  if (!hooks.swap) return { ok: false, message: "Open the exercise's editor first." };
+  if (!quiet) store.workspaceView = "code";
+  return hooks.swap(path, code, blocks);
 }
 
 export async function revertFromEditor(path, code, mode) {

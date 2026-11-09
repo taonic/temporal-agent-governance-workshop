@@ -24,7 +24,7 @@ class HelloTripWorkflow:
         return f"Your trip: {origin.city} ({origin.code}) to {destination.city} ({destination.code})."
 
     async def airport(self, code: str) -> Airport:
-        # @@solution ch01
+        # @@solution F2
         return await workflow.execute_activity(
             lookup_airport,
             code,

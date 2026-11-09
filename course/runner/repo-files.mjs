@@ -11,10 +11,10 @@ export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 // Where the workshop lives inside a sandbox.
 export const sandboxRepo = "/workshop";
 
-const FILES = ["pyproject.toml", "uv.lock", "agents.toml", "README.md", "DESIGN.md", ".env.example", ".gitignore"];
+const FILES = ["pyproject.toml", "uv.lock", "agents.toml", "README.md", "DESIGN.md", ".env.example", ".gitignore", "quest"];
 const DIRS = [
-  "hello", "codemode", "travel_agent", "concierge", "policies", "challenges", "scripts", "tests",
-  "authoring", "starter", "solutions", "docs",
+  "hello", "codemode", "travel_agent", "concierge", "policies", "quests", "scripts", "tests",
+  "authoring", "starter", "docs",
 ];
 const SKIP = /(^|\/)(__pycache__|\.DS_Store|\.pytest_cache|\.ruff_cache)(\/|$)|\.pyc$/;
 

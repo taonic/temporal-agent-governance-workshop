@@ -121,7 +121,7 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
   }
 
   // After the walkthroughs: opening a later exercise catches up the earlier ones (the poll runs
-  // switch.py catch-up), which, just before exercise 1, could race its Start over.
+  // ./quest catch-up), which, just before exercise 1, could race its Start over.
   test("the Agent UI opens in its pane", async () => {
     test.setTimeout(3 * MINUTE);
     const first = (await coursePages(page)).find((p) => p.hash.startsWith("#/exercise/") && !p.hash.endsWith("/01-hello-temporal"));

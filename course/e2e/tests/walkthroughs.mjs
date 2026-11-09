@@ -1,4 +1,4 @@
-// Each exercise as a learner does it: its assignment (challenges/<id>/assignment.md), step by
+// Each exercise as a learner does it: its modules (quests/<branch>/<module>/module.md, as the path groups them), step by
 // step, through the page. Every step here is a step of the assignment, under its title, doing
 // what it says with the guide's own buttons, and checking what it says will happen. The
 // exercise's own ✓ Check comes last.
@@ -98,17 +98,6 @@ export const WALKTHROUGHS = {
   "02-durable-session": async (l) => {
     await l.startOver("02-durable-session");
 
-    await l.step("Run a script in Monty");
-    await l.openFile("codemode/sandbox.py");
-    await l.insert(0); // MODEL_SCRIPT: its TODO, replaced by the model's script
-    await l.insert(1); // run(): its TODO, replaced by the sandbox
-    expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
-    expect(l.flatOutput, "with no host functions, the script can't call search_flights").toMatch(/search_flights` used when not defined/);
-    await l.insert(2); // HOST_FUNCTIONS: its TODO, replaced by search_flights
-    expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
-    expect(l.flatOutput, "the search should run on the host").toMatch(/host\s+search_flights\('SFO',\s*'JFK',\s*'2026-11-20'\)/); // a wrap may eat a space
-    expect(l.flatOutput, "the script's print should come out of the sandbox").toMatch(/sandbox\s+3 flights, 2 nonstop/);
-
     await l.step("Meet the Agent UI");
     const tour = await l.agentTour();
     expect(tour[0], "the tour should open on the Agent UI").toBe("The Agent UI");
@@ -161,6 +150,18 @@ export const WALKTHROUGHS = {
     await expect(l.agent.locator(".message-list"), "the session's conversation didn't survive the console restart").toContainText("What about JFK to SFO for the way back?", {
       timeout: MINUTE,
     });
+
+    await l.step("Run a script in Monty");
+    await l.view("Code");
+    await l.openFile("codemode/sandbox.py");
+    await l.insert(0); // MODEL_SCRIPT: its TODO, replaced by the model's script
+    await l.insert(1); // run(): its TODO, replaced by the sandbox
+    expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
+    expect(l.flatOutput, "with no host functions, the script can't call search_flights").toMatch(/search_flights` used when not defined/);
+    await l.insert(2); // HOST_FUNCTIONS: its TODO, replaced by search_flights
+    expect(await l.runButton("uv run code-mode"), "uv run code-mode failed").toBe(0);
+    expect(l.flatOutput, "the search should run on the host").toMatch(/host\s+search_flights\('SFO',\s*'JFK',\s*'2026-11-20'\)/); // a wrap may eat a space
+    expect(l.flatOutput, "the script's print should come out of the sandbox").toMatch(/sandbox\s+3 flights, 2 nonstop/);
 
     await l.step("Notice what it did without asking");
     const booked = await l.converse("Book the cheapest one.");

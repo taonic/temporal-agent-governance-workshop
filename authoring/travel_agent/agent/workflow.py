@@ -96,7 +96,7 @@ def approval_policy(posture: Posture) -> ToolApprovalPolicy:
         case "human_approval_only":
             return ToolApprovalPolicy.always_require_human_approval()
         case "approve_bookings":
-            # @@solution ch04
+            # @@solution A9
             # The script itself, and the lookups, can't change anything in the world, so they
             # run unattended. Every booking still waits for a person.
             return ToolApprovalPolicy.allow_tools(

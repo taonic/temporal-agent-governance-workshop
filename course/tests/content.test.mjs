@@ -35,7 +35,7 @@ test("snippet commands drop comments and join continuations", () => {
 
 test("the built course covers every exercise in both modes", () => {
   const course = buildCourse();
-  assert.equal(course.exercises.length, 5);
+  assert.equal(course.exercises.length, 6);
   for (const exercise of course.exercises) {
     for (const mode of ["browser", "local"]) {
       const html = [exercise.modes[mode].intro, ...exercise.modes[mode].sections.map((s) => s.html)].join("\n");
@@ -71,14 +71,54 @@ test("in the browser, localhost links open panes and command snippets get a run 
   assert.ok(!local.includes("data-run"), "local snippets only copy");
 });
 
-test("a master's TODO blocks are the exact starter and solution lines for its chapter", async () => {
+test("a master's TODO blocks are the exact starter and solution lines for its modules", async () => {
   const { todoBlocks } = await import("../content/build.mjs");
-  const master = "a\n    # @@solution ch02\n    return 2\n    # @@starter\n    # TODO(ch02)\n    raise X\n    # @@end\n    # @@solution ch03\n    three\n    # @@starter\n    todo3\n    # @@end\nb";
-  assert.deepEqual(todoBlocks(master, 2), [{ starter: "    # TODO(ch02)\n    raise X\n", solution: "    return 2\n" }]);
-  assert.deepEqual(todoBlocks(master, 1), []);
+  const master = "a\n    # @@solution A4\n    return 2\n    # @@starter\n    # TODO(ch02)\n    raise X\n    # @@end\n    # @@solution N2\n    three\n    # @@starter\n    todo3\n    # @@end\nb";
+  assert.deepEqual(todoBlocks(master, ["A4"]), [{ starter: "    # TODO(ch02)\n    raise X\n", solution: "    return 2\n" }]);
+  assert.deepEqual(todoBlocks(master, ["F2"]), []);
+  assert.equal(todoBlocks(master, ["A4", "N2"]).length, 2);
   // Two in one file: each its own block.
-  const two = "# @@solution ch02\nA = 1\n# @@starter\nA = 0\n# @@end\nx\n# @@solution ch02\nB = 1\n# @@starter\nB = 0\n# @@end\n";
-  assert.deepEqual(todoBlocks(two, 2), [{ starter: "A = 0\n", solution: "A = 1\n" }, { starter: "B = 0\n", solution: "B = 1\n" }]);
+  const two = "# @@solution A1\nA = 1\n# @@starter\nA = 0\n# @@end\nx\n# @@solution A1\nB = 1\n# @@starter\nB = 0\n# @@end\n";
+  assert.deepEqual(todoBlocks(two, ["A1"]), [{ starter: "A = 0\n", solution: "A = 1\n" }, { starter: "B = 0\n", solution: "B = 1\n" }]);
+});
+
+test("a master renders with some modules' TODOs solved and the rest open, as render.py does", async () => {
+  const { renderMaster } = await import("../content/build.mjs");
+  const master = "a\n# @@solution N2\nask()\n# @@starter\nTODO ask\n# @@end\n# @@solution N3\nreserve()\n# @@starter\nTODO reserve\n# @@end\nb\n";
+  assert.equal(renderMaster(master, []), "a\nTODO ask\nTODO reserve\nb\n");
+  assert.equal(renderMaster(master, ["N2"]), "a\nask()\nTODO reserve\nb\n");
+  assert.equal(renderMaster(master, ["N2", "N3"]), "a\nask()\nreserve()\nb\n");
+});
+
+test("the quests: every module where its branch says, and every module it builds on before it", async () => {
+  const { closure, loadQuests } = await import("../content/build.mjs");
+  const quests = loadQuests();
+  const course = buildCourse();
+  assert.deepEqual(course.branches.map((b) => b.id), ["fundamentals", "ai-agent", "nexus", "payments", "ai-sdlc", "worker-ops"]);
+  for (const branch of course.branches) {
+    assert.ok(branch.name && branch.icon && branch.classTitle && branch.tiers?.length, `${branch.id} needs a name, icon, class title and tiers`);
+    for (const id of branch.modules) {
+      const module = course.modules.find((m) => m.id === id);
+      assert.equal(module.branch, branch.id);
+      assert.ok(module.tier >= 1 && module.tier <= branch.tiers.length, `${id}: tier ${module.tier} isn't one of ${branch.id}'s`);
+    }
+  }
+  // N2 builds on the travel agent up to its working tools, not on approval.
+  assert.deepEqual(closure(quests.modules, ["N2"]), ["A2", "A3", "A4", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "N1"]);
+  assert.ok(!closure(quests.modules, ["A12"]).some((id) => id.startsWith("N")), "auto mode doesn't need Nexus");
+  // The 4-hour path is the five exercises, in order, each a run of ready modules.
+  const path = course.paths.find((p) => p.id === "agent-governance-4h");
+  assert.deepEqual(path.modules, course.exercises.slice(0, 5).flatMap((e) => e.modules));
+  // 27 modules, and the trunk's first two challenges (FC1 after F5, FC2 after F7).
+  assert.equal(path.modules.length, 29);
+  assert.deepEqual(path.modules.slice(0, 9), ["F1", "F2", "F3", "F4", "F5", "FC1", "F6", "F7", "FC2"]);
+  for (const id of path.modules) assert.equal(course.modules.find((m) => m.id === id).status, "ready");
+  assert.ok(course.modules.filter((m) => m.status === "coming-soon").length >= 9);
+  // The trunk is whole: every Fundamentals module ready, its second tier the sixth exercise.
+  const trunk = course.paths.find((p) => p.id === "fundamentals");
+  assert.deepEqual(trunk.modules, course.branches.find((b) => b.id === "fundamentals").modules);
+  for (const id of trunk.modules) assert.equal(course.modules.find((m) => m.id === id).status, "ready", `${id} isn't ready`);
+  assert.deepEqual(course.exercises[5].modules, ["F8", "F9", "F10", "F11", "F12", "FC3", "F13"]);
 });
 
 test("every exercise's TODO block is in its starter, and its snippet replaces it", async () => {
@@ -259,4 +299,33 @@ test("a link to a section names one of its exercise's sections", () => {
       }
     }
   }
+});
+
+test("a challenge is a beat of its exercise, after its module, with one right choice and a recording of each", () => {
+  const course = buildCourse();
+  const challenges = course.modules.filter((m) => m.kind === "challenge");
+  assert.deepEqual(challenges.map((c) => c.id), ["FC1", "FC2", "FC3"]);
+  for (const c of challenges) {
+    const exercise = course.exercises.find((e) => e.id === c.exercise);
+    const data = exercise.challenges[c.id];
+    assert.ok(data, `${c.id}: no data in ${exercise.id}`);
+    assert.equal(data.choices.filter((x) => x.right).length, 1, `${c.id}: one right choice`);
+    for (const choice of data.choices) {
+      assert.ok(choice.recording.lines.length, `${c.id} ${choice.id}: an empty recording`);
+      assert.equal(choice.recording.done.right, choice.right, `${c.id} ${choice.id}: its recording disagrees with its flag`);
+    }
+    // In both modes, the challenge's beat comes right after its module's last beat.
+    for (const mode of ["browser", "local"]) {
+      const sections = exercise.modes[mode].sections;
+      const at = sections.findIndex((s) => s.challenge === c.id);
+      assert.ok(at > 0 && sections[at].kind === "challenge", `${c.id}: no challenge beat in ${mode}`);
+      assert.ok(exercise.moduleBeats[c.after].includes(sections[at - 1].id), `${c.id}: not right after ${c.after}`);
+    }
+    assert.deepEqual(exercise.moduleBeats[c.id], [exercise.modes.browser.sections.find((s) => s.challenge === c.id).id]);
+    assert.equal(exercise.modules[exercise.modules.indexOf(c.after) + 1], c.id);
+  }
+  // FC2 sits before exercise 1's check, not after it.
+  const hello = course.exercises[0].modes.browser.sections;
+  assert.equal(hello.at(-1).kind, "check");
+  assert.equal(hello.at(-2).challenge, "FC2");
 });

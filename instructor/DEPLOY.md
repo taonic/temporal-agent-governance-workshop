@@ -5,7 +5,7 @@ The runbook for hosting the browser course (`course/`) for an event: first deplo
 ## What runs where
 
 ```
-learner's browser ──▶ Fly app: temporal-agent-governance-workshop  (one machine, one Node process)
+learner's browser ──▶ Fly app: temporal-quest  (one machine, one Node process)
                         :443  the site, /api, the model passthrough (/llm/v1)
                         :8081 the Temporal UI proxy
                               │
@@ -48,11 +48,11 @@ If the snapshot already exists, `npm run snapshot` says so and does nothing (`--
 Export the values first (or keep them in your shell profile or a password manager's CLI), then set them all at once. Each `${VAR:?}` stops the command with a message if that variable is empty, so nothing is half-set:
 
 ```bash
-fly apps create temporal-agent-governance-workshop
+fly apps create temporal-quest
 
 export DAYTONA_API_KEY=... GEMINI_API_KEY=... ACCESS_CODE=... INSTRUCTOR_CODE=...
 
-fly secrets set --app temporal-agent-governance-workshop \
+fly secrets set --app temporal-quest \
   DAYTONA_API_KEY="${DAYTONA_API_KEY:?set DAYTONA_API_KEY}" \
   GEMINI_API_KEY="${GEMINI_API_KEY:?set GEMINI_API_KEY}" \
   ACCESS_CODE="${ACCESS_CODE:?set ACCESS_CODE}" \
@@ -89,12 +89,12 @@ fly deploy . --config course/fly.toml --dockerfile course/Dockerfile \
 
 The repo root is the build context because the runner uploads the workshop's own files into each sandbox. The image build runs `npm test`, so a failing test fails the deploy.
 
-Keep it to **one machine**: `--ha=false` does that, and `fly scale count 1 --app temporal-agent-governance-workshop` fixes it if a second appears. The runner holds terminal connections and rate limits in memory; two machines would each hold half of them.
+Keep it to **one machine**: `--ha=false` does that, and `fly scale count 1 --app temporal-quest` fixes it if a second appears. The runner holds terminal connections and rate limits in memory; two machines would each hold half of them.
 
 ### 4. Smoke test
 
 ```bash
-curl https://temporal-agent-governance-workshop.fly.dev/api/health
+curl https://temporal-quest.fly.dev/api/health
 # {"ok":true,"runtime":{"enabled":true},...}
 ```
 
@@ -108,7 +108,7 @@ It needs two repository secrets (Settings → Secrets and variables → Actions)
 
 ```bash
 # A deploy token scoped to this app
-fly tokens create deploy --app temporal-agent-governance-workshop
+fly tokens create deploy --app temporal-quest
 gh secret set FLY_API_TOKEN      # paste the token
 gh secret set DAYTONA_API_KEY    # for the snapshot build
 ```
@@ -130,7 +130,7 @@ The app's own secrets (`GEMINI_API_KEY`, `ACCESS_CODE`, ...) stay in Fly; CI nev
 - **A fresh access code:**
 
   ```bash
-  fly secrets set --app temporal-agent-governance-workshop ACCESS_CODE=<event-code>
+  fly secrets set --app temporal-quest ACCESS_CODE=<event-code>
   ```
 
   Setting a secret restarts the machine. Signed-in learners stay signed in and sandboxes survive (the runner finds them again by their Daytona labels).
@@ -145,7 +145,7 @@ The app's own secrets (`GEMINI_API_KEY`, `ACCESS_CODE`, ...) stay in Fly; CI nev
 
   ```bash
   curl -s -H "x-instructor-code: $INSTRUCTOR_CODE" \
-    https://temporal-agent-governance-workshop.fly.dev/api/admin/sandboxes
+    https://temporal-quest.fly.dev/api/admin/sandboxes
   ```
 
   It lists each sandbox, its state and the exercise its learner last had open, against `max`.
@@ -154,11 +154,11 @@ The app's own secrets (`GEMINI_API_KEY`, `ACCESS_CODE`, ...) stay in Fly; CI nev
 
 | Need | Command |
 |---|---|
-| Live logs | `fly logs --app temporal-agent-governance-workshop` |
-| Machine state | `fly status --app temporal-agent-governance-workshop` |
-| Restart the runner | `fly apps restart temporal-agent-governance-workshop` |
-| Shell on the machine | `fly ssh console --app temporal-agent-governance-workshop` |
-| Roll back | `fly releases --app temporal-agent-governance-workshop --image`, then from the repo root `fly deploy --config course/fly.toml --image <image-ref>` |
+| Live logs | `fly logs --app temporal-quest` |
+| Machine state | `fly status --app temporal-quest` |
+| Restart the runner | `fly apps restart temporal-quest` |
+| Shell on the machine | `fly ssh console --app temporal-quest` |
+| Roll back | `fly releases --app temporal-quest --image`, then from the repo root `fly deploy --config course/fly.toml --image <image-ref>` |
 
 **When something breaks**
 
@@ -166,7 +166,7 @@ The app's own secrets (`GEMINI_API_KEY`, `ACCESS_CODE`, ...) stay in Fly; CI nev
 - **Sandboxes fail to start for everyone:** the Daytona quota or `MAX_SANDBOXES` is full. Check the admin list and Daytona's dashboard.
 - **The agent stops answering (402s or 429s in the logs):** Gemini credit or quota. Learners can switch their sandbox to the scripted model from the sandbox menu in the top bar; it plays every walkthrough, including the injection.
 - **Ask Temporal says the search is busy:** the Kapa team limit (60 a minute). The answer still arrives without docs; it clears within a minute.
-- **The site doesn't load:** check `fly status`; if the machine is stopped or crashed, `fly apps restart temporal-agent-governance-workshop`. Restarts don't lose learners' work, which lives in their sandboxes.
+- **The site doesn't load:** check `fly status`; if the machine is stopped or crashed, `fly apps restart temporal-quest`. Restarts don't lose learners' work, which lives in their sandboxes.
 
 ## After
 

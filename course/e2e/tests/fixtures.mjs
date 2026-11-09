@@ -32,12 +32,15 @@ export const test = base.extend({
   },
 });
 
-// The course's pages in order, as the exercise picker lists them: [{ hash, label }].
+// The course's exercises, as the map's playable nodes name them (each module says which
+// exercise shows it), in order: [{ hash, label }].
 export async function coursePages(page) {
-  await page.goto("/#/exercise/01-hello-temporal");
-  const options = page.locator(".exercise-picker select option:not([disabled])");
-  await expect(options.first()).toBeAttached();
-  return options.evaluateAll((els) => els.map((el) => ({ hash: el.value, label: el.textContent.trim() })));
+  await page.goto("/#/");
+  await page.getByRole("button", { name: "Full map", exact: true }).click();
+  const nodes = page.locator(".map-node[data-exercise]");
+  await expect(nodes.first()).toBeAttached();
+  const ids = await nodes.evaluateAll((els) => [...new Set(els.map((el) => el.dataset.exercise))].sort());
+  return ids.map((id) => ({ hash: `#/exercise/${id}`, label: id }));
 }
 
 // The workspace's Code view, as a learner clicks it: an exercise's briefing opens on its

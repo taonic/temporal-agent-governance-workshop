@@ -1,0 +1,67 @@
+{
+  "fingerprint": "e6eaec3011fdc26f",
+  "choice": "A",
+  "lines": [
+    {
+      "type": "step",
+      "text": "Started boarding SFO→JFK: 3 passengers, one a second.",
+      "kind": "info",
+      "t": 0.0
+    },
+    {
+      "type": "step",
+      "text": "Started the worker",
+      "kind": "worker",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Query before the restart: no answer",
+      "kind": "bad",
+      "t": 4.7
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker",
+      "kind": "worker",
+      "t": 4.7
+    },
+    {
+      "type": "step",
+      "text": "Started a new worker",
+      "kind": "worker",
+      "t": 4.7
+    },
+    {
+      "type": "step",
+      "text": "Query after the restart: no answer",
+      "kind": "bad",
+      "t": 7.7
+    },
+    {
+      "type": "step",
+      "text": "Stopped the new worker",
+      "kind": "worker",
+      "t": 13.7
+    },
+    {
+      "type": "step",
+      "text": "Workflow Task Failed: Cannot access datetime.datetime.now.__call__ from inside a workflow. If this is code from ",
+      "kind": "bad",
+      "t": 13.7
+    }
+  ],
+  "done": {
+    "type": "done",
+    "choice": "A",
+    "right": false,
+    "summary": "Boarding never got going: every workflow task failed.",
+    "result": null,
+    "error": "Cannot access datetime.datetime.now.__call__ from inside a workflow. If this is code from a module not used in a workflow or known to only be used deterministically from a workflow, mark the import as pass through.",
+    "focus": "challenge-fc2-a-bcac-board",
+    "events": [
+      "Workflow Task Failed: Cannot access datetime.datetime.now.__call__ from inside a workflow. If this is code from a module not used in a workflo"
+    ],
+    "t": 13.7
+  }
+}

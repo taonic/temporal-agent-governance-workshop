@@ -11,9 +11,9 @@ __pycache__/
 .logs/
 # The bookings ledger
 .data/
-# scripts/switch.py backups of your edits
+# ./quest backups of your edits
 .learner-backup/
-# Exercise checks that passed (challenges/lib.sh), read by the browser course
+# Checks that passed (./quest check), read by the browser course
 .course/
 # The browser course site
 course/node_modules/

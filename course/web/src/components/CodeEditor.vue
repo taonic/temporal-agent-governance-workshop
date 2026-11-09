@@ -1,6 +1,6 @@
 <script setup>
 // The exercise's files. In the browser the sandbox holds the real copy: editable files save
-// to it (after a pause, or Cmd/Ctrl-S), and a file changed on disk (solve.sh, switch.py, the
+// to it (after a pause, or Cmd/Ctrl-S), and a file changed on disk (./quest, the
 // terminal) reloads, unless you have unsaved edits, which get a choice instead. Locally it's
 // a viewer: the starter, or the official solution.
 //
@@ -547,6 +547,56 @@ async function insertSnippet(path, code, mode, { retried = false } = {}) {
   return `Inserted into ${name} ${where}: line${a === b ? ` ${a}` : `s ${a}–${b}`}.`;
 }
 
+// A challenge's choice, into its file: whichever of `blocks` (the block as the learner has it,
+// and every choice's version of it) is there gives way to `code`, at its indent, the way a
+// snippet goes in; failing those, the file's open TODO (a learner who came to the challenge
+// before its module). The same code going in again is typed again too, so the editor never
+// gives away which choice is the file's own. Returns { ok, message, replaced }: `replaced`, the
+// text that was there, to put back.
+async function swapBlock(path, code, blocks) {
+  const file = files.value.find((f) => f.path === path);
+  if (!file?.editable) return { ok: false, message: "That file isn't editable here." };
+  if (!props.live) return { ok: false, message: "Start your sandbox first: the editor saves to it." };
+  if (active.value !== path || view.value !== "mine") {
+    active.value = path;
+    view.value = "mine";
+    await nextTick();
+  }
+  if (docs[path]?.text === undefined) await loadFile(path, { force: true });
+  showCurrent();
+  const text = editor.state.doc.toString();
+  const name = path.split("/").pop();
+  const found =
+    blocks.map((block) => findSnippet(text, block)).find(Boolean) ??
+    (file.todos ?? []).map((todo) => findSnippet(text, todo.starter)).find(Boolean);
+  if (!found) return { ok: false, message: `The block this challenge changes isn't in ${name} as it was: it runs the choice on its own copy.` };
+  const replaced = text.slice(found.start, found.end);
+  const indent = text.slice(found.start).match(/^[ \t]*/)[0];
+  const insert = indentLines(dedent(code), indent);
+  // Hidden (the Temporal UI is showing a run's history): no one to watch it type, so at once.
+  if (!props.shown) {
+    editor.dispatch({ changes: { from: found.start, to: found.end, insert } });
+    saveNow();
+    return { ok: true, message: `Put it into ${name}.`, replaced };
+  }
+
+  await scrollToSlowly(found.start, found.end);
+  editor.dispatch({ effects: flash.of({ from: found.start, to: found.end, cls: "cm-outgoing" }) });
+  await pause(900);
+  if (!editor || editor.state.doc.toString() !== text) {
+    editor?.dispatch({ effects: flash.of(null) });
+    return { ok: false, message: "The file changed while it was going in: pick it again." };
+  }
+  await typeIn(found.start, found.end, insert);
+  if (!editor) return { ok: true, message: `Put it into ${name}.`, replaced };
+  saveNow();
+  const end = found.start + insert.length;
+  highlight(found.start, end, { scroll: false });
+  await scrollToSlowly(found.start, end);
+  const [a, b] = lineRange(found.start, end);
+  return { ok: true, message: `In ${name}, line${a === b ? ` ${a}` : `s ${a}–${b}`}.`, replaced };
+}
+
 // Takes an inserted snippet back out: a solution gives way to the exercise's TODO block again;
 // a policy rule or a cursor insert is removed. An ordinary edit, so it can be undone too.
 async function revertSnippet(path, code, mode) {
@@ -790,6 +840,7 @@ let unregister = null;
 let unregisterInsert = null;
 let unregisterTodo = null;
 let unregisterRevert = null;
+let unregisterSwap = null;
 let unregisterEditor = null;
 // The tab on show, for Ask Temporal's "send my code" chip.
 watch([active, view], () => (store.editorPath = `${active.value}|${view.value}`), { immediate: true });
@@ -805,6 +856,7 @@ onMounted(() => {
   unregisterInsert = registerHook("insert", insertSnippet);
   unregisterTodo = registerHook("todo", openTodo);
   unregisterRevert = registerHook("revert", revertSnippet);
+  unregisterSwap = registerHook("swap", swapBlock);
   // For Ask Temporal: the file on show, and what's selected in it.
   unregisterEditor = registerHook("editor", () => {
     if (!editor) return null;
@@ -822,6 +874,7 @@ onBeforeUnmount(() => {
   unregisterInsert?.();
   unregisterTodo?.();
   unregisterRevert?.();
+  unregisterSwap?.();
   unregisterEditor?.();
   store.fileTexts = {};
   store.editorPath = "";

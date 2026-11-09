@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The workshop's modules, from the command line: enter, check, solve or reset one.
+# ./quest with no arguments says how (scripts/quest.py).
+cd "$(dirname "$0")" && exec uv run --frozen python scripts/quest.py "$@"

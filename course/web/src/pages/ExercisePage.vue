@@ -36,7 +36,10 @@ const exercise = computed(() => course.exercises.find((e) => e.id === props.id))
 const mode = computed(() => effectiveMode());
 const live = computed(() => mode.value === "browser" && store.sandbox.state === "ready");
 // Exercise 1 starts trips from buttons, which show each trip's workflow: the poll lists them.
-const hasTrips = computed(() => exercise.value.modes.browser.sections.some((s) => s.html.includes("data-trip=")));
+// Its guide starts trips, or opens the hello worker's workflows: poll for them.
+const hasTrips = computed(() =>
+  exercise.value.modes.browser.sections.some((s) => s.html.includes("data-trip=") || s.html.includes("data-workflow-open=")),
+);
 const stamps = ref({});
 // The workspace (whichever tab, and the terminals) over the guide's column too.
 const codeMaximized = ref(false);
@@ -223,12 +226,13 @@ const shellStyle = computed(() => ({
 let pollTimer = 0;
 // The runner gave the sandbox a new model address (it restarted behind a new tunnel, say): the
 // running travel worker still has the old one, so it starts again. The poll reports it once.
-// The sandbox just filled in earlier exercises' TODOs with their solutions (runner poll): say so,
-// and restart a running worker so it runs them.
-function caughtUp(numbers, worker) {
-  const names = numbers.length > 1 ? `Exercises ${numbers.slice(0, -1).join(", ")} and ${numbers.at(-1)}` : `Exercise ${numbers[0]}`;
+// The sandbox just filled in the TODOs of the modules this exercise builds on with their
+// solutions (runner poll): say so, and restart a running worker so it runs them.
+function caughtUp(ids, worker) {
+  const titles = ids.map((id) => course.modules.find((m) => m.id === id)?.title ?? id);
+  const names = titles.length > 1 ? `${titles.slice(0, -1).join(", ")} and ${titles.at(-1)}` : titles[0];
   const restart = worker?.running && !store.worker.pending;
-  toast(`${names} ${numbers.length > 1 ? "are" : "is"} solved in your sandbox, so this one doesn't depend on ${numbers.length > 1 ? "them" : "it"}${restart ? ": restarting the worker" : ""}`, 5200);
+  toast(`Solved in your sandbox, so this one doesn't depend on ${titles.length > 1 ? "them" : "it"}: ${names}${restart ? ". Restarting the worker" : ""}`, 5200);
   if (restart) runInTerminal("worker", [worker.name === "hello-worker" ? "uv run hello-worker" : "uv run travel-worker"], { interrupt: true, reveal: false });
 }
 

@@ -50,23 +50,31 @@ function readWorkshopIntro() {
   return workshopIntro;
 }
 
+// The exercises' text, as the content build wrote it (content/build.mjs: the modules of each
+// exercise, one after the other). Read once; the build writes it before the site is served.
+const assignmentsFile = path.join(repoRoot, "course/web/src/generated/assignments.json");
+let assignments = null;
+function readAssignments() {
+  if (assignments) return assignments;
+  try {
+    assignments = JSON.parse(fs.readFileSync(assignmentsFile, "utf8"));
+  } catch {
+    return {};
+  }
+  return assignments;
+}
+
 // The assignment as the learner sees it in this mode (the course's mode blocks, as in
 // content/build.mjs: browser-only text sits in a comment, local-only text between markers).
 export function readAssignment(exerciseId, mode = "browser") {
   if (!/^\d{2}-[a-z0-9-]+$/.test(String(exerciseId ?? ""))) return null;
-  const file = path.join(repoRoot, "challenges", exerciseId, "assignment.md");
-  let text;
-  try {
-    text = fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n");
-  } catch {
-    return null;
-  }
-  const title = text.match(/^title:\s*["']?(.+?)["']?\s*$/m)?.[1] ?? exerciseId;
-  text = text
-    .replace(/^---\n[\s\S]*?\n---\n/, "")
+  const all = readAssignments();
+  const found = Object.hasOwn(all, exerciseId) ? all[exerciseId] : null;
+  if (!found) return null;
+  const text = found.text
     .replace(/<!--\s*browser\s*\n([\s\S]*?)-->/g, (_, body) => (mode === "browser" ? body : ""))
     .replace(/<!--\s*local\s*-->([\s\S]*?)<!--\s*\/local\s*-->/g, (_, body) => (mode === "local" ? body : ""));
-  return { title, text: text.trim().slice(0, LIMITS.assignment) };
+  return { title: found.title, text: text.trim().slice(0, LIMITS.assignment) };
 }
 
 export function systemPrompt({ assignment, mode }) {

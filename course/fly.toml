@@ -9,13 +9,13 @@
 # One machine: the runner keeps the terminals' connections and the rate limits in memory.
 # Secrets and the first deploy: course/DEPLOY.md.
 
-app = "temporal-agent-governance-workshop"
+app = "temporal-quest"
 primary_region = "sjc"
 
 [env]
   HOST = "0.0.0.0"
   PORT = "8080"
-  PUBLIC_URL = "https://temporal-agent-governance-workshop.fly.dev"
+  PUBLIC_URL = "https://temporal-quest.fly.dev"
   MAX_SANDBOXES = "100"
   LLM_MODEL = "gemini-3.8-flash"
 

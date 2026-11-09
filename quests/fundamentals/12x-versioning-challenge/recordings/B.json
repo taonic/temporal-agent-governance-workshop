@@ -1,0 +1,85 @@
+{
+  "fingerprint": "fb0404e3991b03a5",
+  "choice": "B",
+  "lines": [
+    {
+      "type": "step",
+      "text": "Started the worker, before the email step",
+      "kind": "worker",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Held seat 14C for 5 seconds, on the code before the email step.",
+      "kind": "info",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker, before the email step",
+      "kind": "worker",
+      "t": 0.6
+    },
+    {
+      "type": "step",
+      "text": "Started the worker, with this version",
+      "kind": "worker",
+      "t": 0.6
+    },
+    {
+      "type": "step",
+      "text": "Held seat 15A for 3 seconds, on this version.",
+      "kind": "info",
+      "t": 0.6
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker, with this version",
+      "kind": "worker",
+      "t": 1.6
+    },
+    {
+      "type": "step",
+      "text": "Restarting the worker: it has to replay both holds.",
+      "kind": "info",
+      "t": 1.6
+    },
+    {
+      "type": "step",
+      "text": "Started a new worker",
+      "kind": "worker",
+      "t": 1.6
+    },
+    {
+      "type": "step",
+      "text": "14C: Seat 14C: the hold expired, and the seat is back on sale.",
+      "kind": "good",
+      "t": 5.1
+    },
+    {
+      "type": "step",
+      "text": "15A is stuck: [TMPRL1100] Nondeterminism error: Timer machine does not handle this event: HistoryEvent(i",
+      "kind": "bad",
+      "t": 12.1
+    },
+    {
+      "type": "step",
+      "text": "Stopped the new worker",
+      "kind": "worker",
+      "t": 12.1
+    }
+  ],
+  "done": {
+    "type": "done",
+    "choice": "B",
+    "right": false,
+    "summary": "15A got stuck on replay.",
+    "result": null,
+    "error": "nondeterminism",
+    "focus": "challenge-fc3-b-49dd-hold-15a",
+    "events": [
+      "15A: Workflow Task Failed: [TMPRL1100] Nondeterminism error: Timer machine does not handle this event: HistoryEvent(id: 5, ActivityTaskSc"
+    ],
+    "t": 12.1
+  }
+}

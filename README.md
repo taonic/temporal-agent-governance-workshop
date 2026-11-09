@@ -6,11 +6,13 @@ A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://te
 
 | # | Exercise | What you see | What you write |
 |---|---|---|---|
-| 1 | [Hello Temporal](challenges/01-hello-temporal/assignment.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries; a count nobody saved survives a restart | Call an activity with a timeout and a retry policy |
-| 2 | [A durable travel agent session](challenges/02-durable-session/assignment.md) | A script in the Monty sandbox stops at every tool call; in the agent those calls are activities; kill the worker and the conversation carries on | Running the script in Monty, and the `search_flights` tool |
-| 3 | [Agents across teams, with Nexus](challenges/03-nexus/assignment.md) | The agent asks another team's agent, and reserves through its workflow, in another namespace; a plain workflow asks that agent too; the other team's outage is a wait, not an error | The Nexus calls in the agent's `ask_concierge` and `reserve_table` tools |
-| 4 | [Human approval mode](challenges/04-human-approval/assignment.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
-| 5 (bonus) | [Auto mode](challenges/05-auto-mode/assignment.md) | Bookings that match your trip form run unattended; others come to you | Turn a plain flight rule into one that looks back at the trip form |
+| 1 | [Hello Temporal](quests/fundamentals/01-run-it-and-see-it-stop/module.md) | A bug pauses a workflow; the fix resumes the same run; a flaky activity retries; a count nobody saved survives a restart | Call an activity with a timeout and a retry policy |
+| 2 | [A durable travel agent session](quests/ai-agent/01-meet-the-agent-ui/module.md) | In the agent, tool calls are activities: a broken tool makes the conversation wait, and killing the worker loses nothing; then the Monty sandbox that runs the model's scripts | The `search_flights` tool, and running a script in Monty |
+| 3 | [Agents across teams, with Nexus](quests/nexus/01-meet-the-other-team/module.md) | The agent asks another team's agent, and reserves through its workflow, in another namespace; a plain workflow asks that agent too; the other team's outage is a wait, not an error | The Nexus calls in the agent's `ask_concierge` and `reserve_table` tools |
+| 4 | [Human approval mode](quests/ai-agent/08-approve-everything/module.md) | Bookings wait for you, for as long as it takes; it gets noisy | The `approve_bookings` approval posture |
+| 5 (bonus) | [Auto mode](quests/ai-agent/12-read-the-policy/module.md) | Bookings that match your trip form run unattended; others come to you | Turn a plain flight rule into one that looks back at the trip form |
+
+Each exercise is a run of 5-minute **modules** in [`quests/`](quests/README.md), grouped by topic into branches (Fundamentals, AI Agent, Architecture & Nexus, and more to come); this workshop is one path through them.
 
 **In your browser:** the [course site](course/README.md) has every exercise, and with your event's access code, a cloud sandbox with all of this installed and running: an editor, two terminals, the console and the Temporal UI. Nothing to set up.
 
@@ -74,18 +76,28 @@ uv run travel-worker                 # the agent's worker: in its own terminal, 
 The repo ships **solved**. To do the exercises, switch the exercise files to the starter:
 
 ```bash
-uv run python scripts/switch.py starter    # every TODO open
-uv run python scripts/switch.py solution   # back to the finished workshop
-uv run python scripts/switch.py status
+./quest starter     # every TODO open
+./quest solution    # back to the finished workshop
+./quest status      # each module's TODOs: open, solved, or yours
 ```
 
-Each exercise has a check (`./challenges/NN-*/check.sh`), a solve (`solve.sh`, which applies the official solution) and a start over (`reset.sh`, which puts the exercise's code back as it starts, saving your edits in `.learner-backup/` first, and ends the running sessions).
+`./quest` works on a module (`A4`) or a whole exercise (`02-durable-session`):
+
+```bash
+./quest enter N2    # get ready: the modules it builds on solved, fresh sessions
+./quest check A4    # its check
+./quest solve A4    # the official solution
+./quest reset A4    # start it over: its TODOs open again
+```
+
+None of them depends on having done the earlier modules, and none loses your work: a TODO you finished your own way stays yours, and a file that has to change is saved in `.learner-backup/` first.
 
 ## Repository map
 
 ```
-hello/                 exercise 1: a tiny workflow, activity, worker and starter
-codemode/              exercise 2's warm-up: sandbox.py runs a model's script in Monty (uv run code-mode)
+hello/                 exercises 1 and 6: a tiny workflow, activity, worker and starter; a fare hold, an
+                       itinerary of child workflows, a booking saga, and a replayer (uv run hello-…)
+codemode/              exercise 2's step 6: sandbox.py runs a model's script in Monty (uv run code-mode)
 travel_agent/
   agent/               TravelAgent workflow, call_llm, scripted model, prompts, trip form, travel notes,
                        the concierge's tools (Nexus calls)
@@ -97,44 +109,48 @@ concierge/             exercise 3's other team, in its own namespace: its Nexus 
                        reservations workflow and worker
 policies/              travel.dw (the Dogwood policy), schema.cedarschema (generated), events.dwschema
 agents.toml            the agents the console can start
+quests/                the modules, by branch, and the paths through them (quests/README.md)
+quest                  enter, check, solve or reset a module (scripts/quest.py)
 authoring/             MASTER copies of the files with TODOs (edit these, then render)
-starter/ solutions/    generated: the TODO files at stage 0, and with exercises 1..N solved
-challenges/            assignment.md + setup/check/solve/cleanup.sh per exercise (Instruqt-shaped)
+starter/               generated: the TODO files with every TODO open
 instructor/            run of show and talking points
-tests/                 one check per exercise (scripted model, no API keys), plus provided-code tests
-scripts/               render, switch, verify_stages, setup_dogwood.sh, gpu_endpoint, bench_llm, cleanup
+tests/                 the modules' checks (scripted model, no API keys), plus provided-code tests
+scripts/               quest, quests, render, verify_modules, record_histories, challenges, record_challenges,
+                       setup_dogwood.sh, gpu_endpoint, bench_llm, cleanup
 ```
 
 ## Authoring
 
-Six files contain TODOs: `hello/workflow.py`, `codemode/sandbox.py`, `travel_agent/travel/activities.py`, `travel_agent/agent/concierge.py`, `travel_agent/agent/workflow.py` and `policies/travel.dw`. Their masters live in `authoring/`, with markers (`//` in the policy):
+Ten files contain TODOs: `hello/workflow.py`, `hello/hold.py`, `hello/itinerary.py`, `hello/saga.py`, `hello/replay.py`, `codemode/sandbox.py`, `travel_agent/travel/activities.py`, `travel_agent/agent/concierge.py`, `travel_agent/agent/workflow.py` and `policies/travel.dw`. Their masters live in `authoring/`, with markers that name the module whose TODO it is (`//` in the policy):
 
 ```python
-# @@solution ch02
+# @@solution A4
 ...the code learners write...
 # @@starter
 ...the TODO they start from...
 # @@end
 ```
 
-The assignments also feed the [browser course](course/README.md#writing-for-both-modes): browser-only text goes in `<!-- browser … -->` comments, which GitHub and Instruqt don't show.
+The modules also feed the [browser course](course/README.md#writing-for-both-modes): browser-only text goes in `<!-- browser … -->` comments, which GitHub doesn't show. [quests/README.md](quests/README.md) has the module format.
 
 After editing a master:
 
 ```bash
-uv run python scripts/render.py               # writes the finished files, starter/ and solutions/chNN/
-uv run python scripts/verify_stages.py        # each check fails before its solution, passes after
+uv run python scripts/render.py               # writes the finished files and starter/
+uv run python scripts/verify_modules.py       # each check fails before its module is solved, passes after
 ```
 
+`verify_modules.py` renders, for each module with a check, only the modules it builds on solved, then that module too:
+
 ```
-stage  base  ch01  ch02  ch03  ch04  ch05  walk
-  0    pass  FAIL  FAIL  FAIL  FAIL  FAIL  FAIL
-  1    pass  pass  FAIL  FAIL  FAIL  FAIL  FAIL
-  2    pass  pass  pass  FAIL  FAIL  FAIL  pass
-  3    pass  pass  pass  pass  FAIL  FAIL  pass
-  4    pass  pass  pass  pass  pass  FAIL  pass
-  5    pass  pass  pass  pass  pass  pass  pass
+  F2 open      FAIL   solved: F1
+  F2 solved    pass   solved: F1,F2
+  …
+  N3 open      FAIL   solved: A1,A2,A3,A4,F1,…,F7,N1,N2
+  N3 solved    pass   solved: A1,A2,A3,A4,F1,…,F7,N1,N2,N3
 ```
+
+So a module's `requires` is all it needs, and its TODO is what its check checks.
 
 After changing the agent's tools or messages, regenerate the policy schema with `uv run python -m travel_agent.schema` and restart the verifier.
 

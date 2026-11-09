@@ -1,0 +1,29 @@
+# The 4-hour live workshop: Governed Agents With Temporal, Monty, And Dogwood.
+#
+# A path is an ordered list of modules. Until the map (issue 02), the site shows this path as the
+# workshop's five exercises: each exercise is a run of the path's modules, and its id is what
+# the site's URLs and saved progress use.
+id: agent-governance-4h
+title: Governed Agents With Temporal, Monty, And Dogwood
+exercises:
+  - id: 01-hello-temporal
+    title: Hello Temporal
+    teaser: Write a tiny workflow, run it, break it, and watch Temporal remember where it was, even a count nobody saved.
+    modules: [F1, F2, F3, F4, F5, F6, F7]
+  - id: 02-durable-session
+    title: A durable travel agent session
+    teaser: A travel agent that is a Temporal workflow. Fix a broken tool while a conversation waits for it, then crash it and watch it carry on.
+    modules: [A2, A3, A4, A5, A6, A1, A7]
+  - id: 03-nexus
+    title: Agents across teams, with Nexus
+    teaser: Call another team's agent and workflow, in another namespace, over Nexus. From your agent, and from a plain workflow.
+    modules: [N1, N2, N3, N4, N5]
+  - id: 04-human-approval
+    title: Human approval mode
+    teaser: Make bookings wait for a person, safely, for as long as it takes. Then notice how many times you clicked.
+    modules: [A8, A9, A10, A11]
+  - id: 05-auto-mode
+    title: Auto mode
+    bonus: true
+    teaser: Let bookings run unattended when they match what you already asked for, and bring the rest to you.
+    modules: [A12, A13, A14, A15]

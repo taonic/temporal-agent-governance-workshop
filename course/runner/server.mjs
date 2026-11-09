@@ -195,6 +195,12 @@ const routes = {
     });
   },
 
+  // How a challenge's choice is going, run in the sandbox's commands terminal.
+  "GET /api/sandbox/challenge": async (req, _res, url) => {
+    const learner = requireLearner(req);
+    return manager.challengeRun(learner, url.searchParams.get("id"), url.searchParams.get("choice"));
+  },
+
   "POST /api/sandbox/llm-mode": async (req) => {
     const learner = requireLearner(req);
     const { mode } = await readJson(req);

@@ -34,7 +34,7 @@ async def ask_concierge(request: ConciergeQuestion) -> ConciergeAnswer:
     """Ask the concierge about a destination: the weather, what to pack, what's on. Name the
     city and the day in the question. The concierge is another team's agent: pass its `answer`
     on to the user."""
-    # @@solution ch03
+    # @@solution N2
     # A client for the concierge's Nexus service, through its endpoint. It names neither their
     # namespace nor their task queue: only the contract, and the endpoint that routes to them.
     concierge = workflow.create_nexus_client(service=ConciergeService, endpoint=ENDPOINT)
@@ -58,7 +58,7 @@ async def ask_concierge(request: ConciergeQuestion) -> ConciergeAnswer:
 async def reserve_table(request: TableRequest) -> TableConfirmation:
     """Reserve a restaurant table at the destination, through the concierge. Returns its
     `confirmation_code` and the `restaurant`."""
-    # @@solution ch03
+    # @@solution N3
     # The same client, another operation. Behind this one is a plain workflow, not an agent: the
     # call doesn't change, and doesn't need to know.
     concierge = workflow.create_nexus_client(service=ConciergeService, endpoint=ENDPOINT)

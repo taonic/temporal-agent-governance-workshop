@@ -1,6 +1,6 @@
 # End-to-end tests
 
-Playwright tests of the deployed course site, as a learner uses it: the live Fly app (`https://temporal-agent-governance-workshop.fly.dev`) unless `E2E_BASE_URL` says otherwise. Why they're built this way, and what to update when the workshop changes: [../DESIGN.md](../DESIGN.md#end-to-end-tests-added-2026-10-18).
+Playwright tests of the deployed course site, as a learner uses it: the live Fly app (`https://temporal-quest.fly.dev`) unless `E2E_BASE_URL` says otherwise. Why they're built this way, and what to update when the workshop changes: [../DESIGN.md](../DESIGN.md#end-to-end-tests-added-2026-10-18).
 
 | Tier | Needs | What it does | Time |
 |---|---|---|---|
@@ -35,7 +35,7 @@ Failures keep a trace, a screenshot and a video (`test-results/`); the sandbox t
 
 ## Every day, by email
 
-`.github/workflows/e2e.yml` runs every tier at 14:00 UTC and emails the result, pass or fail: a subject like `✅ Course e2e passed · temporal-agent-governance-workshop.fly.dev · 2026-10-18`, each tier's result, each failure's error, and a link to the run (the HTML report and traces are its artifacts). It also runs after every deploy (emailing only a failure) and can be run by hand: Actions → E2E → Run workflow.
+`.github/workflows/e2e.yml` runs every tier at 14:00 UTC and emails the result, pass or fail: a subject like `✅ Course e2e passed · temporal-quest.fly.dev · 2026-10-18`, each tier's result, each failure's error, and a link to the run (the HTML report and traces are its artifacts). It also runs after every deploy (emailing only a failure) and can be run by hand: Actions → E2E → Run workflow.
 
 To turn it on, in the repository's Settings → Secrets and variables → Actions:
 

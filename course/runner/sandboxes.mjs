@@ -49,6 +49,14 @@ const START_LSP =
   `(: </dev/tcp/127.0.0.1/${LSP_PORT}) 2>/dev/null || ` +
   `setsid -f /opt/lsp/bin/python /opt/lsp/lsp_bridge.py --port ${LSP_PORT} >/tmp/lsp-bridge.log 2>&1 </dev/null`;
 
+// A challenge run's name (FC1-B), checked: it goes into a shell command and a file name.
+export function challengeRun(id, choice) {
+  if (!/^[A-Z]{1,3}C\d{1,2}$/.test(id ?? "") || !/^[A-D]$/.test(choice ?? "")) {
+    throw Object.assign(new Error("No such challenge choice."), { status: 400 });
+  }
+  return `${id}-${choice}`;
+}
+
 function shellQuote(value) {
   return `'${String(value).replace(/'/g, `'\\''`)}'`;
 }
@@ -349,7 +357,9 @@ export class SandboxManager {
     const steps = [
       // Process ids from before a stop point at nothing (or at something else).
       "rm -f .stack/*.pid",
-      ...(fresh ? ["uv run --frozen python scripts/switch.py starter"] : []),
+      // An upload doesn't always keep a file's executable bit.
+      "chmod +x quest",
+      ...(fresh ? ["./quest starter"] : []),
       "uv run --frozen travel-stack up",
       `{ ${START_LSP}; }`,
       `mkdir -p .course && touch ${BOOTSTRAPPED}`,
@@ -401,17 +411,19 @@ export class SandboxManager {
   }
 
   // What the page polls for: each open file's mtime and size (to notice edits made by
-  // solve.sh, switch.py or the terminal), the exercises whose check passed, the model mode, the
-  // worker, and with trips, exercise 1's workflows (trips and boardings, the latest first) and
+  // ./quest or the terminal), the exercises whose check passed, the model mode, the
+  // worker, and with trips, the hello worker's workflows (trips, boardings, and exercise 6's
+  // holds, itineraries and bookings, the latest first) and
   // whether a hello-start is still waiting for one in the commands terminal.
   async poll(learner, files, { trips = false, origins = null, exercise = null } = {}) {
     const safe = files.filter(isSafePath).slice(0, 20);
     // The exercise on the page, for the console to name new sessions after (ex4-human-approval-…).
     // When it changes, or the sandbox started over from its snapshot with every TODO open, the
-    // earlier exercises' TODOs get their solutions: an exercise never depends on the earlier ones.
+    // TODOs of the modules it builds on get their solutions: an exercise never depends on the
+    // ones before it.
     const mark = /^\d\d-[a-z0-9-]+$/.test(exercise ?? "")
       ? `mkdir -p .course; [ "$(cat .course/exercise 2>/dev/null)" = ${exercise} ] || ` +
-        `{ echo ${exercise} > .course/exercise; CAUGHT_UP=$(uv run --frozen python scripts/switch.py catch-up ${Number.parseInt(exercise, 10)} 2>/dev/null); }; `
+        `{ echo ${exercise} > .course/exercise; CAUGHT_UP=$(./quest catch-up ${exercise} 2>/dev/null); }; `
       : "";
     const sandbox = await this.sandboxFor(learner);
     // A page left open across a runner restart polls without starting the sandbox again: its
@@ -433,10 +445,10 @@ export class SandboxManager {
         // The runner rewrote .env since: a travel worker running now has the old model address.
         // Reported once (ps's process ages aren't to be trusted in these sandboxes).
         `echo '--stale'; if [ -f ${ENV_CHANGED} ]; then rm -f ${ENV_CHANGED}; pgrep -f '[t]ravel-worker' >/dev/null && echo stale; fi; ` +
-        // The exercises switch.py just solved (see mark), one number a line.
+        // The modules quest catch-up just solved (see mark), one id a line.
         `echo '--caughtup'; echo "\${CAUGHT_UP:-}"` +
         (trips
-          ? `; echo '--trips'; timeout 5 temporal workflow list --query "WorkflowType IN ('HelloTripWorkflow', 'BoardingWorkflow')" --limit 20 -o jsonl 2>/dev/null` +
+          ? `; echo '--trips'; timeout 5 temporal workflow list --query "WorkflowType IN ('HelloTripWorkflow', 'BoardingWorkflow', 'FareHoldWorkflow', 'ItineraryWorkflow', 'BookTripWorkflow')" --limit 30 -o jsonl 2>/dev/null` +
             `; echo '--starter'; pgrep -af '[h]ello-start' 2>/dev/null | head -3`
           : ""),
       15,
@@ -467,7 +479,7 @@ export class SandboxManager {
       } else if (section === "stale") {
         out.worker = { ...out.worker, stale: true };
       } else if (section === "caughtup") {
-        if (/^\d+$/.test(line.trim())) out.caughtUp.push(Number(line.trim()));
+        if (/^[A-Z]\d+$/.test(line.trim())) out.caughtUp.push(line.trim());
       } else if (section === "trips") {
         const trip = parseTrip(line);
         if (trip) out.trips.push(trip);
@@ -475,6 +487,38 @@ export class SandboxManager {
       else out.llmMode = parseLlmMode(line);
     }
     return out;
+  }
+
+  // A challenge's choice, run in the sandbox: the page types `./quest challenge FC1 B --run X`
+  // into the commands terminal, which writes a JSON line a step to .course/challenges/FC1-B.jsonl
+  // (its first line names the run, X) and its pid beside it while it runs. This reads them.
+  async challengeRun(learner, id, choice) {
+    const run = challengeRun(id, choice);
+    const sandbox = await this.sandboxFor(learner);
+    const out = `.course/challenges/${run}`;
+    const result = await this.exec(
+      sandbox,
+      `cat ${out}.jsonl 2>/dev/null; echo '--state'; kill -0 "$(cat ${out}.pid 2>/dev/null)" 2>/dev/null && echo running || echo stopped`,
+      15,
+    );
+    const [lines, state = ""] = (result.result ?? "").split("\n--state\n");
+    const parsed = lines.split("\n").filter((l) => l.startsWith("{")).flatMap((l) => {
+      try {
+        return [JSON.parse(l)];
+      } catch {
+        return [];
+      }
+    });
+    const done = parsed.find((l) => l.type === "done") ?? null;
+    const running = state.trim() === "running";
+    return {
+      // Which run these lines are: the page ignores another run's (an earlier one's, say).
+      run: parsed.find((l) => l.type === "start")?.run ?? null,
+      lines: parsed.filter((l) => l.type === "step" || l.type === "workflow"),
+      done,
+      running,
+      error: !done && !running && parsed.length ? "It stopped without an answer: see the commands terminal." : null,
+    };
   }
 
   async setLlmMode(learner, mode) {

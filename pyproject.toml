@@ -8,6 +8,7 @@ dependencies = [
     "temporalio>=1.31.0",
     "pydantic>=2",
     "openai",
+    "pyyaml",
 ]
 
 [dependency-groups]
@@ -50,12 +51,16 @@ known-first-party = ["travel_agent", "hello", "codemode", "concierge", "temporal
 [tool.ruff.lint.per-file-ignores]
 # The starter imports what learners will need for their TODOs.
 "starter/**" = ["F401"]
-"solutions/**" = ["F401"]
 
 [project.scripts]
 hello-worker = "hello.worker:run"
 hello-start = "hello.starter:run"
 hello-board = "hello.starter:run_board"
+hello-hold = "hello.starter:run_hold"
+hello-pay = "hello.starter:run_pay"
+hello-itinerary = "hello.starter:run_itinerary"
+hello-book = "hello.starter:run_book"
+hello-replay = "hello.replay:run"
 travel-worker = "travel_agent.worker:run"
 travel-stack = "travel_agent.stack:run"
 trip-briefing = "travel_agent.briefing:run"

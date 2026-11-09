@@ -99,12 +99,12 @@ textarea {
   position: sticky;
   top: 0;
   z-index: 50;
-  min-height: 72px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 10px 24px;
+  gap: 20px;
+  padding: 7px 20px;
   border-bottom: 1px solid var(--line);
   background: var(--topbar-bg);
   backdrop-filter: blur(14px);
@@ -114,19 +114,19 @@ textarea {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: inherit;
   text-decoration: none;
 }
 
 .brand-image {
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
-  border-radius: var(--radius);
+  border-radius: 7px;
   background: #000000;
-  padding: 5px;
-  box-shadow: 0 8px 22px rgba(20, 20, 20, 0.16);
+  padding: 4px;
+  box-shadow: 0 4px 12px rgba(20, 20, 20, 0.14);
 }
 
 .brand-copy {
@@ -134,10 +134,16 @@ textarea {
   flex-direction: column;
 }
 
+.brand-copy .eyebrow {
+  margin: 0;
+  font-size: 9.5px;
+  line-height: 1.2;
+}
+
 .brand-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
-  line-height: 1.22;
+  line-height: 1.2;
 }
 
 .eyebrow,
@@ -3725,7 +3731,7 @@ a.cite:hover {
 
 @media (max-width: 680px) {
   .topbar {
-    padding: 10px 16px;
+    padding: 7px 16px;
   }
 
   .topbar-controls {
@@ -3915,3 +3921,1995 @@ a.cite:hover {
   font-size: 15px;
 }
 
+
+/* --- The skill tree (MapPage, SkillMap) ------------------------------------------------------ */
+
+:root {
+  --branch-green: #0f8b68;
+  --branch-violet: #7c3aed;
+  --branch-blue: #2563eb;
+  --branch-amber: #c77700;
+  --branch-teal: #0d9488;
+  --branch-slate: #64748b;
+  --map-bg: #f6f8fc;
+  --map-next: #6d3fe0;
+  --done-line: color-mix(in srgb, var(--success) 45%, var(--line));
+}
+
+:root[data-theme="dark"] {
+  --branch-green: #34d399;
+  --branch-violet: #a78bfa;
+  --branch-blue: #60a5fa;
+  --branch-amber: #fbbf24;
+  --branch-teal: #2dd4bf;
+  --branch-slate: #94a3b8;
+  --map-bg: #12141a;
+  --map-next: #8b5cf6;
+  --done-line: color-mix(in srgb, var(--success) 40%, var(--line-strong));
+}
+
+.branch-green { --branch: var(--branch-green); }
+.branch-violet { --branch: var(--branch-violet); }
+.branch-blue { --branch: var(--branch-blue); }
+.branch-amber { --branch: var(--branch-amber); }
+.branch-teal { --branch: var(--branch-teal); }
+.branch-slate { --branch: var(--branch-slate); }
+
+.map-page {
+  flex: 1;
+  width: 100%;
+  padding: 18px 24px 40px;
+  background: var(--map-bg);
+}
+
+/* A rail on the left (you, then the node you've selected), the map beside it. */
+.map-stage {
+  display: grid;
+  grid-template-columns: minmax(290px, 340px) minmax(0, 1fr);
+  gap: 16px 28px;
+  align-items: start;
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
+.map-rail {
+  position: sticky;
+  top: 66px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.map-main {
+  min-width: 0;
+}
+
+.map-panel {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 30px rgba(20, 20, 20, 0.06);
+}
+
+.map-player h1 {
+  margin-bottom: 12px;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.map-level {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.map-level-badge {
+  flex: none;
+  width: 48px;
+  height: 52px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: linear-gradient(160deg, var(--temporal-uv), var(--branch-violet));
+  color: #ffffff;
+  font-size: 21px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.map-level-badge small {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.map-level-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.map-level-title {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.xp-bar {
+  display: block;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.xp-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--amber), #f59e0b);
+  transition: width 600ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.xp-bar.is-path > span {
+  background: var(--temporal-uv);
+}
+
+.map-level-meta {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.map-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.map-stats strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+/* --- A node: its glyph (NodeGlyph), wherever it's drawn ---------------------------------------- */
+
+.node-glyph {
+  flex: none;
+  display: block;
+  overflow: visible;
+}
+
+.glyph-shape {
+  fill: var(--paper);
+  stroke: var(--branch, var(--temporal-uv));
+  stroke-width: 3.5;
+  transition: fill 160ms ease, stroke 160ms ease;
+}
+
+.glyph-mark {
+  fill: var(--branch, var(--temporal-uv));
+}
+
+.glyph-mark-stroke {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glyph-mark-stroke.is-thin {
+  stroke-width: 2.4;
+}
+
+.glyph-id {
+  fill: var(--branch, var(--temporal-uv));
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* A node's number (F1, A4), set apart from its title wherever it's written: monospace, small, a
+   quiet grey chip (it's for finding your place, not for drawing the eye). A challenge's or boss's
+   kind, the same way, in capitals. */
+.node-num {
+  display: inline-block;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--mist);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.78em;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0;
+  vertical-align: 0.12em;
+}
+
+.node-num.is-kind {
+  font-family: inherit;
+  font-size: 0.68em;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Next: purple, a play mark. */
+.node-glyph.is-next .glyph-shape {
+  fill: var(--map-next);
+  stroke: var(--map-next);
+  filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--map-next) 45%, transparent));
+}
+
+.node-glyph.is-next .glyph-mark {
+  fill: #ffffff;
+}
+
+.glyph-halo {
+  fill: none;
+  stroke: var(--map-next);
+  stroke-width: 2.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-halo 2s ease-out infinite;
+}
+
+@keyframes map-halo {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+/* Completed: a soft green, a green check. Quiet, so a run of done steps doesn't outshine Next. */
+.node-glyph.is-done .glyph-shape {
+  fill: var(--success-soft);
+  stroke: var(--done-line);
+  stroke-width: 2;
+}
+
+.node-glyph.is-done .glyph-mark-stroke {
+  stroke: var(--success);
+}
+
+/* Locked: subdued, a lock. */
+.node-glyph.is-locked .glyph-shape {
+  fill: var(--map-bg);
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+.node-glyph.is-locked .glyph-mark {
+  fill: var(--faint);
+}
+
+.node-glyph.is-locked .glyph-mark-stroke {
+  stroke: var(--faint);
+}
+
+/* Coming soon: a dashed outline over whichever it is. */
+.node-glyph.is-soon .glyph-shape {
+  stroke-dasharray: 4 4;
+}
+
+.node-glyph.is-soon.is-open .glyph-shape {
+  stroke: var(--line-strong);
+  stroke-width: 2;
+}
+
+.node-glyph.is-soon.is-open .glyph-mark,
+.node-glyph.is-soon.is-open .glyph-id {
+  fill: var(--faint);
+}
+
+.state-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.state-tag.is-next { background: var(--map-next); color: #ffffff; }
+.state-tag.is-open,
+.state-tag.is-ready { background: color-mix(in srgb, var(--branch, var(--temporal-uv)) 14%, transparent); color: var(--branch, var(--temporal-uv)); }
+.state-tag.is-done { background: var(--success-soft); color: var(--success); }
+.state-tag.is-locked { background: var(--mist); color: var(--muted); }
+.state-tag.is-soon { border: 1px dashed var(--line-strong); background: transparent; color: var(--muted); }
+
+/* --- The selected node's details (NodeDetail) -------------------------------------------------- */
+
+.map-detail {
+  border-top: 4px solid var(--branch, var(--temporal-uv));
+}
+
+.map-detail:has(> .node-detail.branch-green) { --branch: var(--branch-green); }
+.map-detail:has(> .node-detail.branch-violet) { --branch: var(--branch-violet); }
+.map-detail:has(> .node-detail.branch-blue) { --branch: var(--branch-blue); }
+.map-detail:has(> .node-detail.branch-amber) { --branch: var(--branch-amber); }
+.map-detail:has(> .node-detail.branch-teal) { --branch: var(--branch-teal); }
+.map-detail:has(> .node-detail.branch-slate) { --branch: var(--branch-slate); }
+
+.map-detail-next {
+  display: none;
+}
+
+.node-detail-where {
+  margin: 0 0 10px;
+  color: var(--branch, var(--muted));
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.node-detail-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.node-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 4px;
+}
+
+.node-detail-title {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.node-detail-id {
+  font-size: 12px;
+  line-height: 1.5;
+  vertical-align: 0;
+}
+
+.node-detail-facts {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.node-detail-facts > div {
+  display: grid;
+  gap: 2px;
+}
+
+.node-detail-facts dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.node-detail-facts dd {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.node-detail-xp {
+  color: var(--amber);
+  font-weight: 750;
+}
+
+.node-detail-needs {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.node-detail-need {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.node-detail-need:hover {
+  border-color: var(--temporal-uv);
+}
+
+.node-detail-need > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-detail-need-state {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 750;
+}
+
+.node-detail-more {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.node-detail-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.node-detail-go {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  overflow: hidden;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+/* The one call to action: the Next node's purple, and the only play mark on the page. */
+.node-detail-go.button-primary {
+  border-color: var(--map-next);
+  background: var(--map-next);
+}
+
+.node-detail-go.button-primary:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--map-next) 82%, black);
+  background: color-mix(in srgb, var(--map-next) 82%, black);
+}
+
+.node-detail-play {
+  flex: none;
+}
+
+/* The call to action glows, softly and on repeat, so the next thing to do is never in doubt; a
+   node just clicked on the map makes it pulse harder, twice, then it settles back. */
+.node-detail-go.button-primary {
+  animation: cta-breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes cta-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 transparent, 0 0 8px 0 color-mix(in srgb, var(--map-next) 25%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--map-next) 18%, transparent), 0 0 20px 3px color-mix(in srgb, var(--map-next) 40%, transparent); }
+}
+
+.node-detail-go.is-glowing,
+.node-detail-go.button-primary.is-glowing {
+  animation: cta-glow 1s ease-out 2;
+}
+
+@keyframes cta-glow {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--map-next) 65%, transparent), 0 0 18px 2px color-mix(in srgb, var(--map-next) 55%, transparent); filter: brightness(1.12); }
+  70% { box-shadow: 0 0 0 10px transparent, 0 0 24px 6px transparent; filter: brightness(1); }
+  100% { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .node-detail-go.button-primary {
+    animation: none;
+  }
+
+  .node-detail-go.is-glowing,
+  .node-detail-go.button-primary.is-glowing {
+    animation: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--map-next) 45%, transparent);
+  }
+}
+
+.node-detail-go-what {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  opacity: 0.9;
+  text-align: left;
+}
+
+.node-detail-rule {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.node-detail-rule a {
+  color: var(--temporal-uv);
+  font-weight: 750;
+}
+
+.node-detail-back {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--temporal-uv);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* --- The toolbar: view, path, legend, the rule ------------------------------------------------- */
+
+.map-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+}
+
+.map-view-toggle {
+  display: inline-flex;
+}
+
+.map-view-toggle .button {
+  border-radius: 0;
+}
+
+.map-view-toggle .button:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.map-view-toggle .button:last-child {
+  margin-left: -1px;
+  border-radius: 0 6px 6px 0;
+}
+
+.map-view-toggle .button.active {
+  position: relative;
+  z-index: 1;
+  border-color: var(--line-strong);
+  background: var(--mist);
+  color: var(--text);
+}
+
+.map-path-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-path-pick select {
+  min-width: 0;
+  max-width: 300px;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.map-path-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.map-path-progress .xp-bar {
+  width: 80px;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.map-rule {
+  margin: 10px 0 14px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.map-rule strong {
+  color: var(--text);
+}
+
+.path-badge,
+.map-path-badge circle {
+  fill: var(--temporal-uv);
+}
+
+.path-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  display: grid;
+  place-content: center;
+  border: 2px solid var(--map-bg);
+  border-radius: 999px;
+  background: var(--temporal-uv);
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 850;
+}
+
+/* --- The focused view (FocusMap) --------------------------------------------------------------- */
+
+.focus-map {
+  padding: 22px 24px 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.focus-kicker {
+  margin: 0 0 4px;
+  color: var(--branch);
+  font-size: 11.5px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.focus-head h2 {
+  font-size: 22px;
+}
+
+.focus-sub {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* The tiers to switch between, above the trail. */
+.focus-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.focus-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.focus-tab:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+/* The tier on show: raised, in neutral tones (the branch's colour is loud enough elsewhere). */
+.focus-tab.is-active {
+  border-color: var(--line-strong);
+  background: var(--mist);
+  color: var(--text);
+}
+
+.focus-tab-count {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.focus-tab.is-done .focus-tab-count {
+  color: var(--success);
+}
+
+.focus-tab-here {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--map-next);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+/* The trail: a step a column, a line from each node to the one before it. */
+.focus-trail {
+  display: grid;
+  grid-template-columns: repeat(var(--steps), minmax(0, 1fr));
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.focus-trail li {
+  position: relative;
+  min-width: 0;
+}
+
+/* The line to the step before, drawn inside the step (above its button's background, below its
+   node), so a hovered or selected step doesn't cut it. */
+.focus-trail li + li .focus-node-glyph::before {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  /* From this node's left edge to the one before's right edge: the line never crosses a node. */
+  right: calc(50% + 19px);
+  width: calc(100% + 8px - 38px);
+  height: 3px;
+  margin-top: -1.5px;
+  background: var(--line-strong);
+  content: "";
+  pointer-events: none;
+}
+
+.focus-trail li.is-lit + li .focus-node-glyph::before {
+  background: var(--done-line);
+}
+
+.focus-node-glyph > .node-glyph {
+  position: relative;
+  z-index: 1;
+}
+
+.focus-node {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 8px 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.focus-node:hover {
+  background: var(--mist);
+}
+
+.focus-node.is-selected {
+  border-color: var(--line-strong);
+  background: var(--mist);
+}
+
+.focus-node:focus-visible {
+  outline: 2px solid var(--temporal-uv);
+  outline-offset: 2px;
+}
+
+.focus-node-glyph {
+  position: relative;
+  justify-self: stretch;
+  height: 48px;
+  display: grid;
+  place-items: center;
+}
+
+.focus-node-id {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2px 5px;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.focus-node-id .node-num {
+  font-size: 11px;
+}
+
+.focus-node-min {
+  white-space: nowrap;
+}
+
+.focus-node-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.focus-node.is-locked .focus-node-title {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.focus-node.is-next .focus-node-title {
+  color: var(--map-next);
+}
+
+.focus-then {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.focus-then strong {
+  color: var(--text);
+}
+
+.focus-leads {
+  margin-top: 24px;
+}
+
+.focus-leads h3 {
+  font-size: 16px;
+}
+
+.focus-leads > p {
+  margin: 4px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.focus-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--temporal-uv);
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.focus-branches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.focus-branch {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--branch);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.focus-branch:hover {
+  border-color: var(--line-strong);
+  border-top-color: var(--branch);
+}
+
+.focus-branch-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.focus-branch-icon {
+  font-size: 22px;
+}
+
+.focus-branch-name {
+  font-size: 14.5px;
+  font-weight: 850;
+}
+
+.focus-branch-desc {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.focus-branch-after {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.focus-branch-after strong {
+  color: var(--branch);
+}
+
+.focus-branch-go {
+  color: var(--branch);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+.focus-branch:hover .focus-branch-go span {
+  margin-left: 3px;
+}
+
+.focus-expand {
+  margin-top: 18px;
+}
+
+.focus-branch.is-open {
+  border-color: var(--line-strong);
+  border-top-color: var(--branch);
+  background: var(--mist);
+}
+
+/* A specialization's map, expanded in place under the cards. */
+.focus-expanded {
+  margin-top: 14px;
+  padding: 16px 18px 12px;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--branch);
+  border-radius: 14px;
+  background: var(--paper);
+  animation: focus-expand 180ms ease-out;
+}
+
+@keyframes focus-expand {
+  from { opacity: 0; transform: translateY(-6px); }
+}
+
+.focus-expanded-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.focus-expanded-head h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.focus-expanded-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.focus-before {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  margin: 12px 0 4px;
+  font-size: 12.5px;
+}
+
+.focus-before-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.focus-before-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.focus-before-step:hover {
+  border-color: var(--branch);
+}
+
+.focus-before-count {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.focus-before-arrow {
+  color: var(--faint);
+}
+
+.focus-expanded-tier-name {
+  margin: 14px 0 0;
+  color: var(--branch);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.focus-expanded .focus-trail {
+  margin-top: 6px;
+}
+
+.focus-expanded-soon {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-expanded {
+    animation: none;
+  }
+}
+
+/* --- The full map (SkillMap) ------------------------------------------------------------------- */
+
+.skill-map {
+  position: relative;
+}
+
+.skill-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: inherit;
+  user-select: none;
+}
+
+.map-zone {
+  fill: var(--branch);
+  fill-opacity: 0.05;
+  stroke: var(--branch);
+  stroke-opacity: 0.16;
+  stroke-width: 1;
+}
+
+.map-limb {
+  fill: none;
+  stroke: var(--branch);
+  stroke-opacity: 0.18;
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.map-limb.is-lit {
+  stroke-opacity: 0.45;
+}
+
+.map-junction {
+  cursor: pointer;
+  outline: none;
+}
+
+.map-junction rect {
+  fill: var(--paper);
+  stroke: var(--branch-green);
+  stroke-width: 1.5;
+}
+
+.map-junction text {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.map-junction:hover rect,
+.map-junction:focus-visible rect {
+  stroke: var(--temporal-uv);
+  stroke-width: 2;
+}
+
+.map-header-name {
+  fill: var(--text);
+  font-size: 15px;
+  font-weight: 850;
+}
+
+.map-header-name.is-trunk {
+  fill: var(--branch);
+  font-size: 14px;
+}
+
+.map-header-after {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.map-header-req {
+  fill: var(--branch);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.map-header-soon {
+  fill: var(--faint);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.map-tier {
+  fill: var(--muted);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.map-edge {
+  fill: none;
+  stroke: var(--line-strong);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.map-edge.is-lit {
+  stroke: var(--done-line);
+}
+
+.map-edge.is-faint {
+  stroke-dasharray: 2 6;
+}
+
+.map-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.map-node-hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 1.5;
+}
+
+.map-node:hover .map-node-hit {
+  fill: color-mix(in srgb, var(--mist) 80%, transparent);
+}
+
+.map-node.is-selected .map-node-hit {
+  fill: var(--paper);
+  stroke: var(--line-strong);
+}
+
+.map-node:focus-visible .map-node-hit {
+  stroke: var(--temporal-uv);
+  stroke-width: 2;
+}
+
+.map-label {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.map-label-id {
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.map-label-id.is-kind {
+  font-family: inherit;
+  font-size: 9.5px;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.map-node.is-locked .map-label-id,
+.map-node.is-soon .map-label-id {
+  fill: var(--faint);
+}
+
+.map-node.is-next .map-label-id {
+  fill: var(--muted);
+}
+
+.map-node.is-locked .map-label,
+.map-node.is-soon .map-label {
+  fill: var(--muted);
+  font-weight: 600;
+}
+
+.map-node.is-next .map-label {
+  fill: var(--map-next);
+  font-weight: 850;
+}
+
+.map-node.off-path {
+  opacity: 0.35;
+}
+
+/* The way to one branch (a focus card's): the rest of the tree steps back. */
+.map-node.off-route,
+.map-edge.off-route,
+.map-limb.off-route,
+.map-zone.off-route,
+g.off-route {
+  opacity: 0.22;
+  transition: opacity 200ms ease;
+}
+
+.map-zone.is-toward {
+  fill-opacity: 0.1;
+  stroke-opacity: 0.7;
+  stroke-width: 2;
+}
+
+.map-limb.is-toward {
+  stroke-opacity: 0.55;
+}
+
+.map-toward {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--branch);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.map-path-badge circle {
+  stroke: var(--map-bg);
+  stroke-width: 2;
+}
+
+.map-path-badge text {
+  fill: #ffffff;
+  font-size: 9.5px;
+  font-weight: 850;
+  pointer-events: none;
+}
+
+/* --- The list, for phones ---------------------------------------------------------------------- */
+
+.map-list {
+  display: none;
+}
+
+/* Narrower, the rail goes above the map, the panels side by side. */
+@media (max-width: 1100px) {
+  .map-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .map-rail {
+    position: static;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    max-height: none;
+    overflow: visible;
+  }
+
+  .focus-trail {
+    grid-template-columns: repeat(var(--steps), minmax(84px, 1fr));
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .map-page {
+    padding: 16px 16px 40px;
+  }
+
+  .map-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .map-main,
+  .map-detail-selected {
+    display: none;
+  }
+
+  .map-detail-next {
+    display: block;
+  }
+
+  .map-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .map-list .map-rule {
+    margin: 0;
+  }
+}
+
+.map-list-branch {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--branch);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.map-list-branch summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  cursor: pointer;
+  font-weight: 850;
+  list-style: none;
+}
+
+.map-list-branch summary::-webkit-details-marker {
+  display: none;
+}
+
+.map-list-icon {
+  font-size: 20px;
+}
+
+.map-list-name {
+  flex: 1;
+  display: grid;
+}
+
+.map-list-name small {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 650;
+}
+
+.map-list-count {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.map-list-tier {
+  padding: 0 14px 6px;
+}
+
+.map-list-tier-name {
+  margin: 4px 0 6px;
+  color: var(--branch);
+  font-size: 10.5px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.map-list-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-list-row.is-locked,
+.map-list-row.is-soon {
+  color: var(--muted);
+}
+
+.map-list-row.is-next .map-list-title {
+  color: var(--map-next);
+  font-weight: 800;
+}
+
+.map-list-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.map-list-id {
+  margin-right: 8px;
+  font-size: 11px;
+}
+
+.map-list-state {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.map-list-detail {
+  margin: 0 0 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glyph-halo {
+    animation: none;
+  }
+
+  .glyph-shape,
+  .xp-bar > span {
+    transition: none;
+  }
+}
+
+/* --- In a module: where you are (ModuleNav), and your XP (XpPill) ----------------------------- */
+
+.module-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin-right: 6px;
+}
+
+.module-nav-map {
+  gap: 6px;
+}
+
+.module-crumb {
+  min-width: 0;
+  max-width: 340px;
+  padding-left: 12px;
+  border-left: 3px solid var(--branch);
+}
+
+.module-crumb p {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.module-crumb-branch {
+  color: var(--branch);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.module-crumb-pos {
+  color: var(--muted);
+  font-weight: 750;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.module-crumb-title {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.module-crumb-id {
+  margin-right: 7px;
+  color: var(--branch);
+}
+
+.module-minimap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.minimap-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--branch);
+  border-radius: 50%;
+  background: var(--paper);
+  transition: transform 120ms ease;
+}
+
+.minimap-dot.is-done,
+.minimap-dot.is-next {
+  background: var(--branch);
+}
+
+.minimap-dot.is-locked {
+  border-color: var(--line-strong);
+}
+
+.minimap-dot.is-current {
+  width: 13px;
+  height: 13px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--branch) 25%, transparent);
+}
+
+.minimap-dot:hover {
+  transform: scale(1.3);
+}
+
+.xp-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px 0 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.xp-pill-level {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(160deg, var(--temporal-uv), var(--branch-violet));
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.xp-pill-bar {
+  width: 54px;
+  height: 6px;
+}
+
+.xp-pill-xp {
+  color: var(--amber);
+}
+
+.xp-pill.is-bumped {
+  animation: xp-bump 520ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+@keyframes xp-bump {
+  40% { transform: scale(1.12); }
+}
+
+.xp-gain {
+  position: absolute;
+  right: 6px;
+  top: calc(100% + 6px);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--amber);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--amber) 40%, transparent);
+  pointer-events: none;
+  animation: xp-float 1.6s ease-out forwards;
+}
+
+@keyframes xp-float {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.8); }
+  18% { opacity: 1; transform: translateY(0) scale(1.05); }
+  70% { opacity: 1; transform: translateY(4px) scale(1); }
+  100% { opacity: 0; transform: translateY(14px); }
+}
+
+@media (max-width: 1500px) {
+  .module-minimap {
+    display: none;
+  }
+}
+
+@media (max-width: 1280px) {
+  .xp-pill-bar,
+  .xp-pill-xp {
+    display: none;
+  }
+
+  .xp-pill {
+    padding-right: 4px;
+  }
+}
+
+@media (max-width: 680px) {
+  .module-nav {
+    order: 10;
+    flex: 1 1 100%;
+  }
+
+  .module-crumb {
+    flex: 1;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-pill.is-bumped,
+  .xp-gain {
+    animation: none;
+  }
+}
+
+/* --- Challenges: a diamond on the map, and the challenge in the guide --------------------- */
+
+.map-node.is-challenge .map-bolt,
+.map-node.is-challenge.is-done .map-bolt {
+  font-size: 13px;
+}
+
+.challenge {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.challenge-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 750;
+}
+
+.challenge-bolt {
+  font-size: 15px;
+}
+
+.challenge-where {
+  margin-left: auto;
+  color: var(--faint);
+  font-weight: 650;
+}
+
+.challenge-choices {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.challenge-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.challenge-choice:hover:not(:disabled),
+.challenge-choice.is-selected {
+  border-color: var(--temporal-uv);
+  background: var(--temporal-uv-soft);
+}
+
+.challenge-choice.is-struck {
+  border-style: dashed;
+  color: var(--faint);
+  text-decoration: line-through;
+  cursor: default;
+}
+
+.challenge-choice.is-right {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.challenge-choice:disabled:not(.is-struck) {
+  cursor: progress;
+}
+
+.challenge-letter {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--mist);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.challenge-choice.is-selected .challenge-letter {
+  background: var(--temporal-uv);
+  color: #fff;
+}
+
+.challenge-label {
+  flex: 1;
+}
+
+.challenge-mark {
+  font-weight: 850;
+}
+
+.challenge-choice.is-struck .challenge-mark {
+  color: var(--danger);
+  text-decoration: none;
+}
+
+.challenge-choice.is-right .challenge-mark {
+  color: var(--success);
+}
+
+.challenge-prompt,
+.challenge-again {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.challenge-again {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.challenge-diff {
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--code-bg);
+}
+
+.challenge-diff-file {
+  margin: 0;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--code-muted);
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.challenge-diff pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  color: var(--code-ink);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.challenge-diff .diff-line {
+  display: block;
+  padding: 0 12px;
+  white-space: pre;
+}
+
+.challenge-diff .diff-line.is-add {
+  background: rgba(52, 211, 153, 0.14);
+  color: #b7f5d8;
+}
+
+.challenge-diff .diff-line.is-del {
+  background: rgba(251, 113, 133, 0.12);
+  color: #fecdd3;
+}
+
+.challenge-run {
+  margin: 8px 12px 12px;
+}
+
+.challenge-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--amber-soft);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.challenge-outcomes {
+  display: grid;
+  gap: 10px;
+}
+
+.challenge-outcomes.is-compare .challenge-outcome {
+  font-size: 12.5px;
+}
+
+.challenge-outcome {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.challenge-outcome.is-right {
+  border-left-color: var(--success);
+}
+
+.challenge-outcome.is-wrong {
+  border-left-color: var(--danger);
+}
+
+.challenge-outcome.is-running {
+  border-left-color: var(--temporal-uv);
+}
+
+.outcome-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.outcome-label {
+  flex: 1;
+}
+
+.outcome-source {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.outcome-timeline {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.outcome-timeline li {
+  display: flex;
+  gap: 8px;
+  color: var(--muted);
+  animation: map-card-in 160ms ease-out;
+}
+
+.outcome-timeline li.is-good {
+  color: var(--success);
+}
+
+.outcome-timeline li.is-bad {
+  color: var(--danger);
+}
+
+.outcome-timeline li.is-worker {
+  color: var(--faint);
+  font-style: italic;
+}
+
+.outcome-timeline li.is-waiting {
+  color: var(--temporal-uv);
+}
+
+.outcome-t {
+  flex: none;
+  width: 38px;
+  color: var(--faint);
+  text-align: right;
+}
+
+.outcome-summary {
+  margin: 0;
+  font-weight: 800;
+}
+
+.challenge-outcome.is-right .outcome-summary {
+  color: var(--success);
+}
+
+.challenge-outcome.is-wrong .outcome-summary {
+  color: var(--danger);
+}
+
+.outcome-events {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.outcome-events code {
+  font-size: 11px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.outcome-why {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.outcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.outcome-actions .button {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* A path's number on a trail step: by the node, not the step's edge. */
+.focus-node-glyph > .path-badge {
+  z-index: 2;
+  top: -2px;
+  right: auto;
+  left: calc(50% + 12px);
+}

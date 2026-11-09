@@ -161,7 +161,7 @@ export class Learner {
 
   // On to the step with this title (as the assignment's heading has it, without its number),
   // with the guide's replies, as a learner goes. Fails if the guide gets to the check without it.
-  // A check that passes mid-exercise (exercise 5 runs check.sh in a step) sends the guide to its
+  // A check that passes mid-exercise (a step can run the check) sends the guide to its
   // 🎉: then back to the step by its segment in the step bar, as a learner would.
   async step(title) {
     for (let i = 0; i < 40; i++) {
@@ -186,7 +186,7 @@ export class Learner {
     expect(await this.heading()).toBe("Check your work");
   }
 
-  // ↺ Start over, in the guide's header (and yes to its confirm): the exercise's reset.sh, in the
+  // ↺ Start over, in the guide's header (and yes to its confirm): the exercise's ./quest reset, in the
   // worker terminal. Its file back as the exercise starts, any earlier exercise whose TODO is
   // still open solved, sessions ended, the bookings ledger cleared, the check no longer passed;
   // a running worker started again on that code. The guide goes back to its first beat. So each
@@ -195,7 +195,7 @@ export class Learner {
   //
   // The worker is stopped first (the dock's toggle): with it running, Start over types Ctrl-C
   // and then its command 900 ms later, and the travel worker takes longer than that to stop, so
-  // the command is lost and reset.sh never runs (TerminalDock's type()).
+  // the command is lost and ./quest reset never runs (TerminalDock's type()).
   // ↺ Start over (its confirm accepted): the sandbox deleted, and a new one ready with the
   // exercise as it starts.
   async startOver(exercise) {

@@ -4,9 +4,11 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import Tour from "./Tour.vue";
 import AccessForm from "./components/AccessForm.vue";
 import AskSelection from "./components/AskSelection.vue";
+import ModuleNav from "./components/ModuleNav.vue";
+import XpPill from "./components/XpPill.vue";
 import { closeHelper, helper, refreshHelper, resumeAfterConnect, toggleHelper } from "./helper.js";
 import ExercisePage from "./pages/ExercisePage.vue";
-import HomePage from "./pages/HomePage.vue";
+import MapPage from "./pages/MapPage.vue";
 import SetupPage from "./pages/SetupPage.vue";
 import {
   course,
@@ -91,22 +93,6 @@ watch(
   },
 );
 
-// The picker and Previous/Next walk the course in order: the overview, then the exercises.
-// (The setup guide isn't one of them: its links lead there.)
-const pages = [
-  { value: "#/", label: "Overview" },
-  ...course.exercises.map((e) => ({ value: `#/exercise/${e.id}`, label: `Exercise ${e.number}${e.bonus ? " (bonus)" : ""}: ${e.title}`, id: e.id })),
-];
-const current = computed(() =>
-  store.route.page === "exercise" ? `#/exercise/${store.route.id}` : store.route.page === "setup" ? "#/setup" : "#/",
-);
-const position = computed(() => pages.findIndex((p) => p.value === current.value));
-
-function go(offset) {
-  const next = pages[position.value + offset];
-  if (next) navigate(next.value);
-}
-
 async function toggleModel() {
   const next = store.llmMode === "scripted" ? "openai" : "scripted";
   try {
@@ -132,7 +118,7 @@ const tourSteps = [
     title: "Welcome",
     body: "You'll build one travel agent on Temporal, make it durable, put a human in the loop, then let a policy decide what it may do on its own. Here's the page in a minute.",
   },
-  { selector: "[data-tour='exercise-picker']", title: "Pick an exercise", body: "Four exercises, each building on the last; the fourth is a bonus. Jump between them here, or use Previous / Next." },
+  { selector: "[data-tour='breadcrumb']", title: "Where you are", body: "The branch and the module you're on, its branch's modules as dots (each one a link), and Next. Map takes you back to the skill tree, where every module is a node." },
   { selector: "[data-tour='editor']", title: "Edit the code", body: "This is your editor, with the exercise's files as tabs. The file with the TODO is editable and saves to your sandbox as you type. Stuck? Switch to the solution." },
   { selector: "[data-tour='terminals']", title: "Two real terminals", body: "Side by side: the worker terminal runs the process the exercises make you stop and restart, and the commands terminal is for everything else. The ▶ buttons type into the right one, so you always see what they did." },
   { selector: "[data-tour='terminal-actions']", title: "Run it, check it", body: "Stop or start the worker (the toggle shows whether it's running), and run the exercise's check." },
@@ -209,24 +195,16 @@ watch(() => store.authenticated, () => refreshHelper());
       <a class="brand" href="#/">
         <img class="brand-image" src="/course-visual.png" alt="">
         <span class="brand-copy">
-          <span class="eyebrow">Temporal Workshop</span>
-          <span class="brand-title">Reliable AI Agents</span>
+          <span class="eyebrow">Learn Temporal</span>
+          <span class="brand-title">Temporal Quest</span>
         </span>
       </a>
       <nav class="topbar-controls" aria-label="Course">
-        <!-- Not on the home page: there, Start is the only way in, and the only thing to do. -->
+        <ModuleNav v-if="exercise" :exercise="exercise" />
+        <a v-else-if="store.route.page !== 'home'" class="button button-secondary" href="#/">Map</a>
+        <XpPill />
+        <!-- Not on the map: there, the tree is the only thing to do. -->
         <template v-if="store.route.page !== 'home'">
-          <button class="button button-secondary" type="button" :disabled="position <= 0" @click="go(-1)">Previous</button>
-          <label class="exercise-picker" data-tour="exercise-picker">
-            <span class="visually-hidden">Go to</span>
-            <select :value="current" @change="navigate($event.target.value)">
-              <option v-if="position < 0" :value="current" disabled>Set up on your machine</option>
-              <option v-for="page in pages" :key="page.value" :value="page.value">
-                {{ page.label }}{{ page.id && store.passed.includes(page.id) ? "  ✓" : "" }}
-              </option>
-            </select>
-          </label>
-          <button class="button button-secondary" type="button" :disabled="position >= pages.length - 1" @click="go(1)">Next</button>
           <div v-if="store.runtime.enabled" class="sandbox-menu" data-tour="sandbox-menu">
             <button class="button sandbox-pill" :class="`state-${sandboxPillState}`" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
               <span class="sandbox-dot" aria-hidden="true" />{{ sandboxLabel }}
@@ -265,7 +243,7 @@ watch(() => store.authenticated, () => refreshHelper());
       </nav>
     </header>
 
-    <HomePage v-if="store.route.page === 'home'" />
+    <MapPage v-if="store.route.page === 'home'" />
     <SetupPage v-else-if="store.route.page === 'setup'" />
     <ExercisePage v-else-if="exercise" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
   </div>

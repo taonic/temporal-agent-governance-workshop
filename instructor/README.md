@@ -1,23 +1,23 @@
 # Instructor guide
 
-Talking points and demo scripts for the instructor blocks of the 4-hour workshop. The exercises themselves are self-contained (`challenges/*/assignment.md`); these notes cover what you say and show between them.
+Talking points and demo scripts for the instructor blocks of the 4-hour workshop. The exercises themselves are self-contained (`quests/`, grouped by the path `quests/paths/agent-governance-4h.yaml`); these notes cover what you say and show between them.
 
 ## Run of show
 
 | Time | Block | You | Learners |
 |---:|---|---|---|
 | 0:00 | Opening | Frame the problem | |
-| 0:10 | Exercise 1: Hello Temporal | Float | `challenges/01-hello-temporal` |
+| 0:10 | Exercise 1: Hello Temporal | Float | `quests/fundamentals` F1–F7 |
 | 0:45 | Temporal debrief | Explain history, retries, timers, workers, messages | |
 | 0:55 | Introduce Monty | Map raw Temporal to the agent | |
-| 1:00 | Exercise 2: Durable session | Float; it opens with Code Mode, hands-on | `challenges/02-durable-session` |
+| 1:00 | Exercise 2: Durable session | Float; it opens with Code Mode, hands-on | `quests/ai-agent` A1–A7 |
 | 1:45 | Break | | |
 | 1:55 | Introduce Nexus | Other teams, other namespaces, durable calls | |
-| 2:00 | Exercise 3: Agents across teams | Float | `challenges/03-nexus` |
+| 2:00 | Exercise 3: Agents across teams | Float | `quests/nexus` N1–N5 |
 | 2:30 | The human approval pattern | Why safe-but-manual doesn't scale | |
-| 2:40 | Exercise 4: Human approval | Float | `challenges/04-human-approval` |
+| 2:40 | Exercise 4: Human approval | Float | `quests/ai-agent` A8–A11 |
 | 3:10 | Introduce Dogwood | Policy over tool calls and history | |
-| 3:20 | Bonus exercise 5: Auto mode | Float; run it as a demo if time is short | `challenges/05-auto-mode` |
+| 3:20 | Bonus exercise 5: Auto mode | Float; run it as a demo if time is short | `quests/ai-agent` A12–A15 |
 | 3:55 | Wrap | Reusable architecture, next steps | |
 
 The arc to keep repeating: **make it run, make it durable, make it safe, then make it autonomous.** Don't explain Dogwood before learners have seen the agent run.
@@ -28,7 +28,7 @@ The arc to keep repeating: **make it run, make it durable, make it safe, then ma
 - **Model:** start the shared GPU endpoint about 30 minutes before (`uv run --group gpu python scripts/gpu_endpoint.py up --hours 4.5`; needs `DAYTONA_API_KEY`) and hand out the `.env` lines it prints.
 - **Benchmark it** with a worker pointed at it: `uv run python scripts/bench_llm.py --runs 3 --concurrency 10`. You want `search`, `form` and `book` at 3/3.
 - **Fallback:** if the endpoint dies, learners set `LLM_MODE=scripted` in `.env` and restart the worker. The scripted agent plays every walkthrough in the assignments.
-- Have the finished workshop in a second checkout for demos (`scripts/switch.py solution`).
+- Have the finished workshop in a second checkout for demos (`./quest solution`).
 - **Browser course:** if learners use the hosted site instead of local setup, deploy it and set a fresh access code the day before: [DEPLOY.md](DEPLOY.md).
 
 ---

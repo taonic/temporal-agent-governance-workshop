@@ -9,7 +9,7 @@ import time
 
 import pydantic_monty as monty
 
-# @@solution ch02
+# @@solution A1
 # 🤖 THE CODE AN LLM WRITES. In the agent, the model writes a script like this, and Monty runs it
 # in its sandbox. It imports nothing: whatever it calls, the host has to pass in.
 MODEL_SCRIPT = """
@@ -19,12 +19,12 @@ print(f"{len(flights)} flights, {len(nonstop)} nonstop")
 min(nonstop, key=lambda f: f["price_cents"])
 """
 # @@starter
-# TODO(ch02): the model's script, as a string. Step 1 of exercise 2 has it.
+# TODO(ch02): the model's script, as a string. Step 6 of exercise 2 has it.
 MODEL_SCRIPT = ""
 # @@end
 
 
-# @@solution ch02
+# @@solution A1
 # 🖥️ A HOST FUNCTION: defined here, on the host, and called from inside the sandbox. It runs out
 # here, where it could reach a real flight API; the script only gets back what it returns.
 def search_flights(origin: str, destination: str, date: str) -> list[dict]:
@@ -48,7 +48,7 @@ STUBS = ""
 
 def run(script: str):
     """Start a fresh sandbox, run ``script`` in it, and return its last expression's value."""
-    # @@solution ch02
+    # @@solution A1
     # A pool of Monty workers, and a fresh sandbox from it: type-checked against the host's
     # signatures (STUBS) before anything runs, and stopped if it computes for over a second.
     with monty.Monty() as pool:
@@ -63,7 +63,7 @@ def run(script: str):
             )
     # @@starter
     # TODO(ch02): start a Monty sandbox and run `script` in it, with HOST_FUNCTIONS as all it
-    # can call. Step 1 of exercise 2 has the code.
+    # can call. Step 6 of exercise 2 has the code.
     raise NotImplementedError("TODO(ch02): run the script in Monty")
     # @@end
 

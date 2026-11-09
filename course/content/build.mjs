@@ -1,20 +1,22 @@
 // Builds the course site's content from the workshop itself, so the site is never a second
 // copy of it:
 //
-//   challenges/NN-*/assignment.md   the exercises (Instruqt frontmatter: title, teaser, timelimit)
-//   README.md                       the home page (its intro and architecture) and the setup page
-//   starter/, solutions/chNN/       the editor's starter and solution views
+//   quests/<branch>/branch.md            the branches (quests/README.md has the format)
+//   quests/<branch>/<NN-slug>/module.md  the modules: frontmatter, then the guide's text
+//   quests/paths/*.yaml                  the paths, and the exercises the site shows them as
+//   README.md                            the home page (its intro and architecture) and the setup page
+//   starter/, authoring/                 the editor's starter, and its solution views
 //
-// Writes course/web/src/generated/course-data.json, and copies the files the content links
-// to under docs/ into course/web/public/content/.
+// Writes course/web/src/generated/course-data.json (and assignments.json, the exercises' text
+// for Ask Temporal's prompt), and copies the files the content links to under docs/ into
+// course/web/public/content/.
 //
-// Assignments carry two kinds of mode block, so one file serves GitHub, Instruqt and both
-// modes of the site:
+// Modules carry two kinds of mode block, so one file serves GitHub and both modes of the site:
 //
 //   <!-- browser
-//   Only in the browser course. Inside a comment, so GitHub and Instruqt don't show it.
+//   Only in the browser course. Inside a comment, so GitHub doesn't show it.
 //   -->
-//   <!-- local -->Only when running locally (and on GitHub and Instruqt).<!-- /local -->
+//   <!-- local -->Only when running locally (and on GitHub).<!-- /local -->
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -29,7 +31,6 @@ import YAML from "yaml";
 
 import { tourRange } from "../web/src/tourRange.js";
 import { ruleBlock, ruleId, todoFor } from "../web/src/snippets.js";
-import { EXERCISES, WORKER_COMMAND } from "./exercises.mjs";
 
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("bash", bash);
@@ -54,6 +55,7 @@ hljs.registerLanguage("dogwood", () => ({
 const courseDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repoRoot = path.resolve(courseDir, "..");
 const outFile = path.join(courseDir, "web/src/generated/course-data.json");
+const assignmentsFile = path.join(courseDir, "web/src/generated/assignments.json");
 const publicContent = path.join(courseDir, "web/public/content");
 
 // Where repo links point when they can't be shown on the site. Unset: they render as text.
@@ -61,9 +63,12 @@ const repoUrl = (process.env.COURSE_REPO_URL ?? "").replace(/\/$/, "");
 
 const MODES = ["browser", "local"];
 
+// A command typed into the worker terminal rather than the commands terminal when a ▶ is clicked.
+export const WORKER_COMMAND = /^(?:\w+=\S+\s+)*uv run (?:hello|travel)-worker\b/;
+
 // Inline code that's a command to run as it stands: no <placeholder> to fill in first.
 export function isInlineCommand(text) {
-  return /^(?:\w+=\S+\s+)*(?:uv run |temporal [a-z]|\.\/challenges\/|cat )/.test(text) && !/[<>]/.test(text);
+  return /^(?:\w+=\S+\s+)*(?:uv run |temporal [a-z]|\.\/quest |cat )/.test(text) && !/[<>]/.test(text);
 }
 
 // "Stop the worker (Ctrl-C)", "restart the worker", "start the travel agent's worker", "Start
@@ -135,6 +140,7 @@ export function sectionKind(title) {
   if (/^\d+\.\s/.test(title)) return "step";
   if (/^check$/i.test(title)) return "check";
   if (/^stretch\b/i.test(title)) return "stretch";
+  if (/^challenge:/i.test(title)) return "challenge";
   return "plain";
 }
 
@@ -193,8 +199,8 @@ function copyToPublic(rel) {
 function resolveRelative(href, sourceFile) {
   const [target, hash = ""] = href.split("#");
   const rel = path.normalize(path.join(path.dirname(sourceFile), target)).split(path.sep).join("/");
-  const exercise = rel.match(/^challenges\/([^/]+)\/assignment\.md$/);
-  if (exercise) return { href: `#/exercise/${exercise[1]}` };
+  const module = rel.match(/^quests\/[^/]+\/[^/]+\/module\.md$/) && moduleExercise.get(rel);
+  if (module) return { href: `#/exercise/${module}` };
   if (rel.startsWith("docs/") && fs.existsSync(path.join(repoRoot, rel))) {
     return { href: copyToPublic(rel) + (hash ? `#${hash}` : ""), external: true };
   }
@@ -549,12 +555,13 @@ function createRenderer() {
 
 // --- Snippets that go into the editor ------------------------------------------------------
 
-const MARKER = /^\s*(?:#|\/\/) @@(solution ch(\d+)|starter|end)\s*$/;
+const MARKER = /^\s*(?:#|\/\/) @@(solution (\w+)|starter|end)\s*$/;
 
-// An exercise's TODO blocks in a master under authoring/, in file order: for each, the lines
-// learners start from (`starter`) and the lines that solve it (`solution`). A file can have
+// The TODO blocks of some modules in a master under authoring/, in file order: for each, the
+// lines learners start from (`starter`) and the lines that solve it (`solution`). A file can have
 // several; each snippet replaces the one it solves.
-export function todoBlocks(masterText, chapter) {
+export function todoBlocks(masterText, moduleIds) {
+  const wanted = new Set(moduleIds);
   const blocks = [];
   let block = null;
   let mode = null;
@@ -563,7 +570,7 @@ export function todoBlocks(masterText, chapter) {
     if (m) {
       if (m[1].startsWith("solution")) {
         mode = "solution";
-        block = Number(m[2]) === chapter ? { starter: [], solution: [] } : null;
+        block = wanted.has(m[2]) ? { starter: [], solution: [] } : null;
         if (block) blocks.push(block);
       } else if (m[1] === "starter") mode = "starter";
       else block = mode = null;
@@ -574,6 +581,27 @@ export function todoBlocks(masterText, chapter) {
   return blocks
     .filter((b) => b.starter.length)
     .map((b) => ({ starter: `${b.starter.join("\n")}\n`, solution: `${b.solution.join("\n")}\n` }));
+}
+
+// A master as learners' code, with these modules' TODOs solved and every other one open
+// (scripts/render.py, in JavaScript).
+export function renderMaster(masterText, solvedIds) {
+  const solved = new Set(solvedIds);
+  const out = [];
+  let mode = null;
+  let module = null;
+  const lines = masterText.split("\n");
+  lines.forEach((line, i) => {
+    const m = line.match(MARKER);
+    if (m) {
+      if (m[1].startsWith("solution")) [mode, module] = ["solution", m[2]];
+      else if (m[1] === "starter") mode = "starter";
+      else mode = null;
+      return;
+    }
+    if (mode === null || (mode === "solution") === solved.has(module)) out.push(i < lines.length - 1 ? `${line}\n` : line);
+  });
+  return out.join("");
 }
 
 const SNIPPET_FILES = { python: ".py", dogwood: ".dw" };
@@ -618,75 +646,317 @@ function renderPage(md, markdown, mode, sourceFile, files) {
   };
 }
 
-function buildExercise(md, dir) {
-  const config = EXERCISES[dir];
-  if (!config) throw new Error(`course/content/exercises.mjs has no entry for challenges/${dir}`);
-  const source = `challenges/${dir}/assignment.md`;
+// --- Quests: branches, modules and paths -----------------------------------------------------
+
+const QUESTS = "quests";
+// A module's file (quests/…/module.md) → the exercise the site shows it in: where links to it go.
+const moduleExercise = new Map();
+
+function subdirs(rel) {
+  return fs
+    .readdirSync(path.join(repoRoot, rel), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
+// Every branch and module under quests/, and the paths through them, checked: ids unique, every
+// module a module requires exists, and no module requires itself, however indirectly.
+export function loadQuests() {
+  const branches = [];
+  const modules = new Map();
+  for (const dir of subdirs(QUESTS)) {
+    const branchFile = `${QUESTS}/${dir}/branch.md`;
+    if (!fs.existsSync(path.join(repoRoot, branchFile))) continue;
+    const { meta, body } = parseFrontmatter(read(branchFile));
+    if (meta.id !== dir) throw new Error(`${branchFile}: its id is ${meta.id}, but its folder is ${dir}`);
+    const branch = { ...meta, description: body.trim(), modules: [] };
+    for (const moduleDir of subdirs(`${QUESTS}/${dir}`)) {
+      const challenge = loadChallenge(`${QUESTS}/${dir}/${moduleDir}`, dir);
+      if (challenge) {
+        if (modules.has(challenge.id)) throw new Error(`${challenge.source}: id ${challenge.id} is also ${modules.get(challenge.id).source}'s`);
+        modules.set(challenge.id, challenge);
+        branch.modules.push(challenge.id);
+        continue;
+      }
+      const source = `${QUESTS}/${dir}/${moduleDir}/module.md`;
+      if (!fs.existsSync(path.join(repoRoot, source))) continue;
+      const { meta: m, body: text } = parseFrontmatter(read(source));
+      for (const key of ["id", "title", "teaser", "learn", "minutes", "xp", "tier"]) {
+        if (m[key] == null) throw new Error(`${source}: no ${key} in its frontmatter`);
+      }
+      if (modules.has(m.id)) throw new Error(`${source}: module id ${m.id} is also ${modules.get(m.id).source}'s`);
+      modules.set(m.id, {
+        ...m,
+        branch: dir,
+        source,
+        status: m.status ?? "ready",
+        requires: m.requires ?? [],
+        check: m.check ?? { kind: "pending" },
+        worker: m.worker ?? meta.worker ?? null,
+        agentUi: (m.agentUi ?? meta.agentUi) !== false,
+        files: m.files ?? [],
+        kind: "module",
+        body: text,
+      });
+      branch.modules.push(m.id);
+    }
+    // Its boss: a quiz on the branch (issue 03), on the map from the start.
+    const bossFile = `${QUESTS}/${dir}/boss/boss.md`;
+    if (fs.existsSync(path.join(repoRoot, bossFile))) {
+      const { meta: b } = parseFrontmatter(read(bossFile));
+      for (const key of ["id", "title", "teaser", "learn"]) {
+        if (b[key] == null) throw new Error(`${bossFile}: no ${key} in its frontmatter`);
+      }
+      if (modules.has(b.id)) throw new Error(`${bossFile}: id ${b.id} is also ${modules.get(b.id).source}'s`);
+      modules.set(b.id, { ...b, kind: "boss", branch: dir, source: bossFile, status: b.status ?? "ready", requires: b.requires ?? [], check: { kind: "quiz" }, files: [], body: "" });
+      branch.boss = b.id;
+    }
+    // A challenge sits after its module, takes its tier, and gates the next module.
+    for (const id of branch.modules) {
+      const ch = modules.get(id);
+      if (ch.kind !== "challenge") continue;
+      const after = modules.get(ch.after);
+      if (!after || after.branch !== dir) throw new Error(`${ch.source}: after ${ch.after}, which isn't a module in ${dir}`);
+      ch.tier = after.tier;
+      const rest = branch.modules.slice(branch.modules.indexOf(id) + 1).map((m) => modules.get(m));
+      ch.before = rest.find((m) => m.kind === "module")?.id ?? null;
+    }
+    branches.push(branch);
+  }
+  branches.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+  for (const module of modules.values()) {
+    for (const req of module.requires) {
+      if (!modules.has(req)) throw new Error(`${module.source}: requires ${req}, which isn't a module`);
+    }
+  }
+  const done = new Set();
+  const visit = (id, trail) => {
+    if (done.has(id)) return;
+    if (trail.includes(id)) throw new Error(`quests: modules require each other in a loop: ${[...trail, id].join(" → ")}`);
+    for (const req of modules.get(id).requires) visit(req, [...trail, id]);
+    done.add(id);
+  };
+  for (const id of modules.keys()) visit(id, []);
+  const paths = [];
+  for (const file of fs.readdirSync(path.join(repoRoot, QUESTS, "paths")).filter((f) => f.endsWith(".yaml")).sort()) {
+    const source = `${QUESTS}/paths/${file}`;
+    const p = YAML.parse(read(source));
+    for (const ex of p.exercises ?? []) {
+      for (const id of ex.modules) {
+        if (!modules.has(id)) throw new Error(`${source}: exercise ${ex.id} names ${id}, which isn't a module`);
+        if (modules.get(id).status !== "ready") throw new Error(`${source}: exercise ${ex.id} names ${id}, which is ${modules.get(id).status}`);
+      }
+    }
+    const listed = p.modules ?? (p.exercises ?? []).flatMap((ex) => ex.modules);
+    paths.push({ ...p, source, modules: withChallenges(listed, modules) });
+  }
+  return { branches, modules, paths };
+}
+
+// A challenge folder (challenge.md, scenario.py, recordings/): the question, its choices, and
+// each choice's recorded run. null for a module's folder.
+function loadChallenge(dir, branch) {
+  const source = `${dir}/challenge.md`;
+  if (!fs.existsSync(path.join(repoRoot, source))) return null;
   const { meta, body } = parseFrontmatter(read(source));
-  const number = Number.parseInt(dir, 10);
-  const chapter = `ch${String(number).padStart(2, "0")}`;
-  const title = String(meta.title ?? dir).replace(/^\d+\s*·\s*/, "");
-  const files = config.files.map((file) => {
+  for (const key of ["id", "title", "teaser", "learn", "after", "file", "replace", "hint", "choices"]) {
+    if (meta[key] == null) throw new Error(`${source}: no ${key} in its frontmatter`);
+  }
+  if (meta.choices.filter((c) => c.right).length !== 1) throw new Error(`${source}: exactly one choice is right`);
+  const choices = meta.choices.map((c, i) => {
+    const id = "ABCD"[i];
+    const recording = readIfExists(`${dir}/recordings/${id}.json`);
+    if (!recording) throw new Error(`${source}: choice ${id} has no recording (uv run python scripts/record_challenges.py ${meta.id})`);
+    const { lines, done } = JSON.parse(recording);
+    return { id, label: c.label, code: c.code ?? "", explanation: c.explanation, right: Boolean(c.right), recording: { lines, done } };
+  });
+  return {
+    id: meta.id,
+    kind: "challenge",
+    branch,
+    source,
+    title: meta.title,
+    teaser: meta.teaser,
+    learn: meta.learn,
+    minutes: meta.minutes ?? 3,
+    xp: CHALLENGE_XP[0],
+    after: meta.after,
+    requires: meta.requires ?? [meta.after],
+    status: "ready",
+    check: { kind: "challenge" },
+    files: [],
+    body,
+    file: meta.file,
+    replace: meta.replace,
+    hint: meta.hint,
+    choices,
+  };
+}
+
+// A challenge's XP: right first time, second time, any time after.
+export const CHALLENGE_XP = [20, 10, 2];
+
+// A list of modules, with each challenge after the module it follows.
+function withChallenges(ids, modules) {
+  const out = [];
+  for (const id of ids) {
+    out.push(id);
+    for (const m of modules.values()) if (m.kind === "challenge" && m.after === id && !ids.includes(m.id)) out.push(m.id);
+  }
+  return out;
+}
+
+// Every module the given ones build on, directly or not: not the given ones themselves, unless
+// one builds on another.
+export function closure(modules, ids) {
+  const seen = new Set();
+  const stack = ids.flatMap((id) => modules.get(id).requires);
+  while (stack.length) {
+    const id = stack.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    stack.push(...modules.get(id).requires);
+  }
+  return [...modules.keys()].filter((id) => seen.has(id));
+}
+
+// The beats a module's text makes in the guide: its sections' ids ("intro" first, for the
+// module that opens an exercise).
+function moduleBeats(module, first) {
+  const { preamble, sections } = splitSections(module.body);
+  if (!first && preamble) {
+    throw new Error(`${module.source}: has text before its first ## heading, but doesn't open its exercise (only the first module of an exercise can, until the site shows modules on their own)`);
+  }
+  return [...(first ? ["intro"] : []), ...sections.map((s) => slugify(s.title))];
+}
+
+// A path's exercise, as the site shows it until it shows the map: its modules' text, one after
+// the other, and their files, tour and questions together.
+function buildExercise(md, quests, ex, number) {
+  const mods = ex.modules.map((id) => quests.modules.get(id));
+  const where = `${quests.paths.find((p) => p.exercises?.includes(ex)).source}: exercise ${ex.id}`;
+  const beats = new Map(mods.map((m, i) => [m.id, moduleBeats(m, i === 0)]));
+  // A challenge is a beat of its own, after the module it follows (before that module's check).
+  const challenges = [...quests.modules.values()].filter((c) => c.kind === "challenge" && ex.modules.includes(c.after));
+  const texts = mods.map((m) => {
+    const challenge = challenges.find((c) => c.after === m.id);
+    if (!challenge) return m.body.trim();
+    const section = `## Challenge: ${challenge.title}\n\n${challenge.body.trim()}`;
+    beats.set(challenge.id, [slugify(`Challenge: ${challenge.title}`)]);
+    const check = m.body.search(/^## Check\s*$/m);
+    return check < 0 ? `${m.body.trim()}\n\n${section}` : `${m.body.slice(0, check).trim()}\n\n${section}\n\n${m.body.slice(check).trim()}`;
+  });
+  const body = `${texts.join("\n\n")}\n`;
+  const workers = new Set(mods.map((m) => m.worker));
+  if (workers.size > 1) throw new Error(`${where}: its modules have different workers (${[...workers].join(", ")})`);
+
+  const solved = [...closure(quests.modules, ex.modules), ...ex.modules];
+  const byPath = new Map();
+  for (const m of mods) {
+    for (const f of m.files) {
+      const file = byPath.get(f.path) ?? { path: f.path, editable: false, scratch: false, modules: [] };
+      file.editable ||= Boolean(f.editable);
+      file.scratch ||= Boolean(f.scratch);
+      file.modules.push(m.id);
+      byPath.set(f.path, file);
+    }
+  }
+  const files = [...byPath.values()].map((file) => {
     const master = readIfExists(`authoring/${file.path}`);
     return {
       path: file.path,
-      beats: fileBeats(dir, file, body),
-      editable: Boolean(file.editable),
-      scratch: Boolean(file.scratch),
+      // The beats its tab shows on: those of the modules that list it (null: every beat).
+      beats: file.modules.length === mods.length ? null : mods.filter((m) => file.modules.includes(m.id)).flatMap((m) => beats.get(m.id)),
+      editable: file.editable,
+      scratch: file.scratch,
       starter: readIfExists(`starter/${file.path}`) ?? read(file.path),
-      solution: readIfExists(`solutions/${chapter}/${file.path}`),
-      todos: file.editable && master ? todoBlocks(master, number) : [],
+      solution: master ? renderMaster(master, solved) : null,
+      todos: file.editable && master ? todoBlocks(master, ex.modules) : [],
     };
   });
-  const script = (name) => (fs.existsSync(path.join(repoRoot, "challenges", dir, name)) ? `./challenges/${dir}/${name}` : null);
+
+  // The code tour: one module's. It's offered at that module's start (the end of the briefing,
+  // for the first), or on leaving its `tourAfter` beat.
+  const touring = mods.filter((m) => m.tour?.length);
+  if (touring.length > 1) throw new Error(`${where}: more than one of its modules has a code tour (${touring.map((m) => m.id).join(", ")})`);
+  const tm = touring[0];
+  let tourAfter = null;
+  if (tm?.tourAfter) tourAfter = tourBeat(tm, tm.tourAfter);
+  else if (tm && tm !== mods[0]) tourAfter = beats.get(mods[mods.indexOf(tm) - 1].id).at(-1);
+
   return {
-    id: dir,
+    id: ex.id,
     number,
-    slug: meta.slug ?? dir,
-    title: title.replace(/\s*\(bonus\)\s*$/i, ""),
-    bonus: /\(bonus\)/i.test(title),
-    teaser: meta.teaser ?? "",
-    minutes: meta.timelimit ? Math.round(meta.timelimit / 60) : null,
-    worker: config.worker,
-    agentUi: config.agentUi !== false,
-    questions: config.questions ?? [],
-    tour: buildTour(md, dir, config.tour ?? [], files),
-    tourAfter: tourBeat(dir, config.tourAfter, body),
-    scripts: { setup: script("setup.sh"), check: script("check.sh"), solve: script("solve.sh"), reset: script("reset.sh") },
+    slug: ex.id.replace(/^\d+-/, ""),
+    title: ex.title,
+    bonus: Boolean(ex.bonus),
+    teaser: ex.teaser ?? "",
+    minutes: [...mods, ...challenges].reduce((sum, m) => sum + (m.minutes ?? 0), 0),
+    modules: withChallenges(ex.modules, quests.modules),
+    // Each module's beats in the guide, so a link to a module opens the guide at it.
+    moduleBeats: Object.fromEntries(beats),
+    worker: mods[0].worker,
+    agentUi: mods[0].agentUi,
+    questions: [...new Set(mods.flatMap((m) => m.questions ?? []))],
+    tour: tm ? buildTour(md, tm, files) : [],
+    tourAfter,
+    scripts: {
+      setup: `./quest enter ${ex.id}`,
+      check: `./quest check ${ex.id}`,
+      solve: `./quest solve ${ex.id}`,
+      reset: `./quest reset ${ex.id}`,
+    },
     files,
-    modes: Object.fromEntries(MODES.map((mode) => [mode, renderPage(md, body, mode, source, files)])),
+    // Its challenges, by id: the question's choices, each with its recorded run.
+    challenges: Object.fromEntries(challenges.map((c) => [c.id, challengeData(md, c)])),
+    modes: Object.fromEntries(
+      MODES.map((mode) => {
+        const page = renderPage(md, body, mode, mods[0].source, files);
+        for (const section of page.sections) {
+          if (section.kind === "challenge") section.challenge = challenges.find((c) => beats.get(c.id)[0] === section.id).id;
+        }
+        return [mode, page];
+      }),
+    ),
   };
 }
 
-// The beats a file's tab shows on, when its config limits them (`fromBeat`, `untilBeat`, by
-// heading): the guide's beat ids, "intro" first. null: every beat.
-function fileBeats(dir, file, body) {
-  if (!file.fromBeat && !file.untilBeat) return null;
-  const sections = splitSections(body).sections;
-  const ids = ["intro", ...sections.map((s) => slugify(s.title))];
-  const find = (heading) => {
-    const i = sections.findIndex((s) => s.title === heading);
-    if (i < 0) throw new Error(`course/content/exercises.mjs: ${dir}'s ${file.path} names "${heading}", which isn't a heading in its assignment.md`);
-    return i + 1;
+// What the guide needs to run a challenge: its choices (the code, highlighted, and the block it
+// replaces, for the diff), the hint, and each choice's recording.
+function challengeData(md, c) {
+  return {
+    id: c.id,
+    title: c.title,
+    file: c.file,
+    replace: c.replace,
+    hint: md.renderInline(c.hint),
+    xp: CHALLENGE_XP,
+    choices: c.choices.map((choice) => ({
+      id: choice.id,
+      label: choice.label,
+      code: choice.code,
+      explanation: md.renderInline(choice.explanation),
+      right: choice.right,
+      recording: choice.recording,
+    })),
   };
-  return ids.slice(file.fromBeat ? find(file.fromBeat) : 0, file.untilBeat ? find(file.untilBeat) + 1 : ids.length);
 }
 
-// The beat that offers the code tour, when it isn't the end of the briefing: its section's id.
-function tourBeat(dir, heading, body) {
-  if (!heading) return null;
-  const section = splitSections(body).sections.find((s) => s.title === heading);
-  if (!section) throw new Error(`course/content/exercises.mjs: ${dir}'s tourAfter names "${heading}", which isn't a heading in its assignment.md`);
+// The beat that offers the code tour, when it isn't the module's start: its section's id.
+function tourBeat(module, heading) {
+  const section = splitSections(module.body).sections.find((s) => s.title === heading);
+  if (!section) throw new Error(`${module.source}: its tourAfter names "${heading}", which isn't one of its headings`);
   return slugify(section.title);
 }
 
-// The exercise's code tour, each stop checked against the file as learners start it, so a
-// change to the code that moves an anchor fails the build rather than the tour.
-function buildTour(md, dir, stops, files) {
-  return stops.map((stop, i) => {
-    const where = `course/content/exercises.mjs: ${dir}'s code tour, stop ${i + 1}`;
+// A module's code tour, each stop checked against the file as learners start it, so a change to
+// the code that moves an anchor fails the build rather than the tour.
+function buildTour(md, module, files) {
+  return module.tour.map((stop, i) => {
+    const where = `${module.source}: code tour, stop ${i + 1}`;
     const file = files.find((f) => f.path === stop.file);
-    if (!file) throw new Error(`${where}: ${stop.file} isn't one of the exercise's files`);
+    if (!file || !module.files.some((f) => f.path === stop.file)) throw new Error(`${where}: ${stop.file} isn't one of the module's files`);
     const range = tourRange(file.starter, stop, { strict: true });
     if (!range) throw new Error(`${where}: can't find ${JSON.stringify(stop.from)}${stop.to ? ` … ${JSON.stringify(stop.to)}` : ""} in ${stop.file}`);
     return { file: stop.file, from: stop.from, to: stop.to ?? null, title: stop.title, html: md.renderInline(stop.body) };
@@ -711,19 +981,53 @@ export function buildCourse() {
   knownFiles.clear();
   collectFiles();
   fs.rmSync(publicContent, { recursive: true, force: true });
+  const quests = loadQuests();
+  const exercises = quests.paths.flatMap((p) => p.exercises ?? []);
+  moduleExercise.clear();
+  for (const ex of exercises) for (const id of withChallenges(ex.modules, quests.modules)) moduleExercise.set(quests.modules.get(id).source, ex.id);
   const md = createRenderer();
-  const dirs = fs
-    .readdirSync(path.join(repoRoot, "challenges"), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && /^\d+-/.test(entry.name))
-    .map((entry) => entry.name)
-    .sort();
   const readme = buildReadme(md);
   return {
     title: readme.title,
     home: { intro: readme.intro, architecture: readme.architecture },
     setup: { html: readme.setup },
-    exercises: dirs.map((dir) => buildExercise(md, dir)),
+    exercises: exercises.map((ex, i) => buildExercise(md, quests, ex, i + 1)),
+    branches: quests.branches.map(({ modules, ...branch }) => ({ ...branch, modules })),
+    modules: [...quests.modules.values()].map((m) => ({
+      id: m.id,
+      kind: m.kind,
+      branch: m.branch,
+      title: m.title,
+      teaser: m.teaser,
+      learn: m.learn,
+      minutes: m.minutes,
+      xp: m.xp,
+      tier: m.tier,
+      requires: m.requires,
+      status: m.status,
+      check: m.check.kind,
+      exercise: moduleExercise.get(m.source) ?? null,
+      // A challenge: the module it follows, and the one it gates.
+      ...(m.kind === "challenge" ? { after: m.after, before: m.before, choices: m.choices.length } : {}),
+    })),
+    paths: quests.paths.map((p) => ({ id: p.id, title: p.title, modules: p.modules })),
   };
+}
+
+// The exercises' text, as written (mode blocks and all), for Ask Temporal's prompt: the runner
+// reads it (runner/helper.mjs), and has no Markdown or YAML of its own.
+export function buildAssignments() {
+  const quests = loadQuests();
+  const out = {};
+  for (const ex of quests.paths.flatMap((p) => p.exercises ?? [])) {
+    out[ex.id] = { title: ex.title, text: ex.modules.map((id) => quests.modules.get(id).body.trim()).join("\n\n") };
+  }
+  return out;
+}
+
+function writeIfChanged(file, text) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  if (!fs.existsSync(file) || fs.readFileSync(file, "utf8") !== text) fs.writeFileSync(file, text);
 }
 
 // Writes the data only when it changed, so a watcher that rebuilds on writes can't loop.
@@ -731,33 +1035,27 @@ export function writeCourse() {
   const course = buildCourse();
   const body = JSON.stringify(course);
   const version = crypto.createHash("sha256").update(body).digest("hex").slice(0, 12);
-  const text = `${JSON.stringify({ version, ...course }, null, 1)}\n`;
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  if (!fs.existsSync(outFile) || fs.readFileSync(outFile, "utf8") !== text) fs.writeFileSync(outFile, text);
-  return { file: outFile, version, exercises: course.exercises.length };
+  writeIfChanged(outFile, `${JSON.stringify({ version, ...course }, null, 1)}\n`);
+  writeIfChanged(assignmentsFile, `${JSON.stringify(buildAssignments(), null, 1)}\n`);
+  return { file: outFile, version, exercises: course.exercises.length, modules: course.modules.length };
 }
 
 // The files whose edits should rebuild the content (for the dev server's watcher).
 export function contentInputs() {
-  const inputs = ["README.md", "course/content/exercises.mjs"];
-  for (const dir of fs.readdirSync(path.join(repoRoot, "challenges"))) {
-    if (fs.existsSync(path.join(repoRoot, "challenges", dir, "assignment.md"))) inputs.push(`challenges/${dir}/assignment.md`);
-  }
-  for (const stage of ["starter", "solutions"]) {
-    const walk = (rel) => {
-      for (const entry of fs.readdirSync(path.join(repoRoot, rel), { withFileTypes: true })) {
-        const child = `${rel}/${entry.name}`;
-        if (entry.isDirectory()) walk(child);
-        else inputs.push(child);
-      }
-    };
-    if (fs.existsSync(path.join(repoRoot, stage))) walk(stage);
-  }
-  for (const config of Object.values(EXERCISES)) for (const file of config.files) inputs.push(file.path);
+  const inputs = ["README.md"];
+  const walk = (rel) => {
+    for (const entry of fs.readdirSync(path.join(repoRoot, rel), { withFileTypes: true })) {
+      const child = `${rel}/${entry.name}`;
+      if (entry.isDirectory()) walk(child);
+      else if (!entry.name.startsWith(".")) inputs.push(child);
+    }
+  };
+  for (const dir of [QUESTS, "starter", "authoring"]) if (fs.existsSync(path.join(repoRoot, dir))) walk(dir);
+  for (const module of loadQuests().modules.values()) for (const file of module.files) inputs.push(file.path);
   return [...new Set(inputs)].map((rel) => path.join(repoRoot, rel));
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const result = writeCourse();
-  console.log(`Wrote ${path.relative(repoRoot, result.file)} (${result.exercises} exercises, version ${result.version})`);
+  console.log(`Wrote ${path.relative(repoRoot, result.file)} (${result.exercises} exercises, ${result.modules} modules, version ${result.version})`);
 }

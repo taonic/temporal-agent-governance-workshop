@@ -14,7 +14,6 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import { closeCodeTour, startCodeTour } from "../codeTour.js";
 import { ask, helper, refreshHelper, sharedFile, stepPrompts, stepThread, stop } from "../helper.js";
 import {
-  course,
   effectiveMode,
   insertIntoEditor,
   revertFromEditor,
@@ -45,9 +44,11 @@ import {
   workerRunView,
   workerToggleView,
 } from "../store.js";
+import { complete, isDone, moduleHref, moduleOfBeat, modulesById, nextModule } from "../progress.js";
 import { findSnippet } from "../snippets.js";
 import { streamIn } from "../streaming.js";
 import AskSetupCard from "./AskSetupCard.vue";
+import ChallengeCard from "./ChallengeCard.vue";
 
 // Answers bring Markdown and highlighting with them: loaded with the first question.
 const AskMessage = defineAsyncComponent(() => import("./AskMessage.vue"));
@@ -86,8 +87,6 @@ const passed = computed(() => store.passed.includes(props.exercise.id));
 const scroller = ref(null);
 const input = ref(null);
 const draft = ref("");
-const position = computed(() => course.exercises.findIndex((e) => e.id === props.exercise.id));
-const next = computed(() => course.exercises[position.value + 1]);
 const label = (e) => `Exercise ${e.number}`;
 
 // --- Where the conversation is ------------------------------------------------------------
@@ -128,6 +127,47 @@ watch(at, () => {
 function goTo(index) {
   at.value = Math.max(0, Math.min(index, beats.value.length - 1));
 }
+
+// --- Modules ------------------------------------------------------------------------------
+
+// The module the beat on show belongs to. A link to a module (#/module/A4) opens the guide at
+// its first beat (after getting started, the first time); the URL follows the module you're in.
+const currentModule = computed(() => moduleOfBeat(props.exercise, beat.value?.id));
+// The way on from this exercise: the module after its last, on the path or in its branch.
+const next = computed(() => nextModule(props.exercise.modules.at(-1)));
+let pendingModule = null;
+
+function jumpToModule(id) {
+  if (!id || !props.exercise.moduleBeats?.[id] || currentModule.value === id) return;
+  if (beat.value.kind === "onboard") {
+    pendingModule = id;
+    return;
+  }
+  const i = beats.value.findIndex((b) => b.id === props.exercise.moduleBeats[id][0]);
+  if (i >= 0) goTo(i);
+}
+watch(() => store.route.module, jumpToModule, { immediate: true });
+
+watch(
+  currentModule,
+  (id) => {
+    if (!id || store.route.page !== "exercise") return;
+    const hash = moduleHref(id);
+    if (window.location.hash !== hash) window.history.replaceState(window.history.state, "", hash);
+    if (store.route.module !== id) store.route = { ...store.route, module: id };
+  },
+  { immediate: true },
+);
+
+// Moving on past a module's last beat completes it (its XP); so does the exercise's check, for
+// its last module.
+// A challenge is done only by its right pick, never by moving past it.
+const isChallenge = (id) => modulesById.get(id)?.kind === "challenge";
+function leaving(from) {
+  const order = props.exercise.modules;
+  if (!isChallenge(from) && order.indexOf(currentModule.value) > order.indexOf(from)) complete(from);
+}
+watch(passed, (now) => now && complete(props.exercise.modules.filter((id) => !isChallenge(id)).at(-1)), { immediate: true });
 
 function tick(id, value = true) {
   ticked.value = { ...ticked.value, [id]: value };
@@ -180,8 +220,15 @@ const offersCodeTour = computed(() => {
 
 function advance({ codeTour = offersCodeTour.value } = {}) {
   if (beat.value.kind === "step") tick(beat.value.id);
-  if (beat.value.id === "start-workspace") save("onboarded", true);
+  const finishingOnboarding = beat.value.id === "start-workspace";
+  if (finishingOnboarding) save("onboarded", true);
+  const from = currentModule.value;
   goTo(at.value + 1);
+  leaving(from);
+  if (finishingOnboarding && pendingModule) {
+    jumpToModule(pendingModule);
+    pendingModule = null;
+  }
   if (codeTour) {
     nextTick(() => {
       store.workspaceView = "code";
@@ -330,7 +377,7 @@ watch(
 
 // --- What the guide says -------------------------------------------------------------------
 
-const stepTitle = (b) => b.title.replace(/^\d+\.\s*/, "");
+const stepTitle = (b) => b.title.replace(/^\d+\.\s*/, "").replace(/^Challenge:\s*/, "");
 const stepNumber = (b) => steps.value.indexOf(b) + 1;
 const NEXT_UP = ["Nice. Next up:", "Good. Now:", "On to the next one:", "Great. Here's the next step:"];
 
@@ -339,7 +386,7 @@ const kicker = computed(() => {
   if (b.kind === "onboard") return `Getting started · ${GETTING_STARTED.indexOf(b) + 1} of ${GETTING_STARTED.length}`;
   if (b.kind === "intro") return label(props.exercise);
   if (b.kind === "step") return `Step ${stepNumber(b)} of ${steps.value.length}`;
-  return { stretch: "Stretch", check: "Check", plain: "Background" }[b.kind] ?? "";
+  return { stretch: "Stretch", check: "Check", plain: "Background", challenge: "⚡ Challenge" }[b.kind] ?? "";
 });
 
 const heading = computed(() =>
@@ -356,6 +403,7 @@ const lead = computed(() => {
   if (b.kind === "plain") return before.some((x) => x.kind === "step") ? "Before you move on:" : "A little background first.";
   if (b.kind === "stretch") return "That's every step. Got time left? Try this; it isn't graded.";
   if (b.kind === "check") return passed.value ? "Your check passed. 🎉 Run it again any time." : "Last thing: let's check your work.";
+  if (b.kind === "challenge") return isDone(b.challenge) ? "Challenge solved. Every choice is below, side by side." : "Time to test what you just built.";
   const n = stepNumber(b);
   return n === 1 ? "Let's get going." : NEXT_UP[(n - 2) % NEXT_UP.length];
 });
@@ -369,13 +417,18 @@ const nextLabel = computed(() => {
   if (b.kind === "intro") return following?.kind === "step" ? "Let's start →" : "Next →";
   if (b.kind === "step") return following?.kind === "step" ? "Done, next step →" : "Done →";
   if (b.kind === "stretch") return "Continue →";
+  if (b.kind === "challenge") return isDone(b.challenge) ? "Continue →" : "Skip it for now →";
   return "Got it →";
 });
+
+// A step not ticked, or a challenge not solved: the trail marks it ○.
+const unfinished = (b) => (b.kind === "step" && !ticked.value[b.id]) || (b.kind === "challenge" && !isDone(b.challenge));
 
 function trailLabel(b) {
   if (b.kind === "onboard") return b.title;
   if (b.kind === "intro") return "Introduction";
   if (b.kind === "step") return `Step ${stepNumber(b)} · ${stepTitle(b)}`;
+  if (b.kind === "challenge") return `⚡ ${stepTitle(b)}`;
   return b.kind === "check" ? "Check" : b.title;
 }
 
@@ -675,8 +728,8 @@ function onClick(event) {
         </summary>
         <ol>
           <li v-for="(b, i) in beats.slice(0, at)" :key="b.id">
-            <button type="button" class="guide-trail-item" :class="{ skipped: b.kind === 'step' && !ticked[b.id] }" @click="goTo(i)">
-              <span class="guide-trail-mark" aria-hidden="true">{{ b.kind === "step" && !ticked[b.id] ? "○" : "✓" }}</span>{{ trailLabel(b) }}
+            <button type="button" class="guide-trail-item" :class="{ skipped: unfinished(b) }" @click="goTo(i)">
+              <span class="guide-trail-mark" aria-hidden="true">{{ unfinished(b) ? "○" : "✓" }}</span>{{ trailLabel(b) }}
             </button>
           </li>
         </ol>
@@ -689,8 +742,8 @@ function onClick(event) {
           <div v-if="showPassed" class="guide-passed">
             <span class="guide-tada" aria-hidden="true">🎉</span>
             <span class="visually-hidden">{{ label(exercise) }} passed.</span>
-            <a v-if="next" class="button button-primary guide-next" :href="`#/exercise/${next.id}`">On to {{ label(next) }}: {{ next.title }} →</a>
-            <span v-else class="guide-finale">That's the whole workshop.</span>
+            <a v-if="next" class="button button-primary guide-next" :href="moduleHref(next.id)" @click="complete(currentModule)">On to {{ next.id }} · {{ next.title }} →</a>
+            <a v-else class="button button-primary guide-next" href="#/" @click="complete(currentModule)">Back to the map →</a>
             <button v-if="mode === 'browser'" class="button" type="button" :disabled="!live" @click="emit('check')">✓ Run the check again</button>
           </div>
           <template v-else>
@@ -700,6 +753,14 @@ function onClick(event) {
           <p v-if="beat.kind === 'intro' && exercise.teaser" class="exercise-meta">{{ exercise.teaser }}</p>
           <div class="guide-body markdown" :class="{ 'diagram-on-left': diagramOnLeft }" v-html="beat.html" />
           <AskSetupCard v-if="beat.id === 'start-ask'" class="guide-body" />
+          <ChallengeCard
+            v-if="beat.kind === 'challenge' && exercise.challenges?.[beat.challenge]"
+            :key="beat.challenge"
+            :challenge="exercise.challenges[beat.challenge]"
+            :live="live && mode === 'browser'"
+            :exercise="exercise.id"
+            :beat="beat.id"
+          />
           <div v-if="beat.kind === 'check' && mode === 'browser'" class="instruction-actions">
             <button class="button button-primary" type="button" :disabled="!live" @click="emit('check')">✓ Run the check</button>
             <button v-if="exercise.scripts.solve && !passed" class="button" type="button" :disabled="!live" title="Apply the official solution" @click="emit('solve')">Stuck? Solve it for me</button>
@@ -722,8 +783,8 @@ function onClick(event) {
         </template>
         <template v-else-if="!showPassed">
           <button v-if="beat.kind === 'step' && !ticked[beat.id]" class="guide-reply" type="button" @click="tick(beat.id)">Mark this step done</button>
-          <a v-if="next" class="guide-reply is-primary" :href="`#/exercise/${next.id}`">On to {{ label(next) }}: {{ next.title }} →</a>
-          <span v-else class="guide-finale">That's the whole workshop. 🎉</span>
+          <a v-if="next" class="guide-reply is-primary" :href="moduleHref(next.id)" @click="complete(currentModule)">On to {{ next.id }} · {{ next.title }} →</a>
+          <a v-else class="guide-reply is-primary" href="#/" @click="complete(currentModule)">Back to the map →</a>
         </template>
       </div>
 

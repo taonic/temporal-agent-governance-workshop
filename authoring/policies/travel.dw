@@ -16,7 +16,7 @@
 // Each rule is marked @on_deny("escalate"), so a booking none of them permits comes to you,
 // however the model came by it. Nothing runs on its own that no rule permits.
 
-// @@solution ch05
+// @@solution A14
 // A flight booking runs unattended when you put its passenger and date on a trip form
 // (`ask_trip_details`) earlier in this session. Any other flight comes to you.
 @id("flights-on-the-trip-form")

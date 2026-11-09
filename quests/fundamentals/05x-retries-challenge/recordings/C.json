@@ -1,0 +1,73 @@
+{
+  "fingerprint": "354744522a44a154",
+  "choice": "C",
+  "lines": [
+    {
+      "type": "step",
+      "text": "Started a trip: SFO → JFK. The database will fail SFO's first 3 lookups.",
+      "kind": "info",
+      "t": 0.0
+    },
+    {
+      "type": "step",
+      "text": "Started the worker",
+      "kind": "worker",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Lookup SFO, attempt 1: 503, the database is overloaded",
+      "kind": "bad",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Lookup SFO, attempt 2: 503, the database is overloaded",
+      "kind": "bad",
+      "t": 2.1
+    },
+    {
+      "type": "step",
+      "text": "Lookup SFO, attempt 3: 503, the database is overloaded",
+      "kind": "bad",
+      "t": 6.1
+    },
+    {
+      "type": "step",
+      "text": "Lookup SFO, attempt 4: found it",
+      "kind": "good",
+      "t": 12.1
+    },
+    {
+      "type": "step",
+      "text": "Lookup JFK, attempt 1: found it",
+      "kind": "good",
+      "t": 12.1
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker",
+      "kind": "worker",
+      "t": 12.1
+    },
+    {
+      "type": "step",
+      "text": "Completed: Your trip: San Francisco (SFO) to New York (JFK).",
+      "kind": "good",
+      "t": 12.1
+    }
+  ],
+  "done": {
+    "type": "done",
+    "choice": "C",
+    "right": true,
+    "summary": "The trip got through, with the real airports.",
+    "result": "Your trip: San Francisco (SFO) to New York (JFK).",
+    "error": null,
+    "focus": "challenge-fc1-c-46fc-trip",
+    "events": [
+      "Workflow Execution Completed"
+    ],
+    "t": 12.1
+  }
+}

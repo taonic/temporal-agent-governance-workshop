@@ -3,10 +3,10 @@ revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.14' and sys_platform != 'emscripten'",
+    "python_full_version == '3.13.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.13.*' and sys_platform != 'emscripten'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "(python_full_version < '3.13' and sys_platform != 'emscripten') or (python_full_version < '3.12' and sys_platform == 'emscripten')",
 ]
 
@@ -949,6 +949,7 @@ source = { editable = "." }
 dependencies = [
     { name = "openai" },
     { name = "pydantic" },
+    { name = "pyyaml" },
     { name = "temporal-agent-harness", extra = ["code-mode", "ui"] },
     { name = "temporalio" },
 ]
@@ -967,6 +968,7 @@ gpu = [
 requires-dist = [
     { name = "openai" },
     { name = "pydantic", specifier = ">=2" },
+    { name = "pyyaml" },
     { name = "temporal-agent-harness", extras = ["ui", "code-mode"], git = "https://github.com/temporal-community/temporal-agent-harness?rev=15da54ee8e2baff0370ca245e9da1e29ba831ab8" },
     { name = "temporalio", specifier = ">=1.31.0" },
 ]

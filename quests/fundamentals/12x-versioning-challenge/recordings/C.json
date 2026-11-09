@@ -1,0 +1,85 @@
+{
+  "fingerprint": "fb0404e3991b03a5",
+  "choice": "C",
+  "lines": [
+    {
+      "type": "step",
+      "text": "Started the worker, before the email step",
+      "kind": "worker",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Held seat 14C for 5 seconds, on the code before the email step.",
+      "kind": "info",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker, before the email step",
+      "kind": "worker",
+      "t": 0.6
+    },
+    {
+      "type": "step",
+      "text": "Started the worker, with this version",
+      "kind": "worker",
+      "t": 0.6
+    },
+    {
+      "type": "step",
+      "text": "Held seat 15A for 3 seconds, on this version.",
+      "kind": "info",
+      "t": 0.6
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker, with this version",
+      "kind": "worker",
+      "t": 1.6
+    },
+    {
+      "type": "step",
+      "text": "Restarting the worker: it has to replay both holds.",
+      "kind": "info",
+      "t": 1.6
+    },
+    {
+      "type": "step",
+      "text": "Started a new worker",
+      "kind": "worker",
+      "t": 1.6
+    },
+    {
+      "type": "step",
+      "text": "14C: Seat 14C: the hold expired, and the seat is back on sale.",
+      "kind": "good",
+      "t": 5.1
+    },
+    {
+      "type": "step",
+      "text": "15A: Seat 15A: the hold expired, and the seat is back on sale.",
+      "kind": "good",
+      "t": 5.1
+    },
+    {
+      "type": "step",
+      "text": "Stopped the new worker",
+      "kind": "worker",
+      "t": 5.1
+    }
+  ],
+  "done": {
+    "type": "done",
+    "choice": "C",
+    "right": true,
+    "summary": "Both holds finished, and the new one sent the email.",
+    "result": null,
+    "error": null,
+    "focus": "challenge-fc3-c-5466-hold-14c",
+    "events": [
+      "15A: Marker Recorded (the patch), then send_hold_email"
+    ],
+    "t": 5.1
+  }
+}

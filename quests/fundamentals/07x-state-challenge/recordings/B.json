@@ -1,0 +1,68 @@
+{
+  "fingerprint": "e6eaec3011fdc26f",
+  "choice": "B",
+  "lines": [
+    {
+      "type": "step",
+      "text": "Started boarding SFO→JFK: 3 passengers, one a second.",
+      "kind": "info",
+      "t": 0.0
+    },
+    {
+      "type": "step",
+      "text": "Started the worker",
+      "kind": "worker",
+      "t": 0.1
+    },
+    {
+      "type": "step",
+      "text": "Query before the restart: boarded 0",
+      "kind": "bad",
+      "t": 1.7
+    },
+    {
+      "type": "step",
+      "text": "Stopped the worker",
+      "kind": "worker",
+      "t": 1.7
+    },
+    {
+      "type": "step",
+      "text": "Started a new worker",
+      "kind": "worker",
+      "t": 1.7
+    },
+    {
+      "type": "step",
+      "text": "Query after the restart: boarded 0",
+      "kind": "bad",
+      "t": 1.7
+    },
+    {
+      "type": "step",
+      "text": "Stopped the new worker",
+      "kind": "worker",
+      "t": 3.2
+    },
+    {
+      "type": "step",
+      "text": "Flight SFO→JFK: 3 passengers boarded.",
+      "kind": "info",
+      "t": 3.2
+    }
+  ],
+  "done": {
+    "type": "done",
+    "choice": "B",
+    "right": false,
+    "summary": "The count was right at the end, but the query read 0 all along.",
+    "result": "Flight SFO→JFK: 3 passengers boarded.",
+    "error": null,
+    "focus": "challenge-fc2-b-f582-board",
+    "events": [
+      "Workflow Execution Completed",
+      "Query boarded: 0 while passengers boarded"
+    ],
+    "t": 3.2
+  }
+}

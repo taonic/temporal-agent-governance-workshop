@@ -87,7 +87,7 @@ async def search_flights_activity(request: FlightSearchRequest) -> FlightSearchR
     """Search for flights between two airports (codes like SFO) on a date (YYYY-MM-DD).
     Returns them cheapest first, each with its price in cents and number of stops."""
     activity.logger.info("Searching flights %s -> %s on %s", request.origin, request.destination, request.date)
-    # @@solution ch02
+    # @@solution A4
     await _latency()
     return FlightSearchResponse(flights=flights_for(request.origin, request.destination, request.date))
     # @@starter
