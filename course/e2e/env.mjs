@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 
 // What the tests run against, and the secrets that unlock the higher tiers.
-export const BASE_URL = (process.env.E2E_BASE_URL || "https://temporal-quest.fly.dev").replace(/\/$/, "");
+export const BASE_URL = (process.env.E2E_BASE_URL || "https://temporalquest.dev").replace(/\/$/, "");
 export const ACCESS_CODE = process.env.E2E_ACCESS_CODE || "";
 export const INSTRUCTOR_CODE = process.env.E2E_INSTRUCTOR_CODE || "";
 // Set to 1 to keep the sandbox tier off even with an access code (during an event, say).

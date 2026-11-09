@@ -32,10 +32,18 @@ export const test = base.extend({
   },
 });
 
+// The home page as a learner who has started sees it: a new one lands on the first-run view
+// (one next step), and asks for the whole map.
+export async function wholeMap(page) {
+  await page.goto("/#/");
+  await page.getByRole("button", { name: /Show the whole map/ }).click();
+  await expect(page.locator(".map-stage")).toBeVisible();
+}
+
 // The course's exercises, as the map's playable nodes name them (each module says which
 // exercise shows it), in order: [{ hash, label }].
 export async function coursePages(page) {
-  await page.goto("/#/");
+  await wholeMap(page);
   await page.getByRole("button", { name: "Full map", exact: true }).click();
   const nodes = page.locator(".map-node[data-exercise]");
   await expect(nodes.first()).toBeAttached();

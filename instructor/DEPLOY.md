@@ -94,7 +94,7 @@ Keep it to **one machine**: `--ha=false` does that, and `fly scale count 1 --app
 ### 4. Smoke test
 
 ```bash
-curl https://temporal-quest.fly.dev/api/health
+curl https://temporalquest.dev/api/health
 # {"ok":true,"runtime":{"enabled":true},...}
 ```
 
@@ -145,7 +145,7 @@ The app's own secrets (`GEMINI_API_KEY`, `ACCESS_CODE`, ...) stay in Fly; CI nev
 
   ```bash
   curl -s -H "x-instructor-code: $INSTRUCTOR_CODE" \
-    https://temporal-quest.fly.dev/api/admin/sandboxes
+    https://temporalquest.dev/api/admin/sandboxes
   ```
 
   It lists each sandbox, its state and the exercise its learner last had open, against `max`.

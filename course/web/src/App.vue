@@ -5,8 +5,10 @@ import Tour from "./Tour.vue";
 import AccessForm from "./components/AccessForm.vue";
 import AskSelection from "./components/AskSelection.vue";
 import ModuleNav from "./components/ModuleNav.vue";
+import WelcomeIntro from "./components/WelcomeIntro.vue";
 import XpPill from "./components/XpPill.vue";
 import { closeHelper, helper, refreshHelper, resumeAfterConnect, toggleHelper } from "./helper.js";
+import { shouldShowIntro } from "./intro.js";
 import ExercisePage from "./pages/ExercisePage.vue";
 import MapPage from "./pages/MapPage.vue";
 import SetupPage from "./pages/SetupPage.vue";
@@ -33,6 +35,16 @@ import {
 const AskTemporal = defineAsyncComponent(() => import("./components/AskTemporal.vue"));
 const helperUsed = ref(false);
 watch(() => helper.open, (open) => open && (helperUsed.value = true), { immediate: true });
+
+// The welcome intro, over the map, for a visitor landing on the home page. As it fades, the
+// map's panels arrive under it (is-arriving): started then, not after, or the page would show
+// through the fade and then blink out to arrive.
+const introOpen = ref(shouldShowIntro(store.route));
+const arriving = ref(false);
+function revealPage() {
+  arriving.value = true;
+  setTimeout(() => (arriving.value = false), 1400);
+}
 
 const menuOpen = ref(false);
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
@@ -190,7 +202,7 @@ watch(() => store.authenticated, () => refreshHelper());
 </script>
 
 <template>
-  <div class="app-frame" :class="{ 'with-helper': helper.open }" :style="{ '--ask-width': `${helper.width}px` }">
+  <div class="app-frame" :class="{ 'with-helper': helper.open, 'is-arriving': arriving }" :style="{ '--ask-width': `${helper.width}px` }" :inert="introOpen">
     <header class="topbar">
       <a class="brand" href="#/">
         <img class="brand-image" src="/course-visual.png" alt="">
@@ -271,4 +283,5 @@ watch(() => store.authenticated, () => refreshHelper());
   <AskSelection />
   <div class="toast" :class="{ visible: store.toast }" role="status" aria-live="polite">{{ store.toast }}</div>
   <Tour v-if="tourVisible" :steps="tourSteps" @finish="finishTour" />
+  <WelcomeIntro v-if="introOpen" @reveal="revealPage" @done="introOpen = false" />
 </template>

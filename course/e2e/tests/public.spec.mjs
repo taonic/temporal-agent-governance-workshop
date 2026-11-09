@@ -1,5 +1,5 @@
 // @public: what anyone on the internet gets, signed out. No secrets, nothing created.
-import { coursePages, expect, showCode, storageKey, test } from "./fixtures.mjs";
+import { coursePages, expect, showCode, storageKey, test, wholeMap } from "./fixtures.mjs";
 
 test.describe("the /api, signed out", { tag: "@public" }, () => {
   test("health: up, with the browser runtime on", async ({ request }) => {
@@ -67,9 +67,17 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     expect(res.headers()["cache-control"]).toContain("immutable");
   });
 
-  test("home: a beginner's focused view, F1 next, and Start opens it", async ({ page }) => {
+  test("home: a beginner's first-run view, F1 next, then the whole map, and Start opens it", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/.+/);
+    // First run: one next step. Fundamentals' first tier, F1's card, and where it leads as chips.
+    const firstRun = page.locator(".first-run");
+    await expect(firstRun.locator("h1")).toHaveText("Your quest starts here");
+    await expect(firstRun.locator('.focus-node[data-module="F1"]')).toHaveClass(/is-next/);
+    await expect(firstRun.locator(".first-run-card")).toContainText("Nothing. You can start here.");
+    await expect(firstRun.locator(".first-run-chip")).toHaveCount(5);
+    await expect(page.locator(".map-legend, .map-toolbar")).toHaveCount(0);
+    await page.getByRole("button", { name: /Show the whole map/ }).click();
     await expect(page.locator(".map-player h1")).toHaveText("Your skill tree");
     // Focused: Fundamentals' first tier, named, then the five specializations as destinations.
     await expect(page.locator(".focus-map")).toBeVisible();
@@ -94,7 +102,7 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
   });
 
   test("a specialization card expands its map in place, and shows the way there on the full map", async ({ page }) => {
-    await page.goto("/");
+    await wholeMap(page);
     await page.locator(".focus-branch", { hasText: "Architecture & Nexus" }).click();
     // In place: what comes before it, then its own modules, its boss at the end.
     const expanded = page.locator(".focus-expanded");
@@ -138,7 +146,7 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
   });
 
   test("selecting a node says what it needs first, and one coming soon can't be entered", async ({ page }) => {
-    await page.goto("/");
+    await wholeMap(page);
     await page.getByRole("button", { name: "Full map", exact: true }).click();
     const detail = page.locator(".map-detail-selected");
     await page.locator('.map-node[data-module="A4"]').click();

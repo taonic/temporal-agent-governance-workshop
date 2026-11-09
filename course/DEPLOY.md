@@ -37,7 +37,7 @@ npm run deploy
 
 `npm run deploy` is `fly deploy . --config course/fly.toml --dockerfile course/Dockerfile --ignorefile course/.dockerignore --ha=false`, run from the repo root. Keep it to **one machine** (`--ha=false`; `fly scale count 1` if a second appears): the runner keeps each sandbox's terminal connections and the rate limits in memory. Nothing that matters is lost on a restart, because sandboxes are found again by their Daytona labels, but two machines would each hold half the terminals.
 
-Then open `https://temporal-quest.fly.dev`, enter the code, and start a sandbox. `GET /api/health` reports whether the runtime is on.
+Then open `https://temporalquest.dev`, enter the code, and start a sandbox. `GET /api/health` reports whether the runtime is on.
 
 ## The e2e tests and their email
 
@@ -73,7 +73,7 @@ gh workflow run e2e.yml -f tier=all -f email=always
 - **Quiet the tests during the event.** The daily E2E run starts a sandbox of its own. Set the repository variable `E2E_SKIP_SANDBOX=1` for the event's days, and delete it afterwards: the quick tiers keep running.
 - **The snapshot is current.** `node course/snapshot/build.mjs --name` should name a snapshot that exists. The **Deploy** workflow builds it before each deploy from `main` (with the repository secret `DAYTONA_API_KEY`); `npm run snapshot` says whether it exists, or builds it. A deploy whose snapshot is missing fails at "Creating your sandbox" with that name in the error.
 - **Warm it.** `min_machines_running = 0` lets Fly stop the machine when nobody's using it; the first visitor waits a few seconds for it to start. For the event, `fly scale count 1` and set `min_machines_running = 1`.
-- **Who's in.** `curl -H "x-instructor-code: $INSTRUCTOR_CODE" https://temporal-quest.fly.dev/api/admin/sandboxes` lists sandboxes, their state and the exercise each learner last had open.
+- **Who's in.** `curl -H "x-instructor-code: $INSTRUCTOR_CODE" https://temporalquest.dev/api/admin/sandboxes` lists sandboxes, their state and the exercise each learner last had open.
 
 ## After
 
