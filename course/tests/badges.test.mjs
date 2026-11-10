@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 import { ICON_NAMES, medalSvg } from "../web/src/badgeArt.js";
 import { badgeContext, earnedNow, isComingSoon, meets, missingFor } from "../web/src/badges.js";
-import { CLASS_TITLE_MAX, buildCourse, idList } from "../content/build.mjs";
+import { CLASS_TITLE_MAX, idList, loadBadges, loadQuests } from "../content/build.mjs";
 import { Activity, catalogOf, deriveProgress } from "../runner/activity.mjs";
 import { openDatabase } from "../runner/db.mjs";
 
@@ -87,7 +87,10 @@ test("criteria lines: runs of three or more as a range, the rest one by one", ()
 });
 
 test("the course's badges: a tier badge per named tier, a boss badge per boss, and the skills", () => {
-  const course = buildCourse();
+  // Read, not built: buildCourse() rewrites web/public/content, and content.test.mjs builds it
+  // at the same time in another process.
+  const quests = loadQuests();
+  const course = { branches: quests.branches, badges: loadBadges(quests) };
   const ids = course.badges.map((b) => b.id);
   assert.equal(new Set(ids).size, ids.length, "ids are unique");
   for (const b of course.badges) assert.ok(ICON_NAMES.includes(b.icon), `${b.id}'s icon`);
