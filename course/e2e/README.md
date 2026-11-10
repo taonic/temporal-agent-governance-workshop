@@ -4,11 +4,11 @@ Playwright tests of the deployed course site, as a learner uses it: the live Fly
 
 | Tier | Needs | What it does | Time |
 |---|---|---|---|
-| `@public` | nothing | the `/api` signed out, every page in the picker, the access form, Ask Temporal's panel, theme | ~20 s |
-| `@auth` | `E2E_ACCESS_CODE` | a fresh learner's session, without a sandbox; Ask Temporal answers (only if the app has `KAPA_API_KEY`); `/api/admin/sandboxes` (with `E2E_INSTRUCTOR_CODE`) | ~10 s |
-| `@sandbox` | `E2E_ACCESS_CODE` | a real Daytona sandbox: start it from the page, both terminals, the Temporal UI and Agent UI panes, then every exercise the way its instructions say, step by step through the page with the real model, ending with its ✓ Check (`tests/walkthroughs.mjs`). Deletes the sandbox at the end | ~20–30 min |
+| `@public` | nothing | the `/api` signed out, the map, the setup page, a module's sign-in (and a personal email turned away), theme | ~20 s |
+| `@auth` | `E2E_SIGNIN_KEY` | new learners signed in, without a sandbox: every exercise page, a challenge, Next and paths, Ask Temporal's panel (and an answer, only if the app has `KAPA_API_KEY`), progress on the server, sign-in through the page, an access request approved, and the admin: the allowlist through `/admin`, a learner's journey, blocking, the sandboxes list | ~30 s |
+| `@sandbox` | `E2E_SIGNIN_KEY` | a real Daytona sandbox: sign in and start it from the page, both terminals, the Temporal UI and Agent UI panes, then every exercise the way its instructions say, step by step through the page with the real model, ending with its ✓ Check (`tests/walkthroughs.mjs`). Deletes the sandbox at the end | ~20–30 min |
 
-A tier without its secret skips.
+A tier without its secret skips. Each signed-in test signs in a learner of its own (`e2e+<test>-<random>@temporalquest.dev`; no email is sent, the code comes from `E2E_SIGNIN_KEY`), which the tests' admin puts on the allowlist in an `E2E` cohort and deletes after. The admin's tests skip when `E2E_ADMIN_EMAIL` isn't one of the app's `ADMIN_EMAILS`.
 
 ## Run them
 
@@ -18,8 +18,8 @@ npm ci
 npx playwright install chromium
 
 npm run test:public                          # no secrets
-E2E_ACCESS_CODE=... npm run test:auth        # + the signed-in tier
-E2E_ACCESS_CODE=... npm test                 # everything, sandbox included
+E2E_SIGNIN_KEY=... npm run test:auth         # + the signed-in tier
+E2E_SIGNIN_KEY=... npm test                  # everything, sandbox included
 npm run report                               # the HTML report of the last run
 npm run summary                              # reports/summary.md (and reports/email.json, see below)
 ```
@@ -27,8 +27,8 @@ npm run summary                              # reports/summary.md (and reports/e
 | Variable | |
 |---|---|
 | `E2E_BASE_URL` | the site to test (default: the live Fly app) |
-| `E2E_ACCESS_CODE` | one of the app's `ACCESS_CODE` codes: keep one for the tests in the list ([DEPLOY.md](../DEPLOY.md)) |
-| `E2E_INSTRUCTOR_CODE` | the app's `INSTRUCTOR_CODE`, for the admin test |
+| `E2E_SIGNIN_KEY` | the app's `E2E_SIGNIN_KEY` ([DEPLOY.md](../DEPLOY.md)) |
+| `E2E_ADMIN_EMAIL` | the tests' admin, one of the app's `ADMIN_EMAILS` (default `e2e+admin@temporalquest.dev`) |
 | `E2E_SKIP_SANDBOX` | `1` keeps the sandbox tier off |
 
 Failures keep a trace, a screenshot and a video (`test-results/`); the sandbox tier also attaches both terminals' text and the Agent UI's chat. A step whose instructions the page can't follow as written is noted in the report (an `instructions` annotation) without failing the run. `npx playwright show-trace test-results/<test>/trace.zip` replays one.
@@ -41,8 +41,8 @@ To turn it on, in the repository's Settings → Secrets and variables → Action
 
 | Kind | Name | Value |
 |---|---|---|
-| secret | `E2E_ACCESS_CODE` | a code you add to the app's list: `fly secrets set ACCESS_CODE=<event codes>,<this>` |
-| secret | `E2E_INSTRUCTOR_CODE` | optional: the app's `INSTRUCTOR_CODE` |
+| secret | `E2E_SIGNIN_KEY` | the app's `E2E_SIGNIN_KEY` |
+| variable | `E2E_ADMIN_EMAIL` | optional: one of the app's `ADMIN_EMAILS` (default `e2e+admin@temporalquest.dev`) |
 | secret | `RESEND_API_KEY` | a [Resend](https://resend.com/api-keys) API key with sending access |
 | variable | `E2E_MAIL_TO` | where the email goes, comma-separated |
 | variable | `E2E_MAIL_FROM` | `onboarding@resend.dev`, or an address on a domain you've verified in Resend |

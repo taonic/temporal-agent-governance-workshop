@@ -17,8 +17,9 @@ __pycache__/
 .course/
 # The browser course site
 course/node_modules/
-# A local runner's session secret (course/runner/config.mjs)
+# A local runner's session secret and database (course/runner/config.mjs)
 course/.session-secret
+course/.data/
 course/web/dist/
 course/web/src/generated/
 course/web/public/content/

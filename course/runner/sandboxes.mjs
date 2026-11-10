@@ -552,6 +552,19 @@ export class SandboxManager {
     return sandbox;
   }
 
+  // Stops the learner's sandbox (out of sandbox time), keeping it and their edits.
+  async stop(learner) {
+    const inflight = this.inflight.get(learner);
+    if (inflight) inflight.run.cancelled = true;
+    this.inflight.delete(learner);
+    this.progress.delete(learner);
+    const sandbox = await this.find(learner, { fresh: true });
+    if (!sandbox || !["started", "starting"].includes(sandbox.state)) return;
+    this.ready.delete(sandbox.id);
+    await withTimeout(sandbox.stop(60), 90_000, "Stopping the sandbox");
+    this.cache.delete(learner);
+  }
+
   clearError(learner) {
     const progress = this.progress.get(learner);
     if (progress && (progress.state === "error" || progress.state === "full")) this.progress.delete(learner);

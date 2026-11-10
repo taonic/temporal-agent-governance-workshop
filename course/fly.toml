@@ -6,8 +6,9 @@
 #     --ignorefile course/.dockerignore --ha=false
 #
 # or `npm run deploy` in course/.
-# One machine: the runner keeps the terminals' connections and the rate limits in memory.
-# Secrets and the first deploy: course/DEPLOY.md.
+# One machine: the runner keeps the terminals' connections and the rate limits in memory, and
+# its SQLite database (users, the allowlist, the activity log) on the volume quest_data.
+# Secrets, the volume and the first deploy: course/DEPLOY.md.
 
 app = "temporal-quest"
 primary_region = "sjc"
@@ -18,6 +19,11 @@ primary_region = "sjc"
   PUBLIC_URL = "https://temporalquest.dev"
   MAX_SANDBOXES = "100"
   LLM_MODEL = "gemini-3.8-flash"
+  DATABASE_PATH = "/data/quest.db"
+
+[mounts]
+  source = "quest_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 8080

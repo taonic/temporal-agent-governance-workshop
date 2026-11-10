@@ -1,7 +1,7 @@
 # 07 · Rename and redeploy as temporal-quest
 
 Status: ready-for-human
-Blocked by: 01, 02, 03, 04, 05, 06
+Blocked by: 01, 02, 03, 04a, 04b, 04c, 04d, 04e, 04f, 04g, 05, 06
 Spec: [../spec.md](../spec.md) (Product)
 
 ## What

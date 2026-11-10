@@ -33,6 +33,8 @@ import {
 
 // Ask Temporal's panel (and its Markdown and highlighting) loads the first time it opens.
 const AskTemporal = defineAsyncComponent(() => import("./components/AskTemporal.vue"));
+// The admin panel, for ADMIN_EMAILS: loaded only for them.
+const AdminPage = defineAsyncComponent(() => import("./pages/AdminPage.vue"));
 const helperUsed = ref(false);
 watch(() => helper.open, (open) => open && (helperUsed.value = true), { immediate: true });
 
@@ -47,6 +49,27 @@ function revealPage() {
 }
 
 const menuOpen = ref(false);
+const accountOpen = ref(false);
+// Module pages need a sign-in (the map and the setup page don't): until the session is known,
+// nothing; then the page, or the sign-in in its place.
+const gated = computed(() => store.route.page === "exercise" && store.runtime.checked && !store.authenticated);
+// Ten minutes or less of sandbox time left, with the sandbox running: say so, and when it stops.
+const allowanceNote = computed(() => {
+  const a = store.allowance;
+  if (!store.authenticated || !a || a.remainingMinutes > 10 || store.sandbox.state !== "ready") return "";
+  const left = a.remainingMinutes <= 1 ? "less than a minute" : `${a.remainingMinutes} minutes`;
+  return `${left} of sandbox time left today (${Math.round(a.limitMinutes / 60)} hours a day). Your sandbox stops then, and keeps your work.`;
+});
+
+// Signed in, but not let in (yet): a request pending or turned down, or a cohort that ended.
+const waitingNote = computed(() => {
+  const user = store.user;
+  if (!user || user.allowed) return "";
+  if (user.ended) return "Your cohort has ended, so the modules are closed. Explore the map, or ask the course team to carry on.";
+  if (user.request?.status === "pending") return "Request pending: we'll email you when you're in. Meanwhile, explore the map.";
+  if (user.request?.status === "rejected") return "Your request for the course wasn't approved.";
+  return "";
+});
 const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 const tourVisible = ref(false);
 watch(tourVisible, (open) => (store.pageTourOpen = open));
@@ -64,6 +87,7 @@ const SANDBOX_LABELS = {
   starting: "Waking sandbox…",
   error: "Sandbox problem",
   full: "No sandbox free",
+  allowance: "Out of sandbox time",
   none: "No sandbox yet",
   unknown: "Sandbox",
 };
@@ -100,7 +124,8 @@ watch(
   () => [store.route.page, store.route.id],
   () => {
     menuOpen.value = false;
-    if (store.route.page === "home") closeHelper();
+    accountOpen.value = false;
+    if (store.route.page === "home" || store.route.page === "admin") closeHelper();
     window.scrollTo({ top: 0 });
   },
 );
@@ -151,7 +176,7 @@ function onShortcut(event) {
     return;
   }
   if (event.key.toLowerCase() !== "k" || event.shiftKey || event.altKey || !(isMac ? event.metaKey : event.ctrlKey)) return;
-  if (store.route.page === "home") return; // no Ask Temporal on the home page
+  if (store.route.page === "home" || store.route.page === "admin") return; // no Ask Temporal there
   if (!isMac && event.target instanceof Element && event.target.closest(".xterm")) return;
   event.preventDefault();
   // A read-only editor never has focus, so where the selection is decides, not focus.
@@ -212,11 +237,11 @@ watch(() => store.authenticated, () => refreshHelper());
         </span>
       </a>
       <nav class="topbar-controls" aria-label="Course">
-        <ModuleNav v-if="exercise" :exercise="exercise" />
+        <ModuleNav v-if="exercise && store.authenticated" :exercise="exercise" />
         <a v-else-if="store.route.page !== 'home'" class="button button-secondary" href="#/">Map</a>
         <XpPill />
-        <!-- Not on the map: there, the tree is the only thing to do. -->
-        <template v-if="store.route.page !== 'home'">
+        <!-- Not on the map or in the admin panel: there, the tree (or the panel) is the only thing to do. -->
+        <template v-if="store.route.page !== 'home' && store.route.page !== 'admin' && !gated">
           <div v-if="store.runtime.enabled" class="sandbox-menu" data-tour="sandbox-menu">
             <button class="button sandbox-pill" :class="`state-${sandboxPillState}`" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
               <span class="sandbox-dot" aria-hidden="true" />{{ sandboxLabel }}
@@ -249,22 +274,52 @@ watch(() => store.authenticated, () => refreshHelper());
           </button>
           <button class="button button-secondary" type="button" title="Take the tour" @click="startTour">Tour</button>
         </template>
+        <button v-if="store.runtime.checked && !store.user" class="button button-primary" type="button" @click="store.gateOpen = true">Sign in</button>
+        <div v-else-if="store.user" class="sandbox-menu account-menu">
+          <button class="button button-secondary account-button" type="button" :aria-expanded="accountOpen" :title="store.user.email" @click="accountOpen = !accountOpen">
+            <span class="account-initial" aria-hidden="true">{{ (store.user.name || store.user.email)[0].toUpperCase() }}</span><span class="account-name">{{ store.user.name || store.user.email }}</span>
+          </button>
+          <div v-if="accountOpen" class="menu" role="menu" @keydown.escape="accountOpen = false">
+            <p class="menu-note">Signed in as <strong>{{ store.user.email }}</strong>{{ store.user.cohort ? ` · ${store.user.cohort.name}` : "" }}</p>
+            <a v-if="store.user.admin" class="menu-item" role="menuitem" href="#/admin" @click="accountOpen = false">Admin panel</a>
+            <button class="menu-item" type="button" role="menuitem" @click="signOut(); accountOpen = false">Sign out</button>
+          </div>
+        </div>
         <button class="button button-secondary theme-toggle" type="button" :aria-pressed="store.theme === 'dark'" :title="store.theme === 'dark' ? 'Light mode' : 'Dark mode'" @click="store.theme = store.theme === 'dark' ? 'light' : 'dark'">
           {{ store.theme === "dark" ? "☀" : "☾" }}
         </button>
       </nav>
     </header>
 
+    <p v-if="waitingNote" class="waiting-banner" role="status">{{ waitingNote }}</p>
+    <p v-else-if="allowanceNote" class="waiting-banner" role="status">{{ allowanceNote }}</p>
     <MapPage v-if="store.route.page === 'home'" />
     <SetupPage v-else-if="store.route.page === 'setup'" />
-    <ExercisePage v-else-if="exercise" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
+    <AdminPage v-else-if="store.route.page === 'admin' && store.user?.admin" />
+    <section v-else-if="store.route.page === 'admin'" class="sign-in-page">
+      <div class="sign-in-card">
+        <p class="panel-kicker">Admin panel</p>
+        <h2>{{ store.user ? "This is for the course's admins" : "Sign in" }}</h2>
+        <p v-if="store.user">{{ store.user.email }} isn't one of them. <a href="#/">Back to the map</a></p>
+        <AccessForm v-else label="Sign in" :start="false" />
+      </div>
+    </section>
+    <section v-else-if="gated" class="sign-in-page">
+      <div class="sign-in-card">
+        <p class="panel-kicker">{{ exercise?.title ?? "Temporal Quest" }}</p>
+        <h2>{{ store.user ? "This module opens once you're in" : "Sign in to start this module" }}</h2>
+        <p v-if="!store.user">The map is open to everyone. The modules, your own cloud sandbox and Ask Temporal are for signed-in learners. Use your work email: we'll send you a code.</p>
+        <AccessForm label="Sign in" :start="false" />
+      </div>
+    </section>
+    <ExercisePage v-else-if="exercise && store.authenticated" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
   </div>
 
   <div v-if="store.gateOpen" class="modal-backdrop" @click.self="store.gateOpen = false">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="Access code">
-      <h3>Run the workshop in your browser</h3>
-      <p>Enter the access code your instructor gave you.</p>
-      <AccessForm @done="store.gateOpen = false" />
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Sign in">
+      <h3>Sign in to Temporal Quest</h3>
+      <p>Use your work email: we'll send you a code.</p>
+      <AccessForm label="Sign in" :start="store.route.page === 'exercise'" @done="store.gateOpen = false" />
     </div>
   </div>
 

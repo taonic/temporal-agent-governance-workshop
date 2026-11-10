@@ -1,9 +1,10 @@
 // End-to-end tests against a deployed course site: the live Fly app unless E2E_BASE_URL says
 // otherwise. Three tiers, by tag:
 //
-//   @public   no secrets: the site, its pages and the /api's answers to a signed-out visitor
-//   @auth     E2E_ACCESS_CODE: a session, without starting a sandbox
-//   @sandbox  E2E_ACCESS_CODE: a real learner's run, a Daytona sandbox from start to delete
+//   @public   no secrets: the map, the sign-in, and the /api's answers to a signed-out visitor
+//   @auth     E2E_SIGNIN_KEY (and E2E_ADMIN_EMAIL in the app's ADMIN_EMAILS): signed-in
+//             learners, the module pages, access requests and the admin, without a sandbox
+//   @sandbox  E2E_SIGNIN_KEY: a real learner's run, a Daytona sandbox from start to delete
 //
 // A tier whose secret is missing skips. See README.md.
 import { defineConfig, devices } from "@playwright/test";

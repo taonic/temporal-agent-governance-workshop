@@ -2,7 +2,8 @@
 // site's code or a 5xx from the site itself, whatever the test was looking at.
 import { test as base, expect } from "@playwright/test";
 
-import { BASE_URL } from "../env.mjs";
+import { BASE_URL, SIGNIN_KEY } from "../env.mjs";
+import { newLearner } from "./accounts.mjs";
 
 export { expect };
 
@@ -12,8 +13,25 @@ export const storageKey = (key) => `governed-agents-course:${key}`;
 export const test = base.extend({
   // Off by default for a page that has done the getting-started steps: true shows them.
   firstVisit: [false, { option: true }],
+  // A page signed in as a new learner of its own (deleted after the test). Needs E2E_SIGNIN_KEY.
+  signedIn: [false, { option: true }],
 
-  page: async ({ page, firstVisit }, use, testInfo) => {
+  // The test's learner, when signedIn: { email, api, user, cookies }.
+  learner: async ({ signedIn }, use, testInfo) => {
+    if (!signedIn) return use(null);
+    if (!SIGNIN_KEY) testInfo.skip(true, "needs E2E_SIGNIN_KEY");
+    const learner = await newLearner(testInfo.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 24).replace(/-+$/, ""));
+    await use(learner);
+    await learner.dispose();
+  },
+
+  page: async ({ page, firstVisit, learner }, use, testInfo) => {
+    if (learner) {
+      await page.context().addCookies(learner.cookies);
+      // A signed-in page starts the learner's sandbox on its own: not in these tests (Daytona
+      // bills for it). It has none, and starting one does nothing.
+      await page.route((url) => ["/api/sandbox", "/api/sandbox/start"].includes(url.pathname), (route) => route.fulfill({ json: { state: "none", message: "" } }));
+    }
     const problems = [];
     page.on("pageerror", (err) => problems.push(`uncaught: ${err.message}`));
     page.on("response", (res) => {

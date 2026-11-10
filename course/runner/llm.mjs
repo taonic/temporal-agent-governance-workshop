@@ -10,7 +10,7 @@ import { RateLimiter } from "./ratelimit.mjs";
 
 const ROUTES = new Set(["POST chat/completions", "GET models"]);
 
-export function createLlmPassthrough(config, { fetchImpl = fetch, limiter } = {}) {
+export function createLlmPassthrough(config, { fetchImpl = fetch, limiter, onCall = () => {} } = {}) {
   const limits =
     limiter ?? new RateLimiter({ perKey: config.llmPerSandboxPerMinute, global: config.llmGlobalPerMinute });
 
@@ -40,6 +40,7 @@ export function createLlmPassthrough(config, { fetchImpl = fetch, limiter } = {}
       });
     }
 
+    onCall(learner);
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     let body;

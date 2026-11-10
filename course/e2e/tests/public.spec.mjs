@@ -1,4 +1,8 @@
-// @public: what anyone on the internet gets, signed out. No secrets, nothing created.
+// @public: what anyone on the internet gets, signed out: the map, the setup page, and a module
+// page asking them to sign in. No secrets, nothing created.
+//
+// Then, @auth: the module pages themselves, which need a sign-in, each as a new learner of its
+// own (signedIn, fixtures.mjs). They skip without E2E_SIGNIN_KEY.
 import { coursePages, expect, showCode, storageKey, test, wholeMap } from "./fixtures.mjs";
 
 test.describe("the /api, signed out", { tag: "@public" }, () => {
@@ -7,21 +11,33 @@ test.describe("the /api, signed out", { tag: "@public" }, () => {
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body.ok).toBe(true);
-    expect(body.runtime.enabled, "the browser runtime is off: check the app's DAYTONA_API_KEY and ACCESS_CODE secrets").toBe(true);
+    expect(body.runtime.enabled, "the browser runtime is off: check the app's DAYTONA_API_KEY and RESEND_API_KEY secrets").toBe(true);
   });
 
-  test("session: an access code is required and nobody is signed in", async ({ request }) => {
+  test("session: signing in is on, and nobody is signed in", async ({ request }) => {
     const body = await (await request.get("/api/session")).json();
-    expect(body.runtime).toMatchObject({ enabled: true, codeRequired: true });
+    expect(body.runtime).toMatchObject({ enabled: true });
+    expect(body.signIn, "signing in is off: check RESEND_API_KEY").toMatchObject({ enabled: true, console: false });
     expect(body.helper.enabled, "Ask Temporal is off: check GEMINI_API_KEY").toBe(true);
     expect(body.authenticated).toBe(false);
+    expect(body.user).toBeNull();
   });
 
-  test("a wrong access code is refused", async ({ request }) => {
-    const res = await request.post("/api/session", { data: { code: `not-the-code-${Date.now()}` } });
-    expect(res.status()).toBe(403);
-    expect((await res.json()).error).toMatch(/access code/i);
+  test("a personal email is asked for a company one, and sent no code", async ({ request }) => {
+    const res = await request.post("/api/auth/start", { data: { email: `someone.${Date.now()}@gmail.com` } });
+    expect(res.status()).toBe(400);
+    expect(await res.json()).toMatchObject({ code: "personal_email" });
+  });
+
+  test("a code that was never sent is refused, and signs nobody in", async ({ request }) => {
+    const res = await request.post("/api/auth/verify", { data: { email: `nobody.${Date.now()}@example.com`, code: "123456" } });
+    expect(res.status()).toBe(400);
     expect(res.headers()["set-cookie"]).toBeUndefined();
+  });
+
+  test("a session from the old access code is no longer one", async ({ request }) => {
+    const res = await request.get("/api/session", { headers: { cookie: "course_session=aePdEQ4znJYS9FFP.c2lnbmF0dXJl" } });
+    expect((await res.json()).authenticated).toBe(false);
   });
 
   for (const [method, path] of [
@@ -29,17 +45,17 @@ test.describe("the /api, signed out", { tag: "@public" }, () => {
     ["POST", "/api/sandbox/start"],
     ["GET", "/api/files?path=hello/workflow.py"],
     ["POST", "/api/helper/ask"],
+    ["GET", "/api/progress"],
+    ["POST", "/api/events"],
+    ["POST", "/api/heartbeat"],
+    ["GET", "/api/admin/learners"],
+    ["GET", "/api/admin/sandboxes"],
   ]) {
     test(`${method} ${path.split("?")[0]} needs a session`, async ({ request }) => {
       const res = await request.fetch(path, { method, data: method === "POST" ? {} : undefined });
       expect(res.status()).toBe(401);
     });
   }
-
-  test("the instructors' list needs the instructor code", async ({ request }) => {
-    const res = await request.get("/api/admin/sandboxes", { headers: { "x-instructor-code": "wrong" } });
-    expect(res.status()).toBe(403);
-  });
 
   test("the model passthrough refuses a request without a sandbox key", async ({ request }) => {
     const res = await request.post("/llm/v1/chat/completions", { data: { model: "x", messages: [] } });
@@ -95,10 +111,27 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     // The full map: every branch, and its boss.
     await page.getByRole("button", { name: "Full map", exact: true }).click();
     await expect(page.locator(".map-node:has(.kind-boss)")).toHaveCount(6);
+    // Signed out, a module asks for a sign-in in its place.
     await page.getByRole("link", { name: /Start F1/ }).click();
     await expect(page).toHaveURL(/#\/module\/F1$/);
-    await expect(page.locator(".guide-heading-title")).toContainText("Hello Temporal");
-    await expect(page.locator(".module-crumb-title")).toContainText("F1");
+    await expect(page.locator(".sign-in-page h2")).toHaveText("Sign in to start this module");
+    await expect(page.locator(".guide-heading-title")).toHaveCount(0);
+  });
+
+  test("a module page asks for a work email, and a personal one is asked for a company one", async ({ page }) => {
+    await page.goto("/#/exercise/01-hello-temporal");
+    const form = page.locator(".sign-in-page .access-form");
+    await expect(form.locator("#access-email")).toBeVisible();
+    await expect(page.locator("[data-tour='editor']")).toHaveCount(0);
+    await form.locator("#access-email").fill(`someone.${Date.now()}@gmail.com`);
+    await form.getByRole("button", { name: "Email me a code" }).click();
+    await expect(form.locator(".form-error")).toContainText("company email");
+  });
+
+  test("the admin panel asks for a sign-in", async ({ page }) => {
+    await page.goto("/#/admin");
+    await expect(page.locator(".sign-in-page h2")).toHaveText("Sign in");
+    await expect(page.locator(".admin-page")).toHaveCount(0);
   });
 
   test("a specialization card expands its map in place, and shows the way there on the full map", async ({ page }) => {
@@ -161,21 +194,36 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     await expect(detail.getByRole("link", { name: /Start|Skip ahead/ })).toHaveCount(0);
   });
 
-  test("a first visit opens with the getting-started steps", async ({ browser }) => {
-    // A fresh context without the fixture's "onboarded" flag.
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await page.goto("/#/exercise/01-hello-temporal");
-    await expect(page.locator(".exercise-shell.guide-only")).toBeVisible();
-    await expect(page.locator(".guide-replies")).toContainText(/Skip for now|Next/);
-    await context.close();
-  });
-
   test("setup: the guide to running it locally", async ({ page }) => {
     await page.goto("/#/setup");
     await expect(page.locator(".reading .eyebrow")).toHaveText("Set up on your machine");
     await expect(page.locator(".reading")).toContainText("uv sync");
   });
+
+  test("the theme toggle switches and is remembered", async ({ page }) => {
+    await page.goto("/#/setup");
+    const html = page.locator("html");
+    const before = await html.getAttribute("data-theme");
+    await page.locator(".theme-toggle").click();
+    const after = before === "dark" ? "light" : "dark";
+    await expect(html).toHaveAttribute("data-theme", after);
+    await page.reload();
+    await expect(html).toHaveAttribute("data-theme", after);
+  });
+});
+
+test.describe("a module, signed in", { tag: "@auth" }, () => {
+  test.use({ signedIn: true });
+
+  test.describe("a first visit", () => {
+    test.use({ firstVisit: true });
+    test("opens with the getting-started steps", async ({ page }) => {
+      await page.goto("/#/exercise/01-hello-temporal");
+      await expect(page.locator(".exercise-shell.guide-only")).toBeVisible();
+      await expect(page.locator(".guide-replies")).toContainText(/Skip for now|Next/);
+    });
+  });
+
 
   test("every exercise on the map opens", async ({ page }) => {
     const pages = await coursePages(page);
@@ -203,7 +251,7 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
   });
 
   test("a challenge: a wrong pick is struck out with what happened, the right one earns its XP and shows every choice", async ({ page }) => {
-    // Signed out, there's no sandbox: each pick plays its recorded run.
+    // Without a sandbox, each pick plays its recorded run.
     await page.goto("/#/module/FC1");
     const challenge = page.locator(".challenge");
     await expect(challenge).toBeVisible();
@@ -226,6 +274,8 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     await expect(challenge.locator(".challenge-outcome")).toHaveCount(3);
     const attempts = await page.evaluate(() => JSON.parse(localStorage.getItem("governed-agents-course:attempts")));
     expect(attempts.FC1).toEqual(["A", "C"]);
+    // The server has the picks too: the learner's progress follows them to another browser.
+    await expect.poll(async () => (await (await page.request.get("/api/progress")).json()).attempts.FC1).toEqual(["A", "C"]);
     // On the map, it's done: a tick, between F5 and F6.
     await page.goto("/#/");
     await expect(page.locator('[data-module="FC1"]').first()).toHaveClass(/is-done/);
@@ -257,29 +307,10 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     await next.click();
     await expect(page).toHaveURL(/#\/module\/N1$/);
     await page.getByRole("link", { name: "Map", exact: true }).click();
+    // Nothing completed yet (Next doesn't complete a module): the first-run view, then the map.
+    await page.getByRole("button", { name: /Show the whole map/ }).click();
     await expect(page.locator(".map-player h1")).toBeVisible();
     await expect(page.locator(".map-path-pick select")).toHaveValue("agent-governance-4h");
-  });
-
-  test("an exercise offers the sandbox behind the access code", async ({ page }) => {
-    await page.goto("/#/exercise/01-hello-temporal");
-    await expect(page.locator(".sandbox-pill")).toHaveText(/Browser sandbox/);
-    await showCode(page);
-    const status = page.locator(".dock-status .sandbox-status");
-    await expect(status).toContainText("Run the workshop in your browser");
-    await expect(status.locator("#access-code")).toBeVisible();
-    // The Agent UI and Temporal UI tabs wait for a sandbox.
-    await expect(page.getByRole("tab", { name: "Temporal UI" })).toBeDisabled();
-  });
-
-  test("a wrong access code says so in the form", async ({ page }) => {
-    await page.goto("/#/exercise/01-hello-temporal");
-    await showCode(page);
-    const form = page.locator(".dock-status .access-form");
-    await form.locator("#access-code").fill(`not-the-code-${Date.now()}`);
-    await form.getByRole("button", { name: "Start my sandbox" }).click();
-    await expect(form.locator(".form-error")).toHaveText(/isn't this workshop's access code/);
-    await expect(page.locator(".sandbox-pill")).toHaveText(/Browser sandbox/);
   });
 
   test("Ask Temporal opens from the top bar and closes with Esc", async ({ page }) => {
@@ -292,16 +323,5 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     await page.locator(".guide-heading-title").click();
     await page.keyboard.press("Escape");
     await expect(panel).toBeHidden();
-  });
-
-  test("the theme toggle switches and is remembered", async ({ page }) => {
-    await page.goto("/#/setup");
-    const html = page.locator("html");
-    const before = await html.getAttribute("data-theme");
-    await page.locator(".theme-toggle").click();
-    const after = before === "dark" ? "light" : "dark";
-    await expect(html).toHaveAttribute("data-theme", after);
-    await page.reload();
-    await expect(html).toHaveAttribute("data-theme", after);
   });
 });

@@ -13,6 +13,13 @@ export class RateLimiter {
     while (list.length && list[0] <= cutoff) list.shift();
   }
 
+  // Whether a key has no room left in its window (nothing recorded).
+  full(key) {
+    const mine = this.hits.get(key) ?? [];
+    this.#prune(mine, this.now() - this.windowMs);
+    return mine.length >= this.perKey;
+  }
+
   // Records a hit and returns { ok: true }, or { ok: false, retryAfterSeconds, scope }.
   take(key) {
     const now = this.now();

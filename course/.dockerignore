@@ -16,6 +16,7 @@ course/node_modules
 # The e2e tests run from CI against the deployed site, not in the image
 course/e2e
 course/.session-secret
+course/.data
 course/web/dist
 course/web/src/generated
 course/web/public/content

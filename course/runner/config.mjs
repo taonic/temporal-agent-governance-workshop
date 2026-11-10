@@ -4,7 +4,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { parseCodes } from "./auth.mjs";
 import { snapshotName } from "./repo-files.mjs";
 
 const env = process.env;
@@ -58,14 +57,18 @@ export const config = {
   autoStopMinutes: int("SANDBOX_AUTO_STOP_MINUTES", 30),
   ttlMinutes: int("SANDBOX_TTL_MINUTES", 24 * 60),
 
-  // The event's codes, comma-separated (one per event or cohort, so one can be retired while
-  // others stay valid). Without any, the runtime is open only when the runner listens on a
-  // loopback address (local dev, where only this machine can reach it), or with
-  // ALLOW_OPEN_ACCESS=1; otherwise it's off.
-  accessCodes: parseCodes(env.ACCESS_CODE),
-  allowOpenAccess: env.ALLOW_OPEN_ACCESS === "1",
+  // Sign-in: a 6-digit code by email (Resend), for the emails on the allowlist (accounts.mjs).
+  // ADMIN_EMAILS are always allowed, and are the admins (/admin). A local runner without
+  // RESEND_API_KEY prints the code to its console and lets any email in, to this machine only.
+  resendApiKey: env.RESEND_API_KEY || "",
+  mailFrom: env.MAIL_FROM || "Temporal Quest <signin@temporalquest.dev>",
+  adminEmails: parseEmails(env.ADMIN_EMAILS),
+  // The e2e tests' addresses (e2e+…@temporalquest.dev) get no email: their code is derived
+  // from this key.
+  e2eSignInKey: env.E2E_SIGNIN_KEY || "",
   localOnly: LOOPBACK.test(env.HOST ?? "127.0.0.1"),
-  instructorCode: env.INSTRUCTOR_CODE || "",
+  // The SQLite database: users, the allowlist, the activity log. On a Fly volume when deployed.
+  databasePath: env.DATABASE_PATH || path.join(path.dirname(fileURLToPath(import.meta.url)), "..", ".data", "quest.db"),
   // See sessionSecret() above.
   sessionSecret: secret.secret,
   sessionSecretIsEphemeral: !env.SESSION_SECRET && !secret.kept,
@@ -92,35 +95,39 @@ export const config = {
   kapaSearchesPerMinute: int("KAPA_RATE_GLOBAL", 50),
 };
 
-// No code needed: ALLOW_OPEN_ACCESS=1, or a local runner with no ACCESS_CODE.
-export function openAccess() {
-  return !config.accessCodes.length && (config.allowOpenAccess || config.localOnly);
+// "A@x.com, b@y.com" → ["a@x.com", "b@y.com"].
+export function parseEmails(value) {
+  return String(value ?? "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
 }
 
-// Who may get a session without a code. A local runner is still reachable through a tunnel
-// (the one the sandboxes use for the model), so it only opens to requests addressed to this
-// machine.
-export function openAccessAllows(hostHeader) {
-  if (config.allowOpenAccess) return true;
+// A local runner without email: codes go to its console, and any email may sign in. A local
+// runner is still reachable through a tunnel (the one the sandboxes use for the model), so
+// this only opens to requests addressed to this machine.
+export function consoleSignIn() {
+  return !config.resendApiKey && config.localOnly;
+}
+
+export function consoleSignInAllows(hostHeader) {
   const host = String(hostHeader ?? "").replace(/:\d+$/, "");
-  return config.localOnly && LOOPBACK.test(host);
+  return consoleSignIn() && LOOPBACK.test(host);
 }
 
-// Why nobody can get a session (no code to give out, and not open), or null.
-function accessUnavailableReason() {
-  if (!config.accessCodes.length && !config.allowOpenAccess && !config.localOnly) return "The runner has no ACCESS_CODE.";
+// Why nobody can sign in (no way to send a code), or null. The e2e tests' addresses can sign
+// in without email.
+export function signInUnavailableReason() {
+  if (!config.resendApiKey && !config.localOnly && !config.e2eSignInKey) return "The runner has no RESEND_API_KEY.";
   return null;
 }
 
 // Why the browser runtime is off, or null when it's on.
 export function runtimeUnavailableReason() {
   if (!config.daytonaApiKey) return "The runner has no DAYTONA_API_KEY.";
-  return accessUnavailableReason();
+  return signInUnavailableReason();
 }
 
 // Why the helper is off, or null when it's on. It doesn't need the sandboxes, so learners
 // working locally can use it too.
 export function helperUnavailableReason() {
   if (!config.geminiApiKey) return "The runner has no GEMINI_API_KEY.";
-  return accessUnavailableReason();
+  return signInUnavailableReason();
 }

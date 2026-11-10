@@ -422,6 +422,61 @@ h3 {
   outline-offset: 1px;
 }
 
+.access-row select {
+  flex: 1 1 160px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--text);
+}
+
+.access-row select:focus {
+  outline: 2px solid var(--temporal-uv);
+  outline-offset: 1px;
+}
+
+.access-row-end {
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.access-form .access-label-gap {
+  margin-top: 10px;
+}
+
+.access-heading {
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+
+.access-note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.access-note-top {
+  margin: 0 0 10px;
+}
+
+.access-form .link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--temporal-uv);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.access-form .link-button:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
 .form-error {
   margin: 8px 0 0;
   color: var(--danger);
@@ -6501,3 +6556,540 @@ html.intro-open {
 .app-frame.is-arriving .first-run > :nth-child(2) { animation-delay: 60ms; }
 .app-frame.is-arriving .first-run > :nth-child(3) { animation-delay: 120ms; }
 .app-frame.is-arriving .first-run > :nth-child(4) { animation-delay: 180ms; }
+
+/* --- Accounts: the account menu, the sign-in page, the waiting banner --------------------- */
+
+.account-button {
+  gap: 8px;
+  max-width: 220px;
+}
+
+.account-initial {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--temporal-uv-soft);
+  color: var(--temporal-uv);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.account-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.menu-item {
+  display: block;
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .account-name {
+    display: none;
+  }
+
+  .menu {
+    width: min(340px, calc(100vw - 32px));
+  }
+}
+
+.sign-in-page {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
+}
+
+.sign-in-card {
+  width: min(520px, 100%);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.sign-in-card h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.sign-in-card > p:not(.panel-kicker) {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.waiting-banner {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--amber-soft);
+  color: var(--text);
+  font-size: 14px;
+  text-align: center;
+}
+
+/* --- The admin panel (/admin) ----------------------------------------------------------------- */
+
+.admin-page {
+  width: 100%;
+  max-width: 1280px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.admin-form label code {
+  font-size: 12px;
+}
+
+.admin-form label > span {
+  display: block;
+}
+
+.admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-head h1 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-tab:hover {
+  color: var(--text);
+}
+
+.admin-tab.active {
+  background: var(--temporal-uv-soft);
+  color: var(--temporal-uv);
+}
+
+.admin-count {
+  min-width: 18px;
+  padding: 1px 6px;
+  border-radius: 9px;
+  background: var(--temporal-uv);
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+}
+
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.admin-section > *,
+.journey-grid > *,
+.admin-head > * {
+  min-width: 0;
+}
+
+.admin-section > .button {
+  align-self: flex-start;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-toolbar > .button {
+  margin-left: auto;
+}
+
+.admin-page select,
+.admin-page input,
+.admin-page textarea {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-page textarea {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 13px;
+  resize: vertical;
+}
+
+.admin-card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.admin-card h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.admin-card h3:not(:first-child) {
+  margin-top: 18px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.admin-table th {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.admin-learners tbody tr {
+  cursor: pointer;
+}
+
+.admin-learners td {
+  white-space: nowrap;
+}
+
+.admin-learners tbody tr:hover,
+.admin-learners tbody tr:focus-visible {
+  background: var(--mist);
+  outline: none;
+}
+
+.admin-table tr.is-stuck td {
+  background: var(--amber-soft);
+}
+
+.admin-table tr.is-stuck td:first-child {
+  box-shadow: inset 3px 0 0 var(--amber);
+}
+
+.admin-table tr.is-blocked td {
+  opacity: 0.6;
+}
+
+.is-stuck-text {
+  color: var(--amber);
+}
+
+.admin-muted {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.admin-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--mist);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.admin-badge.is-bad {
+  background: var(--amber-soft);
+  color: var(--danger);
+}
+
+.admin-badge.is-good {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.admin-danger {
+  color: var(--danger);
+}
+
+.journey-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.journey-head h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.journey-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.journey-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.journey-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.journey-stats > div.is-stuck {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+}
+
+.journey-stats span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.journey-stats strong {
+  font-size: 17px;
+}
+
+.journey-stats em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.journey-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+  gap: 16px;
+}
+
+.admin-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+.pick {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pick.is-right {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.pick.is-wrong {
+  background: var(--amber-soft);
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+.admin-feed {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+
+.admin-feed li {
+  display: flex;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-feed time {
+  flex: none;
+  width: 120px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.admin-bars {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+}
+
+.admin-bars li {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) 1fr 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--mist);
+  overflow: hidden;
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--temporal-uv);
+}
+
+.bar-count {
+  text-align: right;
+  font-weight: 700;
+}
+
+.admin-cohorts {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  align-items: start;
+}
+
+.cohort-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cohort-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cohort-item:hover {
+  background: var(--mist);
+}
+
+.cohort-item.active {
+  border-color: var(--temporal-uv);
+  background: var(--temporal-uv-soft);
+}
+
+.cohort-item.ended strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.cohort-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .admin-cohorts {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-feed time {
+    width: 88px;
+  }
+
+  .admin-bars li {
+    grid-template-columns: minmax(0, 1fr) 80px 28px;
+  }
+}

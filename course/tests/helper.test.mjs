@@ -215,7 +215,7 @@ const ask = (cookie, question = "How do I retry an activity?") =>
     }),
   });
 
-test("without a session, the helper asks for the access code", async () => {
+test("without a session, the helper asks for a sign-in", async () => {
   const res = await ask("");
   assert.equal(res.status, 401);
   assert.equal((await res.json()).code, "access");

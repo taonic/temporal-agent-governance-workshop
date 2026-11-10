@@ -151,12 +151,24 @@ A **challenge** is a checkpoint every 3–4 modules that tests what the learner 
 
 ## Accounts, cost and events
 
-- **Reading is free** for everyone and needs no sign-in.
-- **Sign-in** is with GitHub or Google. Progress and XP are stored on the server in SQLite on a Fly volume. Anonymous progress is kept in localStorage and merged in at the first sign-in.
-- **Sandboxes need a sign-in** and come with a daily allowance (for example 2 hours of sandbox runtime and N model calls).
-- **An event code** raises the allowance for that day and puts the learner on the event's path.
-- **A path** is an ordered list of module ids in the content (for example `agent-governance-4h`), chosen with an event code or `?path=`. On a path the map highlights the route and Next follows it. Today's 4-hour agenda becomes the first path.
-- **Instructor view:** `/instructor`, behind the instructor code. It shows each learner on the event's path with their current module, XP and minutes on that module, and highlights anyone stuck for more than 10 minutes. It also shows how many learners have passed each module.
+The site serves on-demand training as well as live events.
+
+- **The map is public.** Its branches, module titles, teasers, path and bosses show what the course covers. **Module pages need a sign-in.** The gate is soft: module text stays in the bundle and the repo stays public, because the point is sign-ups and journeys, not secrecy.
+- **Sign-in is by email**, with a 6-digit code sent through Resend. It is valid for 10 minutes, allows 5 tries and works once. Email identifies a learner, and a random user id labels their sandbox, so Daytona never sees the email. At the first sign-in the learner gives a name and a role.
+- **Sessions** are a signed cookie lasting 14 days from sign-in. Every request also looks the user up, so blocking someone or removing them from the allowlist signs them out at once.
+- **The allowlist** decides who may sign in. Its entries are exact emails or domain rules. Each entry belongs to a **cohort**, which has a name, an optional path, an optional end date and a daily allowance. `ADMIN_EMAILS` are always allowed and are the admins.
+- **Access requests.** Personal email addresses (gmail and the like) are asked for a company email, unless they're on the allowlist exactly. A company email that isn't listed is verified with a code first. Then the learner files a request with name and role, and waits in a `pending` state that shows the map only. Admins are emailed. They approve the one email or the whole domain into the **On-demand** cohort, or reject it, and the requester is emailed.
+- **Allowance.** A user gets 8 hours of sandbox time in any rolling 24 hours, idle time included. A cohort can change this. There's no daily cap on model calls beyond the per-minute rate limits.
+- **Progress and activity** are stored in SQLite on a Fly volume. An append-only events table records sign-ins, the sandbox lifecycle, helper questions, model-call counts, modules opened and passed, failed checks, challenge picks, boss results and admin actions. A heartbeat every minute from a visible module page measures time on a module. Progress is derived from the events, so it follows a learner across browsers. Progress in localStorage is imported at the first sign-in.
+- **A path** is an ordered list of module ids in the content (for example `agent-governance-4h`), chosen by the learner's cohort or by `?path=`. On a path the map highlights the route and Next follows it. Today's 4-hour agenda becomes the first path.
+- **Admin panel:** `/admin`, for `ADMIN_EMAILS`, with these tabs:
+  - **Cohorts & allowlist**
+  - **Requests**
+  - **Learners:** a row per learner and a journey page each. Anyone stuck for more than 10 minutes is highlighted, along with passes per module and challenge stats.
+  - **Activity:** a live feed.
+  - **Sandboxes**
+
+  Learners and Requests export as CSV. An admin can delete a learner along with their events. Emails are used to run the course only, with no marketing.
 
 ## Content format
 
@@ -188,7 +200,14 @@ Each milestone ships on its own and leaves the site working. One issue per miles
 2. [Map and navigation](issues/02-map-and-navigation.md)
 3. [Per-module checks and boss quizzes](issues/03-checks-and-boss-quizzes.md)
    - then [Run-it challenges](issues/08-run-it-challenges.md): issue 08, filed later, built after 03 and before 04
-4. [Sign-in, server progress, events](issues/04-accounts-progress-events.md)
+4. Accounts, split into:
+   - [04a Email sign-in, allowlist and cohorts](issues/04a-email-sign-in-allowlist.md) (blocks the rest of 04)
+   - [04b Activity events and server progress](issues/04b-events-and-server-progress.md)
+   - [04c Access requests](issues/04c-access-requests.md)
+   - [04d Learner journeys and activity in /admin](issues/04d-journeys-in-admin.md)
+   - [04e Public map and the reading gate](issues/04e-public-map-reading-gate.md)
+   - [04f Daily sandbox allowance](issues/04f-daily-sandbox-allowance.md)
+   - [04g Sandbox warm-up and save points on entry](issues/04g-sandbox-warm-up-save-points.md)
 5. [Boss question pools](issues/05-boss-question-pools.md)
 6. [Stub branch sample modules](issues/06-stub-branch-samples.md)
 7. [Rename and redeploy as temporal-quest](issues/07-rename-temporal-quest.md)

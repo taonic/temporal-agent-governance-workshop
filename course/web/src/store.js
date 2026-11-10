@@ -33,11 +33,13 @@ function initialTheme() {
 }
 
 // #/ (the map), #/setup, #/module/A4 (the exercise page that has it, at its first beat),
-// #/exercise/02-durable-session. A module that isn't playable yet opens the map, on its card.
+// #/exercise/02-durable-session, #/admin/<tab>. A module that isn't playable yet opens the map,
+// on its card.
 function parseRoute() {
   const hash = window.location.hash.replace(/^#\/?/, "");
   const [page, id] = hash.split("/");
   if (page === "setup") return { page: "setup" };
+  if (page === "admin") return { page: "admin", id: id || "learners" };
   if (page === "exercise" && course.exercises.some((e) => e.id === id)) return { page: "exercise", id };
   if (page === "module") {
     const exercise = course.exercises.find((e) => e.modules.includes(id));
@@ -53,8 +55,16 @@ export const store = reactive({
   toast: "",
 
   // The browser runtime, as the runner reports it.
-  runtime: { checked: false, enabled: false, reason: "", codeRequired: true },
+  runtime: { checked: false, enabled: false, reason: "" },
+  // Whether anyone can sign in here, and whether codes go to the runner's console (local).
+  signInInfo: { enabled: true, reason: "", console: false },
+  // Signed in, and allowed to use the course (read the modules, the sandbox, the helper).
   authenticated: false,
+  // The signed-in user, allowed or not: { email, name, role, company, admin, needsProfile,
+  // allowed, ended, cohort, request }, or null.
+  user: null,
+  // Sandbox time in the last 24 hours: { usedMinutes, limitMinutes, remainingMinutes, freesAt }.
+  allowance: null,
   uiProxy: { base: null, port: null },
   gateOpen: false,
 
@@ -315,6 +325,7 @@ export function sandboxStartView() {
   if (store.sandboxLost) return { state: "idle", label: "Start my sandbox", disabled: false };
   if (store.authenticated && state === "ready") return { state: "ready", label: "✓ Your sandbox is ready", disabled: true };
   if (store.authenticated && SANDBOX_BUSY[state]) return { state: "busy", label: SANDBOX_BUSY[state], disabled: true };
+  if (store.authenticated && state === "allowance") return { state: "error", label: "Out of sandbox time", disabled: true };
   if (store.authenticated && (state === "error" || state === "full")) return { state: "error", label: "Try again", disabled: false };
   return { state: "idle", label: "Start my sandbox", disabled: false };
 }
@@ -424,19 +435,27 @@ export async function api(path, { method = "GET", body } = {}) {
   } catch {
     /* not JSON */
   }
-  if (!response.ok) throw Object.assign(new Error(data.error || `HTTP ${response.status}`), { status: response.status });
+  if (!response.ok) throw Object.assign(new Error(data.error || `HTTP ${response.status}`), { status: response.status, code: data.code, freesAt: data.freesAt });
   return data;
+}
+
+// Signed in, for the page, once they've also said who they are (name and role).
+function applySession({ authenticated, user }) {
+  store.user = user ?? null;
+  store.authenticated = Boolean(authenticated) && !user?.needsProfile;
 }
 
 export async function refreshSession() {
   try {
     const data = await api("/api/session");
-    store.runtime = { checked: true, enabled: data.runtime.enabled, reason: data.runtime.reason ?? "", codeRequired: data.runtime.codeRequired };
-    store.authenticated = data.authenticated;
+    store.runtime = { checked: true, enabled: data.runtime.enabled, reason: data.runtime.reason ?? "" };
+    store.signInInfo = { enabled: data.signIn?.enabled ?? false, reason: data.signIn?.reason ?? "", console: Boolean(data.signIn?.console) };
+    applySession(data);
     store.uiProxy = { base: data.uiProxyBase, port: data.uiProxyPort };
   } catch {
-    store.runtime = { checked: true, enabled: false, reason: "The course runner isn't reachable.", codeRequired: true };
-    store.authenticated = false;
+    store.runtime = { checked: true, enabled: false, reason: "The course runner isn't reachable." };
+    store.signInInfo = { enabled: false, reason: "The course runner isn't reachable.", console: false };
+    applySession({});
   }
 }
 
@@ -446,12 +465,24 @@ export function uiProxyOrigin() {
   return "";
 }
 
-const SETTLED = new Set(["ready", "error", "full", "none"]);
+const SETTLED = new Set(["ready", "error", "full", "none", "allowance"]);
 let sandboxPoll = 0;
 // Whether this page has had a ready sandbox: one that isn't any more was lost, not never started.
 let wasReady = false;
 
+// "14:20", or "tomorrow at 09:05".
+export function clockTime(ms) {
+  const at = new Date(ms);
+  const time = at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return at.toDateString() === new Date().toDateString() ? time : `tomorrow at ${time}`;
+}
+
+export function applyAllowance(allowance) {
+  if (allowance) store.allowance = allowance;
+}
+
 function applySandbox(data) {
+  applyAllowance(data.allowance);
   store.sandbox = { state: data.state, message: data.message ?? "", sandboxId: data.sandboxId ?? null };
   if (data.state === "ready") {
     wasReady = true;
@@ -465,7 +496,7 @@ async function pollSandbox() {
     const exercise = store.route.page === "exercise" ? store.route.id : "";
     applySandbox(await api(`/api/sandbox?exercise=${encodeURIComponent(exercise)}`));
   } catch (err) {
-    if (err.status === 401) store.authenticated = false;
+    if (err.status === 401 || err.status === 403) refreshSession();
     // No status: the request never got an answer (the runner, or the network, is down).
     store.sandbox = { state: "error", message: err.status ? err.message : "The course runner can't be reached.", sandboxId: null };
     return;
@@ -483,7 +514,9 @@ export async function startSandbox() {
   try {
     applySandbox(await api("/api/sandbox/start", { method: "POST" }));
   } catch (err) {
-    store.sandbox = { state: "error", message: err.message, sandboxId: null };
+    // Out of sandbox time: say when it frees up.
+    const message = err.code === "allowance" && err.freesAt ? `${err.message} It frees up at ${clockTime(Date.parse(err.freesAt))}.` : err.message;
+    store.sandbox = { state: err.code === "allowance" ? "allowance" : "error", message, sandboxId: null };
     return;
   }
   pollSandbox();
@@ -500,7 +533,7 @@ export async function resumeSandbox() {
   if (wasReady && store.authenticated) {
     clearTimeout(sandboxPoll);
     store.sandboxLost = true;
-  } else if (!["error", "full"].includes(store.sandbox.state)) startSandbox();
+  } else if (!["error", "full", "allowance"].includes(store.sandbox.state) && (store.allowance?.remainingMinutes ?? 1) > 0) startSandbox();
 }
 
 // Keeps an eye on it while the page is in front of the learner: checks again when the tab comes
@@ -542,15 +575,25 @@ export async function resetSandbox({ restart = false } = {}) {
   }
 }
 
-export async function signIn(code) {
-  await api("/api/session", { method: "POST", body: { code } });
-  store.authenticated = true;
-  store.gateOpen = false;
+// Sign-in: a code to the email, then the code back, then (the first time) name and role.
+export async function requestCode(email) {
+  return api("/api/auth/start", { method: "POST", body: { email } });
+}
+
+export async function verifyCode(email, code) {
+  applySession(await api("/api/auth/verify", { method: "POST", body: { email, code } }));
+  if (store.authenticated && !store.user?.needsProfile) store.gateOpen = false;
+}
+
+export async function saveProfile(name, role) {
+  applySession(await api("/api/auth/profile", { method: "POST", body: { name, role } }));
+  if (store.authenticated) store.gateOpen = false;
 }
 
 export async function signOut() {
   await api("/api/session", { method: "DELETE" }).catch(() => {});
-  store.authenticated = false;
+  applySession({});
+  store.allowance = null;
   wasReady = false;
   store.sandboxLost = false;
   store.sandbox = { state: "unknown", message: "", sandboxId: null };

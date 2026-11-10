@@ -22,7 +22,7 @@ const status = computed(() => helper.status);
     <p v-else-if="status.signedIn && status.docs === 'ready'" class="ask-setup-done">✓ Ask Temporal is ready.</p>
 
     <template v-else-if="!status.signedIn">
-      <p>{{ store.runtime.codeRequired ? "First, the access code your instructor gave you." : "First, sign in to this workshop." }} It also starts your sandbox.</p>
+      <p>First, sign in with your work email. It also starts your sandbox.</p>
       <AccessForm label="Continue" />
     </template>
 

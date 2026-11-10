@@ -263,7 +263,7 @@ export function createHelper(config, { learnerOf, siteOrigin, secure, unavailabl
     const reason = unavailable();
     if (reason) throw fail(503, reason);
     const learner = learnerOf(req);
-    if (!learner) throw fail(401, "Enter the workshop's access code first.", { code: "access" });
+    if (!learner) throw fail(401, "Sign in first.", { code: "access" });
     return learner;
   }
 

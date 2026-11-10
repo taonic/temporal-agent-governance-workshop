@@ -29,7 +29,7 @@ The arc to keep repeating: **make it run, make it durable, make it safe, then ma
 - **Benchmark it** with a worker pointed at it: `uv run python scripts/bench_llm.py --runs 3 --concurrency 10`. You want `search`, `form` and `book` at 3/3.
 - **Fallback:** if the endpoint dies, learners set `LLM_MODE=scripted` in `.env` and restart the worker. The scripted agent plays every walkthrough in the assignments.
 - Have the finished workshop in a second checkout for demos (`./quest solution`).
-- **Browser course:** if learners use the hosted site instead of local setup, deploy it and set a fresh access code the day before: [DEPLOY.md](DEPLOY.md).
+- **Browser course:** if learners use the hosted site instead of local setup, deploy it and add the event's cohort and its learners' emails in `/admin` the day before: [DEPLOY.md](DEPLOY.md).
 
 ---
 

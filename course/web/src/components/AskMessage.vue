@@ -94,7 +94,7 @@ function signedIn() {
         </template>
         <template v-else-if="message.error.code === 'access'">
           <p>{{ message.error.message }}</p>
-          <AccessForm label="Unlock" :start="false" @done="signedIn" />
+          <AccessForm label="Sign in" :start="false" @done="signedIn" />
         </template>
         <template v-else>
           <p>{{ message.error.message }}</p>

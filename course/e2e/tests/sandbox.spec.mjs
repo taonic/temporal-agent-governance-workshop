@@ -1,8 +1,9 @@
-// @sandbox: a learner's whole run, in one real Daytona sandbox: sign in with the access code,
+// @sandbox: a learner's whole run, in one real Daytona sandbox: sign in through the page,
 // start the sandbox, use both terminals, open the Temporal UI and the Agent UI, then every
 // exercise the way its instructions say (walkthroughs.mjs), each ending with its ✓ Check. The
 // sandbox is deleted at the end, pass or fail (global-teardown.mjs). Skips without
-// E2E_ACCESS_CODE, or with E2E_SKIP_SANDBOX=1.
+// E2E_SIGNIN_KEY, or with E2E_SKIP_SANDBOX=1. Its learner (SANDBOX_EMAIL) is put on the
+// allowlist by the tests' admin, and deleted by the teardown.
 //
 // The tests run in order, as one learner, but one failing doesn't stop the rest: Playwright
 // starts a new worker for the next test, which signs in as the same learner (its cookies are
@@ -11,13 +12,14 @@
 // depend on the one before having passed.
 import fs from "node:fs";
 
-import { ACCESS_CODE, LEARNER_STATE, SKIP_SANDBOX } from "../env.mjs";
+import { LEARNER_STATE, SANDBOX_EMAIL, SIGNIN_KEY, SKIP_SANDBOX, e2eCode } from "../env.mjs";
+import { allow } from "./accounts.mjs";
 import { coursePages, expect, showCode, storageKey, test } from "./fixtures.mjs";
 import { Learner, MINUTE } from "./learner.mjs";
 import { WALKTHROUGHS } from "./walkthroughs.mjs";
 
 test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () => {
-  test.skip(!ACCESS_CODE, "needs E2E_ACCESS_CODE");
+  test.skip(!SIGNIN_KEY, "needs E2E_SIGNIN_KEY");
   test.skip(SKIP_SANDBOX, "E2E_SKIP_SANDBOX is set");
   // In order, in one worker at a time. No retries: a retry would walk an exercise twice.
   test.describe.configure({ mode: "default", retries: 0 });
@@ -31,6 +33,7 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
 
   test.beforeAll(async ({ browser }) => {
     const signedIn = fs.existsSync(LEARNER_STATE);
+    if (!signedIn) await allow(SANDBOX_EMAIL);
     context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
       colorScheme: "light",
@@ -67,17 +70,23 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
 
   const terminal = (name) => page.locator(`.terminal-pane[aria-label="The ${name} terminal"]`);
 
-  test("signs in with the access code and starts a sandbox", async () => {
+  test("signs in through the page and starts a sandbox", async () => {
     test.setTimeout(10 * MINUTE);
     await page.goto("/#/exercise/01-hello-temporal");
-    await showCode(page);
-    const form = page.locator(".dock-status .access-form");
-    const start = form.getByRole("button", { name: "Start my sandbox" });
-    await start.waitFor();
-    // A local runner with no ACCESS_CODE asks for none: its form is just the button.
-    if (await form.locator("#access-code").count()) await form.locator("#access-code").fill(ACCESS_CODE);
-    await start.click();
+    // Signed out, the module asks for a sign-in: an email, its code, then a name and role.
+    const form = page.locator(".sign-in-page .access-form");
+    await form.locator("#access-email").fill(SANDBOX_EMAIL);
+    await form.getByRole("button", { name: "Email me a code" }).click();
+    await form.locator("#access-code").fill(e2eCode(SANDBOX_EMAIL));
+    await form.getByRole("button", { name: "Sign in" }).click();
     await expect(form.locator(".form-error")).toHaveCount(0);
+    if (await form.locator("#access-name").isVisible().catch(() => false)) {
+      await form.locator("#access-name").fill("E2E Sandbox");
+      await form.locator("#access-role").selectOption("Developer");
+      await form.getByRole("button", { name: "Sign in" }).click();
+    }
+    // Signed in, the page starts the sandbox on its own.
+    await showCode(page);
     // Creating one from the snapshot, then `travel-stack up`: about a minute, more on a cold day.
     await expect(page.locator(".sandbox-pill"), "the sandbox never got ready").toHaveText(/Sandbox ready/, { timeout: 8 * MINUTE });
     await expect(page.locator(".sandbox-status .status-error")).toHaveCount(0);

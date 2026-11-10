@@ -185,9 +185,9 @@ const selectionLabel = computed(() => {
       </section>
 
       <section v-else-if="!status.signedIn" class="ask-card">
-        <h3>{{ store.runtime.codeRequired ? "Enter the workshop's code" : "Unlock the helper" }}</h3>
-        <p v-if="store.runtime.codeRequired">The helper is for this workshop's learners. Use the access code your instructor gave you.</p>
-        <AccessForm label="Unlock" :start="false" @done="signedIn" />
+        <h3>Sign in to ask</h3>
+        <p>Ask Temporal is for signed-in learners. Use your work email: we'll send you a code.</p>
+        <AccessForm label="Sign in" :start="false" @done="signedIn" />
       </section>
 
       <template v-else>

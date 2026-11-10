@@ -1,10 +1,13 @@
-// Learners are anonymous: entering the event's access code gets a random learner id, signed
-// into a cookie. The id is what a sandbox is labeled with, so a learner can only ever reach
-// their own sandbox, and the sandbox's model key is signed from it too.
+// Learners sign in with their email (accounts.mjs). Each user has a random id, signed into a
+// cookie with the time they signed in. The id is what a sandbox is labeled with, so a learner
+// can only ever reach their own sandbox, and the sandbox's model key is signed from it too; the
+// email never leaves the runner's database.
 import crypto from "node:crypto";
 
 export const SESSION_COOKIE = "course_session";
-const MAX_AGE_SECONDS = 30 * 24 * 3600;
+// A session lasts 14 days from sign-in, without sliding.
+export const SESSION_DAYS = 14;
+const MAX_AGE_SECONDS = SESSION_DAYS * 24 * 3600;
 
 function sign(secret, purpose, value) {
   return crypto.createHmac("sha256", secret).update(`${purpose}:${value}`).digest("base64url");
@@ -22,14 +25,20 @@ export function newLearnerId() {
 
 const LEARNER_ID = /^[A-Za-z0-9_-]{8,64}$/;
 
-export function sessionToken(secret, learnerId) {
-  return `${learnerId}.${sign(secret, "session", learnerId)}`;
+// `id.issuedAt.sig`, issuedAt in seconds. Ids and signatures are base64url, never ".".
+export function sessionToken(secret, learnerId, issuedAt = Math.floor(Date.now() / 1000)) {
+  const body = `${learnerId}.${issuedAt}`;
+  return `${body}.${sign(secret, "session", body)}`;
 }
 
-export function verifySessionToken(secret, token) {
-  const [id, sig, extra] = String(token ?? "").split(".");
-  if (extra !== undefined || !LEARNER_ID.test(id ?? "") || !sig) return null;
-  return safeEqual(sig, sign(secret, "session", id)) ? id : null;
+// The learner id of a token that's genuine and under 14 days old, or null. A token from before
+// email sign-in (`id.sig`) isn't one.
+export function verifySessionToken(secret, token, now = Date.now()) {
+  const [id, issued, sig, extra] = String(token ?? "").split(".");
+  if (extra !== undefined || !LEARNER_ID.test(id ?? "") || !/^\d{1,12}$/.test(issued ?? "") || !sig) return null;
+  if (!safeEqual(sig, sign(secret, "session", `${id}.${issued}`))) return null;
+  const age = now / 1000 - Number(issued);
+  return age >= -300 && age < MAX_AGE_SECONDS ? id : null;
 }
 
 // The key a sandbox sends to the model passthrough. Distinct from the session token, so the
@@ -52,14 +61,20 @@ export function codeMatches(expected, given) {
   return crypto.timingSafeEqual(h(expected), h(given));
 }
 
-// "a, b,,c" → ["a", "b", "c"]: ACCESS_CODE holds one code or several.
-export function parseCodes(value) {
-  return String(value ?? "").split(",").map((code) => code.trim()).filter(Boolean);
+// A sign-in code as stored: hashed with the secret and the email it was sent to.
+export function hashSignInCode(secret, email, code) {
+  return sign(secret, "signin-code", `${email}:${String(code ?? "").trim()}`);
 }
 
-// Whether `given` is any of `codes`. Compares against every code, not stopping at a match.
-export function codeMatchesAny(codes, given) {
-  return codes.reduce((matched, code) => codeMatches(code, given) || matched, false);
+export function newSignInCode() {
+  return String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+}
+
+// The e2e tests' code for one of their addresses: derived from E2E_SIGNIN_KEY, so the tests can
+// sign in without a mailbox. The tests derive it the same way (e2e/env.mjs).
+export function e2eSignInCode(key, email) {
+  const digest = crypto.createHmac("sha256", key).update(`e2e-signin:${email}`).digest();
+  return String(digest.readUInt32BE(0) % 1_000_000).padStart(6, "0");
 }
 
 export function parseCookies(header) {

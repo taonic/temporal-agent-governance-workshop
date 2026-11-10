@@ -4,7 +4,7 @@ The decisions behind the course site, as agreed during planning (2026-10-16). It
 
 ## What it is
 
-- **A course site with a browser runtime.** Anyone can read it; people with the event's access code get a cloud sandbox to do the exercises in. Running locally stays first-class: the setup page covers it, and exercise pages show the local instructions when the runtime is off. The mode is no longer a choice (a Browser | Local switch was replaced by **↺ Start over** in the guide's header): with the runtime available, it's the browser.
+- **A course site with a browser runtime.** Anyone can see the map; signed-in learners read the modules and get a cloud sandbox to do the exercises in (Accounts, below). Running locally stays first-class: the setup page covers it, and exercise pages show the local instructions when the runtime is off. The mode is no longer a choice (a Browser | Local switch was replaced by **↺ Start over** in the guide's header): with the runtime available, it's the browser.
 - **One source of truth.** The site is generated from the workshop: the modules in `quests/` (their frontmatter gives title, teaser, time, files and tour; a path groups them into the exercises the site shows), the README (home and setup pages), and `starter/` and the `authoring/` masters (the editor). Nothing is copied by hand. The instructor notes, DESIGN.md and the authoring docs aren't on the site.
 - **Mode blocks** in the modules: browser-only text sits inside `<!-- browser … -->`, so GitHub doesn't show it, and `<!-- local -->…<!-- /local -->` marks local-only text. The build also turns `localhost:8000`/`:8233` links into pane links in the browser.
 - **The look is the loan-origination course's**, token for token, in light and dark, so the two read as one family. The embedded console and Temporal UI keep their own styling; the site frames them.
@@ -30,9 +30,24 @@ The decisions behind the course site, as agreed during planning (2026-10-16). It
 
 - **The console** is proxied under `/sbx/console/` on the site's origin: its page uses relative paths, and it streams over SSE, which passes straight through.
 - **The Temporal UI** needs an origin of its own (root-absolute paths), so it's on the runner's second port, same host. The loan course's proxy is reused: it strips the framing headers and CSP, rescopes cookies, injects a loading overlay and a postMessage bridge for client-side navigation, and caches the UI's hashed assets across learners.
-- **Access**: one code per event (a Fly secret) gives an anonymous learner id in an HttpOnly cookie. The cookie reaches the UI proxy's port because cookies ignore ports. Every sandbox operation goes through the learner's own id, so nobody can drive someone else's sandbox (the loan course accepted any sandbox id). At most `MAX_SANDBOXES` (40) run at once.
+- **Access**: a signed-in user's random id, with the time they signed in, signed into an HttpOnly cookie (14 days from sign-in). The cookie reaches the UI proxy's port because cookies ignore ports. Every sandbox operation goes through the learner's own id, so nobody can drive someone else's sandbox (the loan course accepted any sandbox id). At most `MAX_SANDBOXES` (40) run at once.
 - **The model**: Gemini, through a passthrough in the runner rather than LiteLLM. Gemini 3 sends each tool call's thought signature (`extra_content`) and needs it back on the next turn; a translating proxy risked dropping it. Each sandbox gets its own key, signed from its learner id and valid only on `/llm/v1`; the model is pinned; 20 requests a minute per sandbox and 300 overall. A learner can read their sandbox's key (it's in `.env`), and that's fine. A scripted-model toggle covers Gemini misbehaving.
-- **Instructor view**: no dashboard yet, only `GET /api/admin/sandboxes` behind `INSTRUCTOR_CODE`.
+- **Admin view**: `/admin`, for `ADMIN_EMAILS` (Accounts, below).
+
+## Accounts (added 2026-11-10)
+
+The site is for on-demand training as well as live events, so learners have accounts. Decided in `.scratch/temporal-quest/` (issues 04a–04f).
+
+- **Email and a code, not a password or OAuth.** A learner enters their work email and gets a 6-digit code (Resend), good for 10 minutes and once; 5 wrong tries use a code up, and 10 wrong codes an email in 15 minutes lock it for the rest of that time, however many new codes are asked for. A code rather than a magic link: at a workshop the email is often read on a phone while the sandbox is on a laptop. Sends are limited to 3 an email and 10 an address per 15 minutes.
+- **The session is a signed cookie, checked against the database.** `userId.issuedAt.sig`, 14 days from sign-in, not sliding. Every request looks the user up in SQLite (cheap: one machine, one file), so blocking someone or taking them off the allowlist signs them out at once, which a cookie alone can't. Rotating `SESSION_SECRET` signs everyone out.
+- **The email stays in the runner.** Each user has a random id, which labels their sandbox and signs its model key, as the anonymous learner id did; Daytona never sees an email.
+- **The allowlist decides who's in.** Exact emails and domain rules (`@acme.com`), each in a **cohort** (a name, an optional path, an optional end date, a daily sandbox allowance). An exact email wins over a domain rule, which is how a learner is moved to another cohort. `ADMIN_EMAILS` are always in. A local runner without `RESEND_API_KEY` prints codes to its console and lets any email in, to requests addressed to localhost only.
+- **Company emails can ask; personal ones can't.** A free-mail address (a fixed list in `accounts.mjs`) is asked for a company one, unless the allowlist has it exactly. A company email that isn't listed still gets a code, so a request is only ever filed by the address's owner; then name and role file the request. Admins are emailed; they approve the one email or the whole domain into the built-in **On-demand** cohort, or reject it with a reason, and the learner is emailed.
+- **The map is public; the modules aren't, softly.** Module text stays in the bundle and the repo stays public: the sign-in is for knowing who's learning, not for secrecy.
+- **The activity log is append-only events** (`events`): the server records sign-ins, codes, the sandbox's lifecycle, helper questions, model-call counts a minute and admin actions; the page sends modules opened and passed, challenge picks, boss results and the path it chose. Progress is derived from the events, so it follows a learner across browsers; what a browser had before the learner's first sign-in is imported then, once.
+- **Heartbeats, not events, for time on a module.** A visible module page says which module it's on once a minute. That moves a "last seen on X since T" row and adds to the learner's time on X (at most 90 s a beat), so a hidden tab or lunch doesn't count, and "stuck" means on one module for 10+ minutes without passing it, and still there.
+- **Sandbox time against an allowance.** Once a minute the runner lists the sandboxes; a running one counts a minute for its learner (idle time before Daytona's auto-stop too: Daytona bills for it). The sum over any 24 hours is held to the cohort's allowance (8 hours unless set). Ten minutes before, the learner is warned; at it, the sandbox stops and won't start until enough time has rolled out of the window. There's no daily cap on model calls: sandbox time bounds them, with the per-minute limits.
+- **Deleting a learner** removes their user, events, allowlist entry and sandbox, and their email from the admin log.
 
 ## Ask Temporal (added 2026-10-17)
 
@@ -42,7 +57,7 @@ A helper for questions about Temporal, in a panel at the right edge of every pag
 - **Each learner verifies with Kapa, once.** The public server asks every user to prove they're human with GitHub or Google (OAuth 2.1 with dynamic client registration and PKCE). Sharing one learner's token with the room would defeat that, and put everyone on one user's limits (600 searches a day), so each learner connects their own, in a popup that hands back to the page with `postMessage` (or a full-page round trip when popups are blocked). The token is sealed (AES-GCM, from `SESSION_SECRET`) in an HttpOnly cookie on `/api/helper`, so it survives a restart and the browser can't read it. An instructor with a Kapa API key for Temporal's project sets `KAPA_API_KEY` instead, and nobody connects anything.
 - **It knows where you are.** The prompt carries the exercise's assignment in your mode (from the build's `assignments.json`, read by the runner, so the page can't swap in a different one), and, unless you untick its chip, the file you have open in the editor. A selection from the instructions, the editor (CodeMirror's) or a terminal (xterm's) goes with the question, with quick questions for each ("What does this error mean?"). It's told that Monty, Dogwood and the harness are the workshop's, not Temporal's, and to hint before handing over a TODO's solution.
 - **Kapa's limits are shared, so searches are scarce.** Kapa allows 60 searches a minute across all its users. Results are cached by query for 30 minutes (the docs are public, and a room asks the same things), the runner holds itself to `KAPA_RATE_GLOBAL` (50), and a search that can't run says so in the answer rather than failing it.
-- **Gated like the runtime, but not on it.** The helper needs `GEMINI_API_KEY` and a session from the access code, not Daytona, so a learner working locally can still ask. Reading the site without a code shows how to add the same docs server to Claude Code, Cursor or VS Code instead.
+- **Gated like the runtime, but not on it.** The helper needs `GEMINI_API_KEY` and a signed-in learner, not Daytona, so a learner working locally can still ask. Signed out, it shows how to add the same docs server to Claude Code, Cursor or VS Code instead.
 - **It sits beside the work.** On a wide screen the page makes room for the panel (no backdrop), so you can keep selecting things to ask about; narrower, it covers the page. Its Markdown and highlighting load the first time it opens. The conversation stays in the browser (`localStorage`), and answers render with no raw HTML.
 
 ## The guide (added 2026-10-17)
@@ -65,10 +80,10 @@ The instructions pane is a conversation with a guide (✦, the same mark as Ask 
 
 Playwright, in `course/e2e/`, against the deployed site (the live Fly app unless `E2E_BASE_URL` says otherwise). They test what a learner gets, not the code: the unit tests in `course/tests/` stay the place for the runner's logic.
 
-- **Three tiers, by tag.** `@public` needs no secrets: the `/api`'s answers to a signed-out visitor, every page in the picker, the access form, Ask Temporal's panel. `@auth` signs a fresh learner in with `E2E_ACCESS_CODE` and stops short of a sandbox. `@sandbox` is a learner's whole run in one real Daytona sandbox: sign in through the page, start it, both terminals, the Temporal UI and Agent UI panes, then **every exercise done the way its instructions say**, ending with its ✓ Check (below). Its sandbox is deleted at the end, pass or fail. A tier whose secret is missing skips rather than fails.
+- **Three tiers, by tag.** `@public` needs no secrets: the `/api`'s answers to a signed-out visitor, the map, the setup page, and a module page's sign-in. `@auth` signs learners in with `E2E_SIGNIN_KEY` and stops short of a sandbox (a signed-in page's sandbox calls are stubbed): every module page, a challenge, Next and paths, Ask Temporal, sign-in through the page, an access request, and the admin. `@sandbox` is a learner's whole run in one real Daytona sandbox: sign in through the page, start it, both terminals, the Temporal UI and Agent UI panes, then **every exercise done the way its instructions say**, ending with its ✓ Check (below). Its sandbox is deleted at the end, pass or fail. A tier whose secret is missing skips rather than fails.
 - **When they run.** Every day at 14:00 UTC, every tier, emailed whatever the result (`.github/workflows/e2e.yml`). After every deploy, on what was just deployed (`deploy.yml` calls it), emailing only a failure: every tier when anything a sandbox runs, the runner that drives one, or the site changed (the paths are in `deploy.yml`'s `e2e-scope` job), `@public` and `@auth` otherwise. And when the tests change.
 - **The email goes through Resend's API**, sent with `curl` from a message `scripts/summary.mjs` writes, rather than through Resend's SDK or a third-party action: nothing to install, and nothing outside this repo and Resend sees the key (`RESEND_API_KEY`, a repository secret). The same script writes the job summary; the HTML report, traces, screenshots and the terminals' text on a failure are the run's artifacts.
-- **A standing access code for the tests.** `ACCESS_CODE` changes per event, so the tests have their own code in the list (`ACCESS_CODE=<event>,<e2e code>`), which stays when the event's code rotates. `E2E_SKIP_SANDBOX=1` (a repository variable) keeps the sandbox tier off during an event, where its sandbox would count against `MAX_SANDBOXES`.
+- **The tests sign in without a mailbox.** Their addresses (`e2e+…@temporalquest.dev`) get no email: the runner derives their code from `E2E_SIGNIN_KEY`, and so do the tests. They skip the send limits (wrong codes are still limited per email, so the fixed code can't be guessed). Their admin (`E2E_ADMIN_EMAIL`, one of the app's `ADMIN_EMAILS`) puts each test's new learner on the allowlist, in an `E2E` cohort, and deletes it after, so the tests leave nothing behind. `E2E_SKIP_SANDBOX=1` (a repository variable) keeps the sandbox tier off during an event, where its sandbox would count against `MAX_SANDBOXES`.
 
 ### Keeping them in step with the workshop
 
@@ -93,19 +108,20 @@ What the tests do depend on is a short contract. **A change to any of these upda
 | What the passed badge is (`.course/passed/<exercise>`, `.passed-badge`), the bookings ledger (`.data/bookings.json`), or `GET /api/files` | `learner.mjs` |
 | The picker (`.exercise-picker select`, its option values `#/exercise/<id>`), Previous / Next, the theme toggle | `fixtures.mjs` `coursePages`, `public.spec.mjs` |
 | The getting-started steps or their `onboarded` key in local storage | `fixtures.mjs` (it sets the key to skip them) |
-| The access form (`#access-code`, **Start my sandbox**, `.form-error`), the sandbox pill's words (`Sandbox ready`, `No sandbox yet`, `Browser sandbox`) | `public.spec.mjs`, `session.spec.mjs`, `sandbox.spec.mjs` |
+| The sign-in form (`#access-email`, **Email me a code**, `#access-code`, **Sign in**, `#access-name`, `#access-role`, `.form-error`), the sign-in page (`.sign-in-page`), the admin panel's tabs and its cohort list (`.cohort-item`), the sandbox pill's words (`Sandbox ready`, `No sandbox yet`, `Browser sandbox`) | `public.spec.mjs`, `session.spec.mjs`, `sandbox.spec.mjs` |
 | The terminals (`.terminal-pane[aria-label="The worker terminal"]`, `.term-dot.connected`, the workshop at `/workshop` in the sandbox) | `sandbox.spec.mjs` |
 | The workspace tabs' names, the panes' iframe titles, or the Agent UI's `button.session-drawer-trigger` | `sandbox.spec.mjs` |
 | The briefing's Diagram view (`iframe.diagram-frame`, the **Code** and **Diagram** tabs): an exercise opens on its diagram, the editor and the terminals behind it | `fixtures.mjs` `showCode`, `public.spec.mjs` |
 | An `/api` route's path, status codes or response shape; a new route a learner depends on | `public.spec.mjs` or `session.spec.mjs`: add it |
 | Something a learner does that no tier covers (a new pane, a new button that types into a terminal) | add a test in the tier it needs |
 
-Before merging such a change, run the tests against a local build of the site set up like production, with an access code and Daytona:
+Before merging such a change, run the tests against a local build of the site set up like production, with email sign-in (a dummy `RESEND_API_KEY`: the tests' addresses are never emailed) and Daytona:
 
 ```bash
 cd course && npm run build
-ACCESS_CODE=local-e2e DAYTONA_API_KEY=... GEMINI_API_KEY=... COURSE_DIST_DIR=web/dist npm start
-cd e2e && E2E_BASE_URL=http://127.0.0.1:8787 E2E_ACCESS_CODE=local-e2e npm test
+RESEND_API_KEY=dummy E2E_SIGNIN_KEY=local ADMIN_EMAILS=e2e+admin@temporalquest.dev DATABASE_PATH=/tmp/quest-e2e.db \
+  DAYTONA_API_KEY=... GEMINI_API_KEY=... COURSE_DIST_DIR=web/dist npm start
+cd e2e && E2E_BASE_URL=http://127.0.0.1:8787 E2E_SIGNIN_KEY=local npm test
 ```
 
 ## Verified (2026-10-16)

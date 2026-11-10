@@ -11,34 +11,54 @@ import path from "node:path";
 
 import { WebSocketServer } from "ws";
 
-import {
-  clearedSessionCookie,
-  codeMatches,
-  codeMatchesAny,
-  learnerFromRequest,
-  newLearnerId,
-  sessionCookie,
-  sessionToken,
-} from "./auth.mjs";
-import { config, helperUnavailableReason, openAccess, openAccessAllows, runtimeUnavailableReason } from "./config.mjs";
+import { Accounts, DEFAULT_ALLOWANCE_MINUTES } from "./accounts.mjs";
+import { Activity } from "./activity.mjs";
+import { createAdmin } from "./admin.mjs";
+import { clearedSessionCookie, learnerFromRequest, sessionCookie, sessionToken } from "./auth.mjs";
+import { config, consoleSignIn, consoleSignInAllows, helperUnavailableReason, runtimeUnavailableReason, signInUnavailableReason } from "./config.mjs";
+import { openDatabase } from "./db.mjs";
 import { createHelper } from "./helper.mjs";
 import { createLlmPassthrough } from "./llm.mjs";
 import { relayLsp } from "./lsp.mjs";
+import { createMailer } from "./mailer.mjs";
 import { harnessConsole, proxyRequest, temporalUi } from "./proxy.mjs";
 import { CONSOLE_PORT, SandboxManager, TEMPORAL_UI_PORT } from "./sandboxes.mjs";
+import { createSweep } from "./sweep.mjs";
 import { TERMINALS, TerminalHub } from "./terminals.mjs";
-
-const manager = new SandboxManager(config);
-const terminals = new TerminalHub(manager);
-const llm = createLlmPassthrough(config);
-const distDir = config.distDir ? path.resolve(config.distDir) : null;
 
 function log(message) {
   console.log(`${new Date().toISOString()} ${message}`);
 }
 
+const db = openDatabase(config.databasePath);
+const activity = new Activity(db);
+const accounts = new Accounts(db, {
+  secret: config.sessionSecret,
+  adminEmails: config.adminEmails,
+  consoleSignIn,
+  e2eKey: config.e2eSignInKey,
+  record: (...args) => activity.record(...args),
+});
+const mailer = createMailer(config, { log });
+const manager = new SandboxManager(config);
+const terminals = new TerminalHub(manager);
+const llm = createLlmPassthrough(config, { onCall: (learner) => activity.countModelCall(learner) });
+const distDir = config.distDir ? path.resolve(config.distDir) : null;
+
+// Who's signed in: the user, with their access (accounts.mjs sessionUser), or null.
+function sessionOf(req) {
+  const id = learnerFromRequest(config.sessionSecret, req);
+  return id ? accounts.sessionUser(id) : null;
+}
+
+// The learner id of a signed-in user who may use the course, or null.
+function activeLearner(req) {
+  const session = sessionOf(req);
+  return session?.access.allowed ? session.id : null;
+}
+
 const helper = createHelper(config, {
-  learnerOf: (req) => learnerFromRequest(config.sessionSecret, req),
+  learnerOf: activeLearner,
   siteOrigin: (req) => origins(req).site,
   secure: (req) => isHttps(req),
   unavailable: helperUnavailableReason,
@@ -85,13 +105,34 @@ function uiProxyInfo() {
   return { uiProxyBase: config.uiProxyPublicBase || null, uiProxyPort: config.uiProxyPublicBase ? null : config.uiProxyPort };
 }
 
+function clientIp(req) {
+  return String(req.headers["fly-client-ip"] ?? req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "").split(",")[0].trim();
+}
+
+// A signed-in user who may use the course (whatever the runtime's state): their session.
+function requireUser(req) {
+  const session = sessionOf(req);
+  if (!session) throw Object.assign(new Error("Sign in first."), { status: 401 });
+  if (!session.access.allowed) {
+    const why = session.access.ended ? "Your cohort has ended." : "Your access request hasn't been approved yet.";
+    throw Object.assign(new Error(why), { status: 403, code: "not_allowed" });
+  }
+  return session;
+}
+
 function requireLearner(req) {
   const reason = runtimeUnavailableReason();
   if (reason) throw Object.assign(new Error(reason), { status: 503 });
-  const learner = learnerFromRequest(config.sessionSecret, req);
-  if (!learner) throw Object.assign(new Error("Enter the workshop's access code first."), { status: 401 });
-  return learner;
+  return requireUser(req).id;
 }
+
+function allowanceOf(learner) {
+  const user = accounts.user(learner);
+  const cohort = user ? accounts.accessFor(user.email).cohort : null;
+  return activity.allowance(learner, cohort?.allowance_minutes ?? DEFAULT_ALLOWANCE_MINUTES);
+}
+
+const admin = createAdmin({ accounts, activity, manager, mailer, readJson, sessionOf, siteOrigin: (req) => origins(req).site, log });
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -133,53 +174,124 @@ const routes = {
   "GET /api/session": async (req) => {
     const reason = runtimeUnavailableReason();
     const helperReason = helperUnavailableReason();
-    const learner = learnerFromRequest(config.sessionSecret, req);
+    const signInReason = signInUnavailableReason();
+    const session = sessionOf(req);
     return {
-      runtime: { enabled: !reason, reason, codeRequired: config.accessCodes.length > 0 },
+      runtime: { enabled: !reason, reason },
       helper: { enabled: !helperReason, reason: helperReason },
-      // A session is good for whichever of the sandboxes and the helper is on.
-      authenticated: (!reason || !helperReason) && Boolean(learner),
+      signIn: { enabled: !signInReason, reason: signInReason, console: consoleSignIn() },
+      // Signed in and allowed: may read the modules, use the sandboxes and the helper.
+      authenticated: Boolean(session?.access.allowed),
+      user: accounts.describe(session),
       ...uiProxyInfo(),
     };
   },
 
-  "POST /api/session": async (req, res) => {
-    const reason = runtimeUnavailableReason();
-    if (reason && helperUnavailableReason()) throw Object.assign(new Error(reason), { status: 503 });
-    const { code } = await readJson(req);
-    if (config.accessCodes.length && !codeMatchesAny(config.accessCodes, code)) {
-      throw Object.assign(new Error("That isn't this workshop's access code."), { status: 403 });
+  // Sends a sign-in code to an email.
+  "POST /api/auth/start": async (req) => {
+    const reason = signInUnavailableReason();
+    if (reason) throw Object.assign(new Error(reason), { status: 503 });
+    const { email: raw } = await readJson(req);
+    if (consoleSignIn() && !consoleSignInAllows(req.headers["x-forwarded-host"] ?? req.headers.host)) {
+      throw Object.assign(new Error("This runner has no RESEND_API_KEY, so it only signs in this machine (localhost)."), { status: 403 });
     }
-    if (!config.accessCodes.length && !openAccessAllows(req.headers["x-forwarded-host"] ?? req.headers.host)) {
-      throw Object.assign(new Error("This runner has no access code, so it only opens to this machine (localhost)."), { status: 403 });
+    const { email, code, delivery } = accounts.startSignIn(raw, clientIp(req));
+    if (delivery === "email") await mailer.signInCode(email, code);
+    else if (delivery === "console") log(`sign-in code for ${email}: ${code}`);
+    activity.record(accounts.userByEmail(email)?.id ?? null, "code_sent", null, accounts.userByEmail(email) ? null : { email });
+    return { sent: true, email, console: delivery === "console" };
+  },
+
+  // Checks the code: signs in, as a new user at the first sign-in.
+  "POST /api/auth/verify": async (req, res) => {
+    const { email, code } = await readJson(req);
+    let user;
+    try {
+      user = accounts.verifySignIn(email, code);
+    } catch (err) {
+      if (err.code === "wrong_code") activity.record(accounts.userByEmail(String(email).trim().toLowerCase())?.id ?? null, "code_failed", null, null);
+      throw err;
     }
-    const learner = learnerFromRequest(config.sessionSecret, req) ?? newLearnerId();
-    res.setHeader("set-cookie", sessionCookie(sessionToken(config.sessionSecret, learner), { secure: isHttps(req) }));
-    log(`session for learner ${learner}`);
-    return { authenticated: true };
+    res.setHeader("set-cookie", sessionCookie(sessionToken(config.sessionSecret, user.id), { secure: isHttps(req) }));
+    activity.record(user.id, "sign_in", null, null);
+    log(`sign-in for learner ${user.id}`);
+    const session = accounts.sessionUser(user.id);
+    return { authenticated: session.access.allowed, user: accounts.describe(session) };
+  },
+
+  // Name and role. For a user who isn't allowed in, this files their access request.
+  "POST /api/auth/profile": async (req) => {
+    const session = sessionOf(req);
+    if (!session) throw Object.assign(new Error("Sign in first."), { status: 401 });
+    const { requested } = accounts.setProfile(session.id, await readJson(req));
+    if (requested) {
+      log(`access request from learner ${session.id}`);
+      await mailer.accessRequested(config.adminEmails, requested, origins(req).site).catch((err) => log(`access request email failed: ${err.message}`));
+    }
+    const fresh = accounts.sessionUser(session.id);
+    return { authenticated: fresh.access.allowed, user: accounts.describe(fresh) };
   },
 
   "DELETE /api/session": async (req, res) => {
+    const id = learnerFromRequest(config.sessionSecret, req);
+    if (id && accounts.user(id)) activity.record(id, "sign_out", null, null);
     res.setHeader("set-cookie", clearedSessionCookie({ secure: isHttps(req) }));
     return { authenticated: false };
   },
 
+  // --- Progress and activity -----------------------------------------------------------------
+
+  "GET /api/progress": async (req) => {
+    const session = requireUser(req);
+    return activity.progress(session.id, session.access.cohort?.path);
+  },
+
+  // The progress this browser had before the first sign-in: kept, once per user.
+  "POST /api/progress/import": async (req) => {
+    const session = requireUser(req);
+    activity.importProgress(session.id, await readJson(req));
+    return activity.progress(session.id, session.access.cohort?.path);
+  },
+
+  "POST /api/events": async (req) => {
+    const session = requireUser(req);
+    const { events } = await readJson(req, 64 * 1024);
+    return { recorded: activity.recordFromBrowser(session.id, events) };
+  },
+
+  "POST /api/heartbeat": async (req) => {
+    const session = requireUser(req);
+    const { moduleId } = await readJson(req, 4 * 1024);
+    return { ok: activity.heartbeat(session.id, moduleId) };
+  },
+
+  // --- The sandbox -----------------------------------------------------------------------------
+
   "GET /api/sandbox": async (req, _res, url) => {
     const learner = requireLearner(req);
     manager.touch(learner, url.searchParams.get("exercise"));
-    return manager.describe(learner);
+    return { ...(await manager.describe(learner)), allowance: allowanceOf(learner) };
   },
 
   "POST /api/sandbox/start": async (req) => {
     const learner = requireLearner(req);
+    const allowance = allowanceOf(learner);
+    if (allowance.remainingMinutes <= 0) {
+      const at = new Date(allowance.freesAt ?? Date.now()).toISOString();
+      throw Object.assign(new Error(`You've used today's ${Math.round(allowance.limitMinutes / 60)} hours of sandbox time.`), { status: 429, code: "allowance", freesAt: at });
+    }
     manager.clearError(learner);
-    return manager.ensure(learner, origins(req));
+    const wasCreating = !(await manager.find(learner).catch(() => null));
+    const result = manager.ensure(learner, origins(req));
+    if (wasCreating) activity.record(learner, "sandbox_create", null, null);
+    return result;
   },
 
   "POST /api/sandbox/reset": async (req) => {
     const learner = requireLearner(req);
     const sandbox = await manager.reset(learner);
     if (sandbox) terminals.forget(sandbox.id);
+    activity.record(learner, "sandbox_reset", null, null);
     log(`reset sandbox for learner ${learner}`);
     return { state: "none" };
   },
@@ -188,11 +300,12 @@ const routes = {
     const learner = requireLearner(req);
     manager.touch(learner, url.searchParams.get("exercise"));
     const files = (url.searchParams.get("files") ?? "").split(",").filter(Boolean);
-    return manager.poll(learner, files, {
+    const polled = await manager.poll(learner, files, {
       trips: url.searchParams.get("trips") === "1",
       origins: origins(req),
       exercise: url.searchParams.get("exercise"),
     });
+    return { ...polled, allowance: allowanceOf(learner) };
   },
 
   // How a challenge's choice is going, run in the sandbox's commands terminal.
@@ -221,14 +334,14 @@ const routes = {
     return { ok: true };
   },
 
-  "GET /api/admin/sandboxes": async (req) => {
-    if (!config.instructorCode || !codeMatches(config.instructorCode, req.headers["x-instructor-code"])) {
-      throw Object.assign(new Error("Instructor code required (x-instructor-code)."), { status: 403 });
-    }
-    return { max: config.maxSandboxes, sandboxes: await manager.listAll() };
-  },
-
+  ...admin.routes,
   ...helper.routes,
+  // A question to Ask Temporal is an event (its text isn't kept).
+  "POST /api/helper/ask": async (req, res, url) => {
+    const learner = activeLearner(req);
+    if (learner) activity.record(learner, "helper_question", null, null);
+    return helper.routes["POST /api/helper/ask"](req, res, url);
+  },
 };
 
 async function handleApi(req, res, url) {
@@ -246,7 +359,7 @@ function proxyError(res, err) {
     res.writeHead(status, { "content-type": "text/html; charset=utf-8" });
     res.end(
       `<!doctype html><meta charset="utf-8"><body style="font:14px system-ui;padding:24px;background:#16181d;color:#e7ebf2">` +
-        `<p>${status === 401 ? "Enter the workshop's access code on the course page first." : `The sandbox isn't reachable right now (${String(err.message).replace(/</g, "&lt;")}).`}</p></body>`,
+        `<p>${status === 401 || status === 403 ? "Sign in on the course page first." : `The sandbox isn't reachable right now (${String(err.message).replace(/</g, "&lt;")}).`}</p></body>`,
     );
   } else res.destroy();
 }
@@ -291,7 +404,7 @@ const server = http.createServer(async (req, res) => {
     const status = err.status ?? 500;
     if (status >= 500) log(`${req.method} ${url.pathname} failed: ${err.stack ?? err.message}`);
     if (!res.headersSent) {
-      json(res, status, { error: err.message, ...(err.code ? { code: err.code } : {}) }, err.retryAfter ? { "retry-after": String(err.retryAfter) } : {});
+      json(res, status, { error: err.message, ...(err.code ? { code: err.code } : {}), ...(err.freesAt ? { freesAt: err.freesAt } : {}) }, err.retryAfter ? { "retry-after": String(err.retryAfter) } : {});
     } else res.end();
   }
 });
@@ -335,11 +448,16 @@ server.listen(config.port, config.host, () => {
   log(`course runner on http://${config.host}:${config.port}${distDir ? ` (serving ${distDir})` : ""}`);
   const reason = runtimeUnavailableReason();
   log(reason ? `browser runtime OFF: ${reason}` : `browser runtime on, snapshot ${config.snapshot}, up to ${config.maxSandboxes} sandboxes`);
-  if (openAccess() && config.allowOpenAccess) log("WARNING: ALLOW_OPEN_ACCESS=1, so anyone who can reach this runner can create sandboxes");
-  else if (openAccess()) log("no ACCESS_CODE: open to this machine only (requests to localhost)");
+  if (consoleSignIn()) log("no RESEND_API_KEY: sign-in codes are printed here, and any email may sign in, from this machine only (localhost)");
+  else if (!config.resendApiKey) log(`no RESEND_API_KEY: nobody can sign in${config.e2eSignInKey ? " but the e2e tests" : ""}`);
+  log(`database ${config.databasePath}; admins: ${config.adminEmails.length ? config.adminEmails.join(", ") : "none (set ADMIN_EMAILS)"}`);
   if (config.sessionSecretIsEphemeral) log("SESSION_SECRET isn't set: sessions end when the runner restarts");
   if (config.sessionSecretKept) log("SESSION_SECRET isn't set: using course/.session-secret, so restarts keep you signed in, on the same sandbox");
   if (!config.geminiApiKey) log("GEMINI_API_KEY isn't set: sandboxes can only use the scripted model, and Ask Temporal is off");
   else log(`Ask Temporal on (${config.helperModel}), docs from ${config.kapaMcpUrl} ${config.kapaApiKey ? "with the shared KAPA_API_KEY" : "with each learner's own Kapa sign-in"}`);
 });
+// The sweep: sandbox time, the sandboxes' lifecycle and the allowance, and the model-call counts.
+const sweep = createSweep({ manager, accounts, activity, log, enabled: () => Boolean(config.daytonaApiKey) });
+setInterval(() => sweep.tick().catch((err) => log(`sweep failed: ${err.message}`)), 60_000).unref();
+
 uiProxyServer.listen(config.uiProxyPort, config.host, () => log(`Temporal UI proxy on http://${config.host}:${config.uiProxyPort}`));

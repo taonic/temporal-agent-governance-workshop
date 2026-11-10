@@ -22,6 +22,16 @@
 
 **Test-out**: beating a boss before doing its branch's modules, which marks the branch complete.
 
-**Path**: an ordered list of modules, used for a live event or a curated route. It is chosen with an event code or `?path=`.
+**Path**: an ordered list of modules, used for a live event or a curated route. It is chosen by the learner's cohort or by `?path=`.
 
-**Event code**: a code for one event. It puts learners on the event's path and raises their daily sandbox allowance.
+**Allowlist**: who may sign in. Each entry is an exact email or a domain rule (`@acme.com`), and belongs to a cohort.
+
+**Cohort**: a group of learners, such as one live event or the built-in **On-demand** cohort. It has an optional path, an optional end date, and the daily allowance for its learners. It replaces the old "event code". Avoid calling it an "event", which is the name for a row in the activity log.
+
+**Access request**: what a learner with a verified company email files when they aren't on the allowlist. An admin approves the one email or the whole domain, or rejects it. Until then the learner is **pending**.
+
+**Allowance**: how much sandbox time a learner may use in any rolling 24 hours, 8 hours unless their cohort sets otherwise.
+
+**Admin**: someone listed in `ADMIN_EMAILS`. Admins use `/admin`. The word replaces "instructor" for this role, but "instructor" still means the person running a live event.
+
+**Journey**: a learner's record in the admin panel: modules passed and how long each took, failed checks, challenge picks, boss results and sandbox time.

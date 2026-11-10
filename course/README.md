@@ -1,12 +1,13 @@
 # The browser course
 
-A website for the workshop: every exercise's instructions, and, for people with the event's access code, their own cloud sandbox to do it in. It's the same workshop as the rest of this repo; the site is generated from it.
+A website for the workshop: every exercise's instructions, and, for signed-in learners, their own cloud sandbox to do it in. It's the same workshop as the rest of this repo; the site is generated from it.
 
-- **Reading** is open to anyone: the instructions, the setup guide, the TODO files, the solutions.
+- **The map** is open to anyone, and so is the setup guide. **The modules** need a sign-in: a learner's work email and a 6-digit code sent to it, for emails on the allowlist (a cohort's, or a company's domain). Others with a company email can ask for access. Progress is kept on the server, so it follows a learner across browsers. (The content is still in the public repo and the site's bundle: the sign-in is for knowing who's learning, not for secrecy.)
+- **`/admin`**, for `ADMIN_EMAILS`: cohorts and the allowlist, access requests, each learner's journey (where they are, what they passed, how long it took, anyone stuck), the activity log, and the sandboxes.
 - **The browser runtime** gives each learner a [Daytona](https://www.daytona.io/) sandbox with everything installed and `travel-stack up` already run, and puts it in the page, laid out like the [loan-origination course](https://temporal-training-agentic-loan-origination.fly.dev): a workspace on the left (tabs for the exercise's code, the agent's console and the Temporal UI, one at a time at full width, over a dock with two real terminals side by side, `worker` and `commands`) and the guide on the right, which brings the right tab forward for each step.
 - **Local** stays first-class: the setup page covers running it on your machine, and exercise pages show the local instructions when the browser runtime isn't available. (There was a Browser | Local switch; the guide's header has **↺ Start over** instead.)
 - **The instructions are a guide**: a conversation that shows one step at a time. You say **Done, next step**, go **← Back**, or ask about the step you're on, and Ask Temporal answers right under it.
-- **Ask Temporal** (⌘K / Ctrl+K, or the button in the top bar) answers questions about Temporal from Temporal's docs, through [Kapa's MCP server](https://temporal.mcp.kapa.ai), with links to the pages it used. It knows the exercise you're on, can see the file you have open, and takes a selection from the instructions, the editor or a terminal (select a traceback, click **✦ Ask**). It needs the access code, not a sandbox, so it works in Local mode too.
+- **Ask Temporal** (⌘K / Ctrl+K, or the button in the top bar) answers questions about Temporal from Temporal's docs, through [Kapa's MCP server](https://temporal.mcp.kapa.ai), with links to the pages it used. It knows the exercise you're on, can see the file you have open, and takes a selection from the instructions, the editor or a terminal (select a traceback, click **✦ Ask**). It needs a sign-in, not a sandbox, so it works in Local mode too.
 
 Hosting it: [DEPLOY.md](DEPLOY.md). Why it's built this way: [DESIGN.md](DESIGN.md).
 
@@ -17,10 +18,13 @@ course/
   content/      build.mjs: the modules (../quests), README and starter/authoring files → web/src/generated/course-data.json
   web/          the Vue site (Vite): pages/, components/, store.js, styles.css
   runner/       the Node service: the /api, the sandboxes, the terminals, the proxies, the model passthrough,
-                and Ask Temporal (helper.mjs; kapa.mjs and mcp.mjs talk to the docs)
+                and Ask Temporal (helper.mjs; kapa.mjs and mcp.mjs talk to the docs). Accounts: db.mjs
+                (SQLite), accounts.mjs (sign-in, the allowlist, cohorts, access requests), activity.mjs
+                (events, progress, time on modules, sandbox time), admin.mjs (/api/admin), mailer.mjs,
+                sweep.mjs (once a minute: sandbox time and the allowance)
   snapshot/     the sandbox image (Dockerfile), lsp_bridge.py (the editor's language server), and
                 build.mjs, which builds it as a Daytona snapshot
-  tests/        node --test: the content build, auth, rate limits, the passthrough
+  tests/        node --test: the content build, auth, accounts and activity, rate limits, the passthrough
   e2e/          Playwright against the deployed site, daily and after each deploy (e2e/README.md)
   Dockerfile    the site and runner, for Fly (built from the repo root)
   fly.toml
@@ -38,13 +42,14 @@ Two terminals:
 
 ```bash
 # A: the runner. Without DAYTONA_API_KEY the site works, but only in Local mode.
-# No access code needed: on localhost it opens to this machine only.
-DAYTONA_API_KEY=... GEMINI_API_KEY=... npm run runner
+# Without RESEND_API_KEY, sign-in codes are printed here and any email may sign in, from this
+# machine only. ADMIN_EMAILS=you@… opens /admin to you.
+DAYTONA_API_KEY=... GEMINI_API_KEY=... ADMIN_EMAILS=you@temporal.io npm run runner
 # B: the site, on http://127.0.0.1:4173 (proxies /api, /sbx and /llm to the runner)
 npm run dev
 ```
 
-**Your sandbox survives runner restarts.** The runner restarts on every change under `runner/`. Without `SESSION_SECRET`, a local runner keeps the secret it signs sessions with in `course/.session-secret` (git-ignored), so a restart keeps you signed in and on the same sandbox. Delete the file to start over as a new learner.
+**Your sandbox survives runner restarts.** The runner restarts on every change under `runner/`. Without `SESSION_SECRET`, a local runner keeps the secret it signs sessions with in `course/.session-secret` (git-ignored), so a restart keeps you signed in and on the same sandbox. The database is `course/.data/quest.db` (git-ignored): delete it to start over with no users.
 
 **Ask Temporal from a local runner** needs `GEMINI_API_KEY` (or any OpenAI-compatible model: `LLM_UPSTREAM_URL`, `HELPER_MODEL`). The first question asks you to verify with GitHub or Google, in a popup, once (Kapa's check that you're human); `KAPA_API_KEY` skips that. Each module's suggested questions are its `questions` (`quests/`).
 

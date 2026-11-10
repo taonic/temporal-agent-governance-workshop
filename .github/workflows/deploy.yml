@@ -4,7 +4,7 @@
 #
 # Needs the repository secrets FLY_API_TOKEN (fly tokens create deploy --app
 # temporal-quest) and DAYTONA_API_KEY. The app's own secrets
-# (GEMINI_API_KEY, ACCESS_CODE, ...) stay in Fly: see instructor/DEPLOY.md.
+# (GEMINI_API_KEY, RESEND_API_KEY, ADMIN_EMAILS, ...) stay in Fly: see course/DEPLOY.md.
 #
 # After the deploy, E2E (e2e.yml) tests what was just deployed: every tier when the exercises,
 # the sandboxes or the site changed (it starts a real sandbox and checks each exercise's
@@ -70,7 +70,7 @@ jobs:
           echo "$body"
           echo "$body" | jq -e '.ok == true' >/dev/null
           if ! echo "$body" | jq -e '.runtime.enabled == true' >/dev/null; then
-            echo "::warning::The browser runtime is off: check the app's DAYTONA_API_KEY and ACCESS_CODE secrets in Fly."
+            echo "::warning::The browser runtime is off: check the app's DAYTONA_API_KEY and RESEND_API_KEY secrets in Fly."
           fi
 
       - name: Summary

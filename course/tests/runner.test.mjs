@@ -3,11 +3,10 @@ import { test } from "node:test";
 
 import {
   codeMatches,
-  codeMatchesAny,
+  e2eSignInCode,
   learnerFromRequest,
   llmKey,
   newLearnerId,
-  parseCodes,
   parseCookies,
   sessionCookie,
   sessionToken,
@@ -25,7 +24,31 @@ test("a session token verifies to its learner, and only with the right secret", 
   assert.equal(verifySessionToken(SECRET, token), id);
   assert.equal(verifySessionToken("other", token), null);
   assert.equal(verifySessionToken(SECRET, `${id}.forged`), null);
+  assert.equal(verifySessionToken(SECRET, `${id}.${Math.floor(Date.now() / 1000)}.forged`), null);
   assert.equal(verifySessionToken(SECRET, "garbage"), null);
+});
+
+test("a session lasts 14 days from sign-in, and its time can't be changed", () => {
+  const id = newLearnerId();
+  const day = 24 * 3600;
+  const signedIn = Math.floor(Date.now() / 1000) - 13 * day;
+  assert.equal(verifySessionToken(SECRET, sessionToken(SECRET, id, signedIn)), id);
+  assert.equal(verifySessionToken(SECRET, sessionToken(SECRET, id, signedIn - 2 * day)), null, "15 days old");
+  const [, , sig] = sessionToken(SECRET, id, signedIn - 2 * day).split(".");
+  assert.equal(verifySessionToken(SECRET, `${id}.${signedIn}.${sig}`), null, "a newer time with the old signature");
+});
+
+test("a session from the access code (id.sig) is no longer one", () => {
+  const id = newLearnerId();
+  const [, , sig] = sessionToken(SECRET, id).split(".");
+  assert.equal(verifySessionToken(SECRET, `${id}.${sig}`), null);
+});
+
+test("the e2e tests' code is six digits, the same for the same address and key", () => {
+  const code = e2eSignInCode("key", "e2e+a@temporalquest.dev");
+  assert.match(code, /^\d{6}$/);
+  assert.equal(code, e2eSignInCode("key", "e2e+a@temporalquest.dev"));
+  assert.notEqual(code, e2eSignInCode("other", "e2e+a@temporalquest.dev"));
 });
 
 test("model keys verify for ids and signatures containing _ and -", () => {
@@ -45,23 +68,12 @@ test("a model key isn't a session token, and the reverse", () => {
   assert.equal(verifyLlmKey(SECRET, sessionToken(SECRET, id)), null);
 });
 
-test("the access code compares exactly (after trimming)", () => {
+test("codes compare exactly (after trimming)", () => {
   assert.equal(codeMatches("governed", "governed"), true);
   assert.equal(codeMatches("governed", "  governed "), true);
   assert.equal(codeMatches("governed", "Governed"), false);
   assert.equal(codeMatches("governed", undefined), false);
   assert.equal(codeMatches("", ""), false);
-});
-
-test("any one of several access codes lets you in", () => {
-  assert.deepEqual(parseCodes(" governed, durable ,,"), ["governed", "durable"]);
-  assert.deepEqual(parseCodes(undefined), []);
-  const codes = parseCodes("governed,durable");
-  assert.equal(codeMatchesAny(codes, "governed"), true);
-  assert.equal(codeMatchesAny(codes, " durable "), true);
-  assert.equal(codeMatchesAny(codes, "governed,durable"), false);
-  assert.equal(codeMatchesAny(codes, ""), false);
-  assert.equal(codeMatchesAny([], ""), false);
 });
 
 test("the session cookie is HttpOnly, Lax, host-only, and Secure over https", () => {

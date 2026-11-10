@@ -16,6 +16,7 @@ import TerminalDock from "../components/TerminalDock.vue";
 import Tour from "../Tour.vue";
 import {
   api,
+  applyAllowance,
   course,
   effectiveMode,
   load,
@@ -252,6 +253,7 @@ async function poll() {
       const data = await api(`/api/sandbox/poll?exercise=${encodeURIComponent(props.id)}&files=${encodeURIComponent(files)}${trips}`);
       stamps.value = data.files;
       store.llmMode = data.llmMode;
+      applyAllowance(data.allowance);
       if (data.worker) setWorkerState(data.worker);
       if (data.caughtUp?.length) caughtUp(data.caughtUp, data.worker);
       else if (data.worker?.stale) restartStaleWorker();

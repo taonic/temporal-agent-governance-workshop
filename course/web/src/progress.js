@@ -1,10 +1,15 @@
 // The learner's progress through the skill tree: modules completed, XP and levels, the path
-// they follow (an event's agenda), and what comes next. Kept in this browser (it survives a new
-// sandbox: forget.js keeps it); issue 04 moves it to the server.
+// they follow (their cohort's agenda, or one they picked), and what comes next. The server keeps
+// it, as events (runner/activity.mjs): a signed-in learner's progress follows them across
+// browsers. This browser keeps a copy (it survives a new sandbox: forget.js keeps it), and what
+// it had before the learner's first sign-in is imported then.
+//
+// While signed in, the page also tells the server which module is open, once a minute while the
+// tab is visible (a heartbeat): that's how time on a module is measured.
 import { computed, reactive, watch } from "vue";
 
 import { addPick, xpFor } from "./challenge.js";
-import { course, load, save } from "./store.js";
+import { api, course, load, save, store } from "./store.js";
 
 export const LEVEL_XP = 50;
 
@@ -13,10 +18,12 @@ export const branchesById = new Map(course.branches.map((b) => [b.id, b]));
 // Every module in map order: branch by branch, each in its own order, its boss last.
 export const mapOrder = course.branches.flatMap((b) => [...b.modules, ...(b.boss ? [b.boss] : [])]);
 
+let pathFromUrl = false;
 function initialPath() {
   try {
     const fromUrl = new URLSearchParams(window.location.search).get("path");
     if (fromUrl !== null) {
+      pathFromUrl = true;
       const id = course.paths.some((p) => p.id === fromUrl) ? fromUrl : null;
       save("path", id);
       return id;
@@ -43,6 +50,80 @@ export const progress = reactive({
 watch(() => progress.completed, (ids) => save("modules", ids), { deep: true });
 watch(() => progress.attempts, (picks) => save("attempts", picks), { deep: true });
 watch(() => progress.path, (id) => save("path", id));
+
+// --- The server's copy ------------------------------------------------------------------------
+
+// Events for the server, sent in a batch a moment after the last one. Only while signed in.
+const outbox = [];
+let flushTimer = 0;
+export function track(type, moduleId = null, data = null) {
+  if (!store.authenticated) return;
+  outbox.push({ type, moduleId, data });
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(flush, 400);
+}
+
+async function flush() {
+  if (!outbox.length || !store.authenticated) return;
+  const events = outbox.splice(0, outbox.length);
+  try {
+    await api("/api/events", { method: "POST", body: { events } });
+  } catch {
+    // Kept for the next try, unless signed out.
+    if (store.authenticated) outbox.unshift(...events);
+  }
+}
+window.addEventListener("pagehide", () => {
+  if (outbox.length && store.authenticated) navigator.sendBeacon?.("/api/events", new Blob([JSON.stringify({ events: outbox.splice(0) })], { type: "application/json" }));
+});
+
+// At sign-in: what this browser has goes up (kept only at the learner's first sign-in), and the
+// server's progress comes back, in place of this browser's. When this browser's progress is
+// already this learner's, anything the server doesn't have yet (a pass whose event didn't get
+// there before a reload) is sent again and kept. Another learner's isn't.
+let syncing = false;
+async function syncFromServer() {
+  const email = store.user?.email;
+  const owner = load("progress-owner", null);
+  const mine = owner === email;
+  try {
+    const server = await api("/api/progress/import", {
+      method: "POST",
+      body: owner && !mine ? {} : { completed: progress.completed, attempts: progress.attempts, path: progress.path },
+    });
+    const unsent = mine ? progress.completed.filter((id) => !server.completed.includes(id)) : [];
+    for (const id of unsent) track("module_passed", id);
+    syncing = true;
+    progress.completed = [...server.completed, ...unsent].filter((id) => modulesById.has(id));
+    progress.attempts = mine ? { ...progress.attempts, ...server.attempts } : server.attempts;
+    save("progress-owner", email);
+    if (!pathFromUrl) progress.path = course.paths.some((p) => p.id === server.path) ? server.path : null;
+    else if (server.path !== progress.path) track("path_set", null, { path: progress.path });
+  } catch {
+    /* the page keeps this browser's progress */
+  } finally {
+    syncing = false;
+  }
+}
+watch(() => store.authenticated, (signedIn) => signedIn && syncFromServer(), { immediate: true });
+
+// A path the learner picks (on the map, or with ?path=) is theirs from then on.
+watch(() => progress.path, (path) => !syncing && track("path_set", null, { path }));
+
+// The module open on the page: opened (an event) and a heartbeat now, then one a minute while the
+// tab is visible.
+const HEARTBEAT_MS = 60_000;
+const openModule = computed(() => (store.authenticated && store.route.page === "exercise" ? (store.route.module ?? null) : null));
+function heartbeat() {
+  if (openModule.value && document.visibilityState === "visible") api("/api/heartbeat", { method: "POST", body: { moduleId: openModule.value } }).catch(() => {});
+}
+watch(openModule, (id) => {
+  if (!id) return;
+  track("module_opened", id);
+  heartbeat();
+});
+setInterval(heartbeat, HEARTBEAT_MS);
+document.addEventListener("visibilitychange", heartbeat);
 watch(() => progress.mapView, (view) => save("map-view", view));
 
 export const activePath = computed(() => course.paths.find((p) => p.id === progress.path) ?? null);
@@ -141,6 +222,7 @@ export function complete(id) {
   const before = level.value;
   progress.completed = [...progress.completed, id];
   progress.lastGain = { id, amount: xpOf(id), levelUp: level.value > before ? level.value : null, at: Date.now() };
+  track("module_passed", id);
 }
 
 // The right choice of a challenge, from the exercise that has it.
@@ -152,7 +234,9 @@ function rightChoice(id) {
 // A pick in a challenge: recorded, and the right one completes it, with the XP its picks earned.
 export function pick(id, choiceId) {
   const right = rightChoice(id);
-  progress.attempts = { ...progress.attempts, [id]: addPick(progress.attempts[id] ?? [], choiceId, right) };
+  const before = progress.attempts[id] ?? [];
+  progress.attempts = { ...progress.attempts, [id]: addPick(before, choiceId, right) };
+  if (progress.attempts[id] !== before) track("challenge_pick", id, { choice: choiceId, right: choiceId === right });
   if (choiceId === right) complete(id);
 }
 

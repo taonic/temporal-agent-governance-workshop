@@ -14,7 +14,7 @@ A 4-hour hands-on workshop for AI engineers who are new to [Temporal](https://te
 
 Each exercise is a run of 5-minute **modules** in [`quests/`](quests/README.md), grouped by topic into branches (Fundamentals, AI Agent, Architecture & Nexus, and more to come); this workshop is one path through them.
 
-**In your browser:** the [course site](course/README.md) has every exercise, and with your event's access code, a cloud sandbox with all of this installed and running: an editor, two terminals, the console and the Temporal UI. Nothing to set up.
+**In your browser:** the [course site](course/README.md) has every exercise, and once you sign in with your work email, a cloud sandbox with all of this installed and running: an editor, two terminals, the console and the Temporal UI. Nothing to set up.
 
 Instructors: [instructor/README.md](instructor/README.md) has the run of show and talking points. Why it's built this way: [DESIGN.md](DESIGN.md).
 
@@ -158,5 +158,5 @@ After changing the agent's tools or messages, regenerate the policy schema with 
 
 - Start the GPU endpoint (`uv run --group gpu python scripts/gpu_endpoint.py up --hours 4.5`, needs `DAYTONA_API_KEY`) and benchmark it with `scripts/bench_llm.py`.
 - Learners should finish `scripts/setup_dogwood.sh` before the day: the first build takes several minutes.
-- For the browser course: a current sandbox snapshot, a fresh access code, and the Daytona and Gemini limits ([course/DEPLOY.md](course/DEPLOY.md#before-an-event)).
+- For the browser course: a current sandbox snapshot, the event's cohort in `/admin`, and the Daytona and Gemini limits ([course/DEPLOY.md](course/DEPLOY.md#before-an-event)).
 - After the session: `scripts/gpu_endpoint.py down`.

@@ -56,7 +56,7 @@ function startOver() {
         <p>You can still do the whole workshop on your own machine: switch the instructions to <strong>Local</strong>, and see <a href="#/setup">Setup</a>.</p>
       </template>
       <template v-else-if="!store.authenticated">
-        <h3>Run the workshop in your browser</h3>
+        <h3>Sign in to run the course in your browser</h3>
         <p>You get your own cloud sandbox with everything installed: Temporal, the agent, the policy verifier, two terminals, an editor and the Agent UI. It stops when you're idle and keeps your work for a day.</p>
         <AccessForm />
       </template>
@@ -82,6 +82,11 @@ function startOver() {
           <button class="button button-primary" type="button" @click="startSandbox">Try again</button>
           <button class="button" type="button" @click="startOver">Start over with a new sandbox</button>
         </div>
+      </template>
+      <template v-else-if="store.sandbox.state === 'allowance'">
+        <h3>You're out of sandbox time for now</h3>
+        <p>{{ store.sandbox.message }}</p>
+        <p>You can keep reading and asking Temporal in the meantime.</p>
       </template>
       <template v-else-if="store.sandbox.state === 'full'">
         <h3>The sandboxes are all in use</h3>
