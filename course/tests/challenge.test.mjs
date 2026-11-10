@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { CHALLENGE_XP, addPick, misses, showsHint, solvedAt, xpFor } from "../web/src/challenge.js";
+import { CHALLENGE_XP, addPick, misses, pickCounts, showsHint, solvedAt, xpFor } from "../web/src/challenge.js";
 import { CHALLENGE_XP as BUILD_XP } from "../content/build.mjs";
 
 test("a challenge is worth 20 XP first time, 10 second time, 2 after that, and nothing unsolved", () => {
@@ -33,3 +33,11 @@ test("the hint shows after two misses, until it's solved", () => {
   assert.equal(showsHint(["A", "B", "C"], "C"), false);
 });
 
+
+test("a live run uses up its pick once it answers, or once its code ran and the learner left", () => {
+  assert.equal(pickCounts({ done: { right: false } }), true);
+  assert.equal(pickCounts({ done: null, started: true, left: true }), true, "leaving mid-run doesn't dodge a wrong pick");
+  assert.equal(pickCounts({ done: null, started: true }), false, "a run that broke after it started, with the learner still there");
+  assert.equal(pickCounts({ done: null, started: false, left: true }), false);
+  assert.equal(pickCounts({ done: null }), false, "a run that broke before its code ran costs nothing");
+});

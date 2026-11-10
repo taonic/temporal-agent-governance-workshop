@@ -1,6 +1,7 @@
 // The workshop files a sandbox gets: the same set goes into the snapshot (so `uv sync` can
 // install the project) and is uploaded again when a sandbox is created (so a content change
-// only needs a redeploy of the course site, not a new snapshot).
+// only needs a redeploy of the course site, not a new snapshot; the files the snapshot has that
+// the workshop no longer does are deleted then too: staleFiles).
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -12,7 +13,7 @@ export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)
 export const sandboxRepo = "/workshop";
 
 const FILES = ["pyproject.toml", "uv.lock", "agents.toml", "README.md", "DESIGN.md", ".env.example", ".gitignore", "quest"];
-const DIRS = [
+export const WORKSHOP_DIRS = [
   "hello", "codemode", "travel_agent", "concierge", "policies", "quests", "scripts", "tests",
   "authoring", "starter", "docs",
 ];
@@ -30,8 +31,19 @@ export function workshopFiles(root = repoRoot) {
     }
   };
   for (const file of FILES) if (fs.existsSync(path.join(root, file))) out.push(file);
-  for (const dir of DIRS) if (fs.existsSync(path.join(root, dir))) walk(dir);
+  for (const dir of WORKSHOP_DIRS) if (fs.existsSync(path.join(root, dir))) walk(dir);
   return out.sort();
+}
+
+// The files in a sandbox's workshop folders (`found`, as `find` lists them) that aren't among
+// the ones it was given (`wanted`): left from the snapshot, which has the workshop as it was when
+// it was built. A module folder since renamed would otherwise sit beside its new copy.
+export function staleFiles(found, wanted) {
+  const keep = new Set(wanted);
+  const inWorkshop = (rel) => WORKSHOP_DIRS.some((dir) => rel.startsWith(`${dir}/`));
+  return found
+    .map((line) => line.trim().replace(/^\.\//, ""))
+    .filter((rel) => rel && inWorkshop(rel) && !SKIP.test(rel) && !keep.has(rel));
 }
 
 // What the snapshot depends on. Its name carries a hash of these, so the runner can tell

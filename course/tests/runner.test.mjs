@@ -261,7 +261,50 @@ test("a sandbox gets every package pyproject.toml builds, or uv can't build the 
   const pyproject = fs.readFileSync(path.join(repoRoot, "pyproject.toml"), "utf8");
   const packages = JSON.parse(pyproject.match(/^packages = (\[.*\])$/m)[1]);
   const files = workshopFiles();
-  for (const pkg of packages) assert.ok(files.includes(`${pkg}/__init__.py`), `${pkg}/ isn't copied into sandboxes (runner/repo-files.mjs DIRS)`);
+  for (const pkg of packages) assert.ok(files.includes(`${pkg}/__init__.py`), `${pkg}/ isn't copied into sandboxes (runner/repo-files.mjs WORKSHOP_DIRS)`);
+});
+
+test("a new sandbox loses the workshop files its snapshot has that the workshop no longer does", async () => {
+  const { staleFiles, workshopFiles } = await import("../runner/repo-files.mjs");
+  const wanted = workshopFiles();
+  const moved = "quests/ai-agent/01-meet-the-agent-ui/module.md";
+  assert.ok(wanted.includes(moved));
+  const found = [
+    ...wanted.map((rel) => `./${rel}`),
+    // A module folder renamed since the snapshot was built: its old copy gives its id twice.
+    "./quests/ai-agent/02-meet-the-agent-ui/module.md",
+    "scripts/gone.py",
+    "",
+  ];
+  // Bytecode the snapshot compiled stays; so does anything outside the workshop's folders.
+  found.push("hello/__pycache__/workflow.cpython-313.pyc", ".venv/lib/x.py", ".course/passed/F1");
+  assert.deepEqual(staleFiles(found, wanted), ["quests/ai-agent/02-meet-the-agent-ui/module.md", "scripts/gone.py"]);
+  assert.deepEqual(staleFiles(wanted, wanted), []);
+});
+
+test("a challenge run that broke before answering says what broke; one that answered has no error", async () => {
+  const manager = new SandboxManager({ maxSandboxes: 5 });
+  let output = "";
+  manager.sandboxFor = async () => ({ id: "sb" });
+  manager.exec = async () => ({ result: output });
+  const lines = (...objs) => objs.map((o) => JSON.stringify(o)).join("\n");
+
+  output = `${lines({ type: "start", run: "r1" }, { type: "error", message: "ValueError: module id A2 is also elsewhere" })}\n--state\nstopped\n`;
+  let state = await manager.challengeRun("learner", "FC1", "A");
+  assert.equal(state.run, "r1");
+  assert.equal(state.done, null);
+  assert.match(state.error, /ValueError: module id A2/);
+
+  output = `${lines({ type: "start", run: "r2" }, { type: "workflow", id: "w" }, { type: "done", right: false, summary: "No." })}\n--state\nstopped\n`;
+  state = await manager.challengeRun("learner", "FC1", "A");
+  assert.equal(state.error, null);
+  assert.equal(state.done.summary, "No.");
+
+  // Still going: no answer and no error yet.
+  output = `${lines({ type: "start", run: "r3" })}\n--state\nrunning\n`;
+  state = await manager.challengeRun("learner", "FC1", "A");
+  assert.equal(state.running, true);
+  assert.equal(state.error, null);
 });
 
 test("the Temporal UI opens in dark mode with its side nav collapsed, set before the UI boots", async () => {

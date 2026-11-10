@@ -7,7 +7,7 @@
 // hint. The right one earns its XP (20, 10, then 2) and puts every choice side by side.
 import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 
-import { misses, showsHint, solvedAt } from "../challenge.js";
+import { misses, pickCounts, showsHint, solvedAt } from "../challenge.js";
 import { ask } from "../helper.js";
 import { isDone, pick, progress, xpOf } from "../progress.js";
 import { api, openPane, runInTerminal, swapInEditor, toast } from "../store.js";
@@ -73,13 +73,16 @@ async function select(id) {
   if (props.live && !solved.value) inFile.value = await swap(choiceOf(id).code);
 }
 
-// Predict, then run: the pick is recorded as it starts, whatever it shows.
+// Predict, then run: a recording's pick is recorded as it starts, whatever it shows; a live
+// one's once the run shows something (pickCounts), so a run that breaks first costs nothing.
 async function runChoice(id, { compare = false } = {}) {
   const choice = choiceOf(id);
-  if (!compare) pick(props.challenge.id, id);
   shown.value = compare ? shown.value : id;
   if (props.live) await runLive(choice, { compare });
-  else playRecording(choice);
+  else {
+    if (!compare) pick(props.challenge.id, id);
+    playRecording(choice);
+  }
 }
 
 function playRecording(choice, { instant = false } = {}) {
@@ -128,6 +131,8 @@ async function runLive(choice, { compare = false } = {}) {
   }
   runs[choice.id].running = false;
   if (!runs[choice.id].done && !runs[choice.id].error) runs[choice.id].error = "No answer from your sandbox: see the commands terminal.";
+  const ran = runs[choice.id].lines.some((l) => l.type === "workflow");
+  if (!compare && pickCounts({ done: runs[choice.id].done, left: stopped, started: ran })) pick(props.challenge.id, choice.id);
   // A wrong pick comes back out of the file, the block as the learner had it again: quietly, so
   // the Temporal UI keeps showing what it did.
   if (!compare && runs[choice.id].done && !choice.right && inFile.value) {

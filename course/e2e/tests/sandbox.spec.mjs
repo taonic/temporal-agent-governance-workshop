@@ -80,7 +80,10 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     await form.locator("#access-code").fill(e2eCode(SANDBOX_EMAIL));
     await form.getByRole("button", { name: "Sign in" }).click();
     await expect(form.locator(".form-error")).toHaveCount(0);
-    if (await form.locator("#access-name").isVisible().catch(() => false)) {
+    // A new learner is asked for a name and role next; one seen before goes straight in.
+    const name = form.locator("#access-name");
+    await expect(name.or(page.locator(".sandbox-pill"))).toBeVisible({ timeout: 30_000 });
+    if (await name.isVisible()) {
       await form.locator("#access-name").fill("E2E Sandbox");
       await form.locator("#access-role").selectOption("Developer");
       await form.getByRole("button", { name: "Sign in" }).click();
@@ -104,6 +107,58 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     const learner = new Learner(page);
     await learner.type("commands", "cd /workshop && test -f pyproject.toml && uv --version");
     expect(await learner.settle("commands", { timeout: MINUTE }), "uv isn't there").toBe(0);
+  });
+
+  // A challenge, live in the sandbox: the pick goes into the learner's file and runs in the
+  // commands terminal. A run that breaks before its code runs says why at once, and costs no pick;
+  // a wrong pick shows what happened and why, is struck out, and comes back out of the file.
+  test("a challenge runs live: a broken run says why and costs nothing, a wrong pick shows what happened and why", async () => {
+    test.setTimeout(6 * MINUTE);
+    const learner = new Learner(page);
+    const picks = async () => (await (await page.request.get("/api/progress")).json()).attempts?.FC1 ?? [];
+    const copy = "quests/fundamentals/99-e2e-copy";
+    await page.goto("/#/module/FC1");
+    await expect(page.locator(".sandbox-pill")).toHaveText(/Sandbox ready/, { timeout: 3 * MINUTE });
+    await showCode(page);
+
+    // The sandbox has the workshop as it is now: every module once (no folder from an older
+    // snapshot beside its renamed copy), so the scripts can read them.
+    await learner.type("commands", "./quest status >/dev/null");
+    expect(await learner.settle("commands", { timeout: MINUTE }), "./quest can't read the workshop's modules").toBe(0);
+    expect(await picks()).toEqual([]);
+
+    const challenge = page.locator(".challenge");
+    const choiceA = challenge.locator(".challenge-choice", { hasText: "Give up after three attempts" });
+    await choiceA.click();
+    await expect(challenge.locator(".challenge-diff-file")).toContainText("Choice A is in hello/workflow.py", { timeout: 30_000 });
+
+    // Broken on purpose: a module copied, so its id is there twice and nothing can load them.
+    await learner.type("commands", `cp -r quests/fundamentals/01-run-it-and-see-it-stop ${copy}`);
+    expect(await learner.settle("commands")).toBe(0);
+    await challenge.getByRole("button", { name: "Lock in A and run it" }).click();
+    const outcome = challenge.locator(".challenge-outcome");
+    // Well before the page's minute of waiting for an answer.
+    await expect(outcome.locator(".outcome-summary")).toContainText("module id F1", { timeout: 40_000 });
+    await expect(outcome.locator(".is-waiting")).toHaveCount(0);
+    await expect(challenge.locator(".challenge-choice.is-struck")).toHaveCount(0);
+    expect(await picks(), "a run that never ran its code shouldn't use up the pick").toEqual([]);
+
+    // Mended, the same pick runs: a wrong one, with what happened and why.
+    await learner.type("commands", `rm -rf ${copy}`);
+    expect(await learner.settle("commands")).toBe(0);
+    await challenge.getByRole("button", { name: "Lock in A and run it" }).click();
+    const wrong = challenge.locator(".challenge-outcome.is-wrong");
+    await expect(wrong, "the run never came back with an answer").toBeVisible({ timeout: 90_000 });
+    await expect(wrong.locator(".outcome-source")).toHaveText("Live");
+    await expect(wrong.locator(".outcome-summary")).toContainText("ran out of attempts");
+    await expect(wrong.locator(".outcome-why")).toContainText(/\S/);
+    await expect(wrong.getByRole("button", { name: "Open its Event History" })).toBeVisible();
+    await expect(challenge.locator(".challenge-choice.is-struck")).toHaveCount(1);
+    await expect(choiceA).toBeDisabled();
+    await expect(challenge.locator(".challenge-again")).toContainText("it's back out of your file");
+    await expect.poll(picks).toEqual(["A"]);
+    const ran = await learner.terminalLines("commands");
+    expect(ran, "the commands terminal").toContain("ran out of attempts");
   });
 
   test("the Temporal UI opens in its pane", async () => {
