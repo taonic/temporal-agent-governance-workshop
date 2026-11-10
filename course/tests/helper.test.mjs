@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import http from "node:http";
 import { after, before, test } from "node:test";
 
-import { seal, sessionToken, unseal } from "../runner/auth.mjs";
+import { seal, sessionToken, unseal, verifySessionToken } from "../runner/auth.mjs";
 import { conversation, createHelper, readAssignment, readCompletion, systemPrompt } from "../runner/helper.mjs";
 import { parseSearchResult, pickSearchTool, titleOf } from "../runner/kapa.mjs";
 import { McpClient } from "../runner/mcp.mjs";
@@ -141,8 +141,10 @@ function fakeModel() {
 function serve(config, fetchImpl) {
   const helper = createHelper(config, {
     learnerOf: (req) => {
+      // Verified, not compared with a token made now: a token is stamped with the second it
+      // was issued, so the test's own one stops matching once the clock ticks over.
       const match = String(req.headers.cookie ?? "").match(/course_session=([^;]+)/);
-      return match && decodeURIComponent(match[1]) === sessionToken(SECRET, "learner-0001") ? "learner-0001" : null;
+      return match ? verifySessionToken(SECRET, decodeURIComponent(match[1])) : null;
     },
     siteOrigin: () => "http://course.test",
     secure: () => false,
