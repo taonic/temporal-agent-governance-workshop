@@ -122,7 +122,15 @@ save("mode", null);
 watch(() => store.passed, (passed) => save("passed", passed), { deep: true });
 watch(() => store.celebrated, (ids) => save("celebrated", ids), { deep: true });
 
-window.addEventListener("hashchange", () => {
+// The page before this one (its hash), for a page that closes back to it (the badge shelf).
+let previousHash = "";
+export const cameFrom = () => previousHash;
+window.addEventListener("hashchange", (event) => {
+  try {
+    previousHash = new URL(event.oldURL).hash;
+  } catch {
+    previousHash = "";
+  }
   store.route = parseRoute();
 });
 

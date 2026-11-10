@@ -2,12 +2,13 @@
 // The badge shelf (#/badges): a row per branch, its tier badges and then its boss badge (the
 // class title), and the skill badges below. Unearned badges show greyed, with what earns them:
 // there are no secret ones. An earned tier badge whose tier has grown since says so, and keeps it.
-import { computed } from "vue";
+// It closes (× or Esc) back to the page it was opened from, or the map.
+import { computed, onBeforeUnmount, onMounted } from "vue";
 
 import BadgeMedal from "../components/BadgeMedal.vue";
 import { iconSvg } from "../badgeArt.js";
 import { badgeComingSoon, badgeMissing, badges, earnedCount, isEarned, progress } from "../progress.js";
-import { course } from "../store.js";
+import { cameFrom, course, navigate } from "../store.js";
 
 const rows = computed(() => [
   ...course.branches
@@ -30,12 +31,22 @@ function note(badge) {
   }
   return { earned: false, soon: badgeComingSoon(badge) };
 }
+function close() {
+  const from = cameFrom();
+  navigate(from && !from.startsWith("#/badges") ? from : "#/");
+}
+// Esc closes the shelf, unless something is open over it (the earn moment, a dialog).
+const onKey = (event) => event.key === "Escape" && !document.querySelector(".earn-backdrop, .modal-backdrop") && close();
+onMounted(() => window.addEventListener("keydown", onKey));
+onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
+
 const kicker = (badge) => (badge.kind === "tier" ? `Tier ${badge.numeral} · ${badge.tierName}` : badge.kind === "boss" ? "Class title" : "");
 </script>
 
 <template>
   <main class="badges-page">
     <header class="badges-head">
+      <button class="badges-close" type="button" aria-label="Close your badges" title="Close (Esc)" @click="close">×</button>
       <p class="panel-kicker">Your badges</p>
       <h1>{{ earnedCount }} of {{ badges.length }} earned</h1>
       <p class="badges-lede">A badge for every tier you finish and every boss you beat, which is your class title, and a few for how you learn. Badges you haven't earned yet say what earns them.</p>

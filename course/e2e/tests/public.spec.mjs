@@ -199,6 +199,10 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     await expect(next).toHaveClass(/is-locked/);
     await expect(next).toContainText("Pass F8–F13 and FC3");
     await expect(page.locator('.badge-card[data-badge="fundamentals-boss"]')).toContainText("Coming soon");
+    // It closes back to where it was opened from: the map.
+    await page.getByRole("button", { name: "Close your badges" }).click();
+    await expect(page).toHaveURL(/#\/$/);
+    await expect(page.locator(".skill-map")).toBeVisible();
   });
 
   test("selecting a node says what it needs first, and one coming soon can't be entered", async ({ page }) => {

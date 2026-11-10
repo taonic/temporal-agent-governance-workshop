@@ -7305,6 +7305,32 @@ a.menu-item {
   padding: 28px 24px 56px;
 }
 
+.badges-head {
+  position: relative;
+  padding-right: 44px;
+}
+
+.badges-close {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.badges-close:hover,
+.badges-close:focus-visible {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
 .badges-head h1 {
   margin: 0;
   font-size: 26px;
