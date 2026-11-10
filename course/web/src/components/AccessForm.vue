@@ -117,6 +117,11 @@ function otherEmail() {
         >
         <button class="button button-primary" type="submit" :disabled="busy || code.replace(/\D/g, '').length !== 6">{{ busy ? "Checking…" : label }}</button>
       </div>
+      <!-- Codes can land in junk mail: say so where it can't be missed. -->
+      <p v-if="!toConsole" class="access-junk" role="note">
+        <span class="access-junk-icon" aria-hidden="true">📬</span>
+        <span><strong>No email?</strong> Check your <strong>junk or spam</strong> folder. It comes from Temporal Quest, and can take a minute.</span>
+      </p>
       <p class="access-note">
         It works for 10 minutes.
         <button class="link-button" type="button" :disabled="busy" @click="sendCode">Send a new code</button> ·

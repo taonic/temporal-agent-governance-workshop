@@ -458,6 +458,49 @@ h3 {
   line-height: 1.45;
 }
 
+/* The code step's reminder that the email may be in junk mail: a nudge, with a wiggle. */
+.access-junk {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent);
+  border-radius: 8px;
+  background: var(--amber-soft);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  animation: access-junk-in 360ms ease-out both;
+}
+
+.access-junk-icon {
+  flex: none;
+  font-size: 20px;
+  line-height: 1.1;
+  transform-origin: 50% 90%;
+  animation: access-junk-wiggle 1.4s ease-in-out 400ms 2;
+}
+
+@keyframes access-junk-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes access-junk-wiggle {
+  0%, 60%, 100% { transform: rotate(0) translateY(0); }
+  10% { transform: rotate(-14deg) translateY(-2px); }
+  20% { transform: rotate(12deg) translateY(-3px); }
+  30% { transform: rotate(-8deg) translateY(-1px); }
+  40% { transform: rotate(5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .access-junk,
+  .access-junk-icon {
+    animation: none;
+  }
+}
+
 .access-note-top {
   margin: 0 0 10px;
 }
