@@ -1,7 +1,7 @@
 // The runner's SQLite database: users, cohorts and the allowlist, sign-in codes, access
-// requests, and the activity log. One file, on a Fly volume when deployed (DATABASE_PATH); the
-// runner is one machine, so nothing else writes to it. Migrations run at startup, in order,
-// each once (PRAGMA user_version counts them).
+// requests, the activity log, and feedback. One file, on a Fly volume when deployed
+// (DATABASE_PATH); the runner is one machine, so nothing else writes to it. Migrations run at
+// startup, in order, each once (PRAGMA user_version counts them).
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -81,6 +81,23 @@ const MIGRATIONS = [
     minute INTEGER NOT NULL,
     PRIMARY KEY (user_id, minute)
   );
+  `,
+  // Feedback from signed-in users, with where they were when they sent it (feedback.mjs).
+  `
+  CREATE TABLE feedback (
+    id INTEGER PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    kind TEXT,
+    message TEXT NOT NULL,
+    page TEXT,
+    exercise_id TEXT,
+    module_id TEXT,
+    beat_id TEXT,
+    context TEXT,
+    emailed_at INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX feedback_at ON feedback (created_at);
   `,
 ];
 

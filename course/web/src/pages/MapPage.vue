@@ -9,7 +9,7 @@
 //
 // The rule, the same everywhere: prerequisites are recommended, not required. A locked node can
 // be entered (skip ahead) and what it builds on is solved for you.
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 
 import FirstRun from "../components/FirstRun.vue";
 import FocusMap from "../components/FocusMap.vue";
@@ -61,6 +61,8 @@ const pathDone = computed(() => doneCount(pathModules.value));
 const picked = ref(store.route.focus ?? null);
 watch(() => store.route.focus, (id) => id && (picked.value = id));
 const selected = computed(() => picked.value ?? recommended.value?.id ?? null);
+watch(selected, (id) => (store.mapFocus = id), { immediate: true });
+onBeforeUnmount(() => (store.mapFocus = null));
 const detail = ref(null);
 const nudge = ref(0);
 function select(id) {

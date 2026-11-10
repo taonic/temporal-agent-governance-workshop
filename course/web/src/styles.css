@@ -6588,6 +6588,117 @@ a.menu-item {
   text-decoration: none;
 }
 
+/* --- Feedback ------------------------------------------------------------------------------ */
+
+.feedback-button {
+  gap: 6px;
+}
+
+.feedback-modal {
+  width: min(540px, 100%);
+}
+
+.feedback-modal > p {
+  margin: 6px 0 14px;
+}
+
+.feedback-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+}
+
+.feedback-kind {
+  padding: 5px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.feedback-kind:hover {
+  color: var(--text);
+}
+
+.feedback-kind.active {
+  border-color: var(--temporal-uv);
+  background: var(--temporal-uv-soft);
+  color: var(--temporal-uv);
+}
+
+.feedback-kind:has(input:focus-visible) {
+  outline: 2px solid var(--temporal-uv);
+  outline-offset: 1px;
+}
+
+.feedback-message {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--text);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.feedback-message:focus {
+  outline: 2px solid var(--temporal-uv);
+  outline-offset: 1px;
+}
+
+.feedback-where {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--mist);
+  font-size: 13px;
+}
+
+.feedback-where-label {
+  color: var(--faint);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.feedback-where-text {
+  flex: 1 1 200px;
+  color: var(--text);
+}
+
+.feedback-where.is-off .feedback-where-text {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+
+.feedback-actions {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.feedback-button.is-compact .feedback-button-label {
+  display: none;
+}
+
+@media (max-width: 1280px) {
+  .feedback-button-label {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   .account-name {
     display: none;
@@ -6830,6 +6941,59 @@ a.menu-item {
 .admin-muted {
   color: var(--muted);
   font-size: 12.5px;
+}
+
+.admin-feedback {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-feedback > li {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-feedback > li:first-child {
+  padding-top: 0;
+}
+
+.admin-feedback > li:last-child {
+  border-bottom: 0;
+}
+
+.admin-feedback-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.admin-feedback-head time {
+  margin-left: auto;
+}
+
+.admin-feedback-message {
+  margin: 8px 0 6px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.admin-feedback-where {
+  margin: 0;
+  font-size: 12.5px;
+}
+
+.admin-feedback-where a {
+  color: inherit;
+  text-decoration-color: var(--line-strong);
+}
+
+.admin-feedback-where a:hover {
+  color: var(--temporal-uv);
 }
 
 .admin-badge {

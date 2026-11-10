@@ -9,6 +9,7 @@ One [Fly.io](https://fly.io) app, `temporal-quest`, runs the site and its runner
 | `DAYTONA_API_KEY` | creating, starting and deleting learners' sandboxes |
 | `GEMINI_API_KEY` | the model, for the sandboxes' agents and for Ask Temporal. It stays on Fly: sandboxes get a key that only works on the runner's `/llm/v1` |
 | `RESEND_API_KEY` | sends the sign-in codes and the access requests' emails ([Resend](https://resend.com), "Sending access"), from a verified `temporalquest.dev` (below). Without it nobody can sign in, but the e2e tests. A runner listening on localhost needs none: it prints the codes and lets any email in, from that machine only |
+| `FEEDBACK_EMAILS` | who gets the feedback learners send (comma-separated; default `tao.guo@temporal.io`, empty for nobody). It's kept either way, under `/admin` → Feedback. Needs `RESEND_API_KEY` |
 | `ADMIN_EMAILS` | the admins, comma-separated (`ana@temporal.io,bo@temporal.io`): `/admin`, and the emails about access requests. Always allowed in. Put the e2e tests' admin here too (`e2e+admin@temporalquest.dev`) |
 | `SESSION_SECRET` | signs session cookies (14 days from sign-in) and the sandboxes' model keys. Changing it signs everyone out and breaks running sandboxes' model keys until they restart |
 | `E2E_SIGNIN_KEY` | the e2e tests' sign-in: their addresses (`e2e+…@temporalquest.dev`) get no email, and sign in with a code derived from this key. The same value as the repository secret of that name |

@@ -4,9 +4,11 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import Tour from "./Tour.vue";
 import AccessForm from "./components/AccessForm.vue";
 import AskSelection from "./components/AskSelection.vue";
+import FeedbackForm from "./components/FeedbackForm.vue";
 import ModuleNav from "./components/ModuleNav.vue";
 import WelcomeIntro from "./components/WelcomeIntro.vue";
 import XpPill from "./components/XpPill.vue";
+import { closeFeedback, feedback, openFeedback } from "./feedback.js";
 import { closeHelper, helper, refreshHelper, resumeAfterConnect, toggleHelper } from "./helper.js";
 import { shouldShowIntro } from "./intro.js";
 import ExercisePage from "./pages/ExercisePage.vue";
@@ -125,6 +127,7 @@ watch(
   () => {
     menuOpen.value = false;
     accountOpen.value = false;
+    closeFeedback(); // it's about the page it was opened on (its draft is kept)
     if (store.route.page === "home" || store.route.page === "admin") closeHelper();
     window.scrollTo({ top: 0 });
   },
@@ -222,6 +225,8 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onShortcut));
 
 // Signing in or out (from the sandbox menu too) changes what the helper can do.
 watch(() => store.authenticated, () => refreshHelper());
+// Feedback is for signed-in users: signing out closes the form.
+watch(() => store.user, (user) => !user && closeFeedback());
 
 
 </script>
@@ -274,6 +279,11 @@ watch(() => store.authenticated, () => refreshHelper());
           </button>
           <button class="button button-secondary" type="button" title="Take the tour" @click="startTour">Tour</button>
         </template>
+        <!-- On a module page the bar is full: just the icon there. -->
+        <button v-if="store.user" class="button button-secondary feedback-button" :class="{ 'is-compact': exercise }" type="button" title="Send feedback to the course team" aria-label="Feedback" @click="openFeedback()">
+          <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 4h12v9H9l-4 3v-3H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
+          <span class="feedback-button-label">Feedback</span>
+        </button>
         <button v-if="store.runtime.checked && !store.user" class="button button-primary" type="button" @click="store.gateOpen = true">Sign in</button>
         <div v-else-if="store.user" class="sandbox-menu account-menu">
           <button class="button button-secondary account-button" type="button" :aria-expanded="accountOpen" :title="store.user.email" @click="accountOpen = !accountOpen">
@@ -281,6 +291,7 @@ watch(() => store.authenticated, () => refreshHelper());
           </button>
           <div v-if="accountOpen" class="menu" role="menu" @keydown.escape="accountOpen = false">
             <p class="menu-note">Signed in as <strong>{{ store.user.email }}</strong>{{ store.user.cohort ? ` · ${store.user.cohort.name}` : "" }}</p>
+            <button class="menu-item" type="button" role="menuitem" @click="openFeedback(); accountOpen = false">Send feedback</button>
             <a v-if="store.user.admin" class="menu-item" role="menuitem" href="#/admin" @click="accountOpen = false">Admin panel</a>
             <button class="menu-item" type="button" role="menuitem" @click="signOut(); accountOpen = false">Sign out</button>
           </div>
@@ -333,6 +344,8 @@ watch(() => store.authenticated, () => refreshHelper());
       </div>
     </div>
   </div>
+
+  <FeedbackForm v-if="feedback.open && store.user" />
 
   <AskTemporal v-if="helperUsed" />
   <AskSelection />

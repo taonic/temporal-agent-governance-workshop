@@ -63,6 +63,8 @@ export const config = {
   resendApiKey: env.RESEND_API_KEY || "",
   mailFrom: env.MAIL_FROM || "Temporal Quest <signin@temporalquest.dev>",
   adminEmails: parseEmails(env.ADMIN_EMAILS),
+  // Who gets each piece of feedback the learners send (feedback.mjs).
+  feedbackEmails: parseEmails(env.FEEDBACK_EMAILS ?? "tao.guo@temporal.io"),
   // The e2e tests' addresses (e2e+…@temporalquest.dev) get no email: their code is derived
   // from this key.
   e2eSignInKey: env.E2E_SIGNIN_KEY || "",

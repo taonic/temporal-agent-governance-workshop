@@ -17,6 +17,7 @@ import { createAdmin } from "./admin.mjs";
 import { clearedSessionCookie, learnerFromRequest, sessionCookie, sessionToken } from "./auth.mjs";
 import { config, consoleSignIn, consoleSignInAllows, helperUnavailableReason, runtimeUnavailableReason, signInUnavailableReason } from "./config.mjs";
 import { openDatabase } from "./db.mjs";
+import { Feedback } from "./feedback.mjs";
 import { createHelper } from "./helper.mjs";
 import { createLlmPassthrough } from "./llm.mjs";
 import { relayLsp } from "./lsp.mjs";
@@ -39,6 +40,7 @@ const accounts = new Accounts(db, {
   e2eKey: config.e2eSignInKey,
   record: (...args) => activity.record(...args),
 });
+const feedback = new Feedback(db, { record: (...args) => activity.record(...args) });
 const mailer = createMailer(config, { log });
 const manager = new SandboxManager(config);
 const terminals = new TerminalHub(manager);
@@ -132,7 +134,7 @@ function allowanceOf(learner) {
   return activity.allowance(learner, cohort?.allowance_minutes ?? DEFAULT_ALLOWANCE_MINUTES);
 }
 
-const admin = createAdmin({ accounts, activity, manager, mailer, readJson, sessionOf, siteOrigin: (req) => origins(req).site, log });
+const admin = createAdmin({ accounts, activity, feedback, manager, mailer, readJson, sessionOf, siteOrigin: (req) => origins(req).site, log });
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -237,6 +239,21 @@ const routes = {
     if (id && accounts.user(id)) activity.record(id, "sign_out", null, null);
     res.setHeader("set-cookie", clearedSessionCookie({ secure: isHttps(req) }));
     return { authenticated: false };
+  },
+
+  // Feedback, from anyone signed in (let in or not): kept, and emailed to FEEDBACK_EMAILS. The
+  // email goes out after the answer: the feedback is kept either way.
+  "POST /api/feedback": async (req) => {
+    const session = sessionOf(req);
+    if (!session) throw Object.assign(new Error("Sign in to send feedback."), { status: 401 });
+    const fb = feedback.add(session.id, { ...(await readJson(req, 32 * 1024)), userAgent: req.headers["user-agent"] });
+    log(`feedback ${fb.id} from learner ${session.id}`);
+    mailer
+      .feedback(config.feedbackEmails, fb, origins(req).site)
+      // Without RESEND_API_KEY it's printed to the console, not sent.
+      .then(() => config.resendApiKey && config.feedbackEmails.length && feedback.markEmailed(fb.id))
+      .catch((err) => log(`feedback ${fb.id} email failed: ${err.message}`));
+    return { ok: true, id: fb.id };
   },
 
   // --- Progress and activity -----------------------------------------------------------------
@@ -450,6 +467,7 @@ server.listen(config.port, config.host, () => {
   log(reason ? `browser runtime OFF: ${reason}` : `browser runtime on, snapshot ${config.snapshot}, up to ${config.maxSandboxes} sandboxes`);
   if (consoleSignIn()) log("no RESEND_API_KEY: sign-in codes are printed here, and any email may sign in, from this machine only (localhost)");
   else if (!config.resendApiKey) log(`no RESEND_API_KEY: nobody can sign in${config.e2eSignInKey ? " but the e2e tests" : ""}`);
+  log(`feedback goes to ${config.feedbackEmails.length ? config.feedbackEmails.join(", ") : "nobody (FEEDBACK_EMAILS is empty): it's only kept"}`);
   log(`database ${config.databasePath}; admins: ${config.adminEmails.length ? config.adminEmails.join(", ") : "none (set ADMIN_EMAILS)"}`);
   if (config.sessionSecretIsEphemeral) log("SESSION_SECRET isn't set: sessions end when the runner restarts");
   if (config.sessionSecretKept) log("SESSION_SECRET isn't set: using course/.session-secret, so restarts keep you signed in, on the same sandbox");

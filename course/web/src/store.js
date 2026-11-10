@@ -107,6 +107,8 @@ export const store = reactive({
   guideDiagram: null,
   // The guide's beat on show (its id): the editor shows the files that beat uses.
   guideBeat: null,
+  // The map's node on show in its detail panel (MapPage): what feedback sent from the map is about.
+  mapFocus: null,
 
 
   // Exercise ids whose check passed (from the sandbox), and the ones already celebrated.

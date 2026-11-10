@@ -346,7 +346,8 @@ export class Accounts {
     this.addEntries(cohortId, user.email, admin);
   }
 
-  // Removes a learner: their user, events and exact allowlist entry. Logged without the email.
+  // Removes a learner: their user, events, feedback (by cascade) and exact allowlist entry.
+  // Logged without the email.
   deleteUser(id, admin) {
     const user = this.user(id);
     if (!user) throw fail(404, "No such learner.");

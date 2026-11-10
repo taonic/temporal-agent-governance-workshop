@@ -1,5 +1,5 @@
 // /api/admin/*: what /admin shows and does, for ADMIN_EMAILS only. Cohorts and the allowlist,
-// access requests, learners and their journeys, the activity feed, and the sandboxes.
+// access requests, learners and their journeys, the activity feed, feedback, and the sandboxes.
 import { DEFAULT_ALLOWANCE_MINUTES, ROLES } from "./accounts.mjs";
 import { deriveProgress } from "./activity.mjs";
 
@@ -16,7 +16,7 @@ export function toCsv(rows) {
 
 const iso = (ms) => (ms ? new Date(ms).toISOString() : "");
 
-export function createAdmin({ accounts, activity, manager, mailer, readJson, sessionOf, siteOrigin, log = () => {} }) {
+export function createAdmin({ accounts, activity, feedback, manager, mailer, readJson, sessionOf, siteOrigin, log = () => {} }) {
   const catalog = activity.catalog;
 
   function requireAdmin(req) {
@@ -298,6 +298,19 @@ export function createAdmin({ accounts, activity, manager, mailer, readJson, ses
       "GET /api/admin/activity": async (req, _res, url) => {
         requireAdmin(req);
         return feed(url);
+      },
+
+      "GET /api/admin/feedback": async (req) => {
+        requireAdmin(req);
+        return { feedback: feedback.list() };
+      },
+
+      "GET /api/admin/feedback.csv": async (req, res) => {
+        requireAdmin(req);
+        csv(res, "feedback.csv", [
+          ["sent", "name", "email", "role", "company", "kind", "where", "module", "step", "url", "message", "emailed"],
+          ...feedback.list({ limit: 100_000 }).map((f) => [iso(f.createdAt), f.name, f.email, f.role, f.company, f.kind, f.where, f.moduleId, f.beatId, f.context?.url, f.message, iso(f.emailedAt)]),
+        ]);
       },
 
       "GET /api/admin/sandboxes": async (req) => {

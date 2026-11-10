@@ -1,16 +1,17 @@
 <script setup>
 // /admin, for ADMIN_EMAILS: who's learning and how it's going (Learners, with each learner's
 // journey), who may sign in (Cohorts & allowlist), who's asking to (Requests), what's happening
-// (Activity), and the sandboxes. Refreshes every 10 seconds while the tab is visible.
+// (Activity), what they tell us (Feedback), and the sandboxes. Refreshes every 10 seconds while the tab is visible.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
-import { api, course, store, toast } from "../store.js";
+import { api, course, navigate, store, toast } from "../store.js";
 
 const TABS = [
   { id: "learners", label: "Learners" },
   { id: "cohorts", label: "Cohorts & allowlist" },
   { id: "requests", label: "Requests" },
   { id: "activity", label: "Activity" },
+  { id: "feedback", label: "Feedback" },
   { id: "sandboxes", label: "Sandboxes" },
 ];
 const tab = computed(() => (TABS.some((t) => t.id === store.route.id) ? store.route.id : "learners"));
@@ -68,6 +69,7 @@ const EVENT_LABELS = {
   user_blocked: "was blocked",
   user_unblocked: "was unblocked",
   user_deleted: "a learner was deleted",
+  feedback_sent: "sent feedback",
 };
 function eventText(e) {
   const d = e.data ?? {};
@@ -78,6 +80,7 @@ function eventText(e) {
   if (e.type === "allowlist_added") return `${label} ${(d.entries ?? []).join(", ")} to ${d.cohort}`;
   if (e.type === "allowlist_removed") return `${label} ${d.entry}`;
   if (["cohort_created", "cohort_saved"].includes(e.type)) return `${label}: ${d.cohort}`;
+  if (e.type === "feedback_sent") return `${label}${d.kind ? ` (${d.kind})` : ""}${e.moduleId ? ` on ${moduleLabel(e.moduleId)}` : ""}`;
   if (e.type === "boss_result") return `${label} ${e.moduleId}: ${d.won ? "won" : "lost"}`;
   if (e.moduleId) return `${label} ${moduleLabel(e.moduleId)}`;
   return label;
@@ -94,6 +97,8 @@ const feedTypes = ref([]);
 const feedType = ref("");
 const feedUser = ref("");
 const sandboxes = ref({ max: 0, sandboxes: [] });
+const feedbackList = ref([]);
+const feedbackKind = ref("");
 const journey = ref(null);
 const selectedLearner = ref(null);
 const cohortId = ref(null);
@@ -126,6 +131,8 @@ async function load() {
       const data = await api(`/api/admin/activity${q({ cohort: cohortFilter.value, type: feedType.value, user: feedUser.value })}`);
       feed.value = data.events;
       feedTypes.value = data.types;
+    } else if (tab.value === "feedback") {
+      feedbackList.value = (await api("/api/admin/feedback")).feedback;
     } else if (tab.value === "sandboxes") {
       sandboxes.value = await api("/api/admin/sandboxes");
     }
@@ -250,6 +257,17 @@ function decide(r, approve, scope = "email") {
     reason = answer;
   } else if (scope === "domain" && !window.confirm(`Let everyone at @${r.domain} in? Anyone with an email there can sign in from now on.`)) return;
   act(() => api("/api/admin/requests/decide", { method: "POST", body: { id: r.id, approve, scope, reason } }), approve ? `Approved: ${r.email} has been emailed` : "Turned down");
+}
+
+// --- Feedback ---------------------------------------------------------------------------------
+
+const FEEDBACK_KINDS = { bug: "broken", confusing: "confusing", idea: "idea", praise: "liked" };
+const shownFeedback = computed(() => feedbackList.value.filter((f) => !feedbackKind.value || (f.kind ?? "none") === feedbackKind.value));
+const feedbackHref = (f) => (f.context?.url ? `${window.location.origin}${window.location.pathname}${f.context.url}` : null);
+function showLearner(id) {
+  selectedLearner.value = id;
+  journey.value = null;
+  navigate("#/admin/learners");
 }
 
 const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name ?? "";
@@ -563,6 +581,40 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
           <li v-if="!feed.length" class="admin-muted">Nothing yet.</li>
         </ol>
         <button v-if="feed.length >= 200" class="button" type="button" @click="loadMoreFeed">Older</button>
+      </div>
+    </section>
+
+    <!-- Feedback -->
+    <section v-else-if="tab === 'feedback'" class="admin-section">
+      <div class="admin-toolbar">
+        <select v-model="feedbackKind" aria-label="Kind">
+          <option value="">Every kind</option>
+          <option v-for="(label, id) in FEEDBACK_KINDS" :key="id" :value="id">{{ label }}</option>
+          <option value="none">No kind given</option>
+        </select>
+        <span class="admin-muted">{{ shownFeedback.length }} of {{ feedbackList.length }}</span>
+        <a class="button button-secondary" href="/api/admin/feedback.csv" download>Export CSV</a>
+      </div>
+      <div class="admin-card">
+        <ol class="admin-feedback">
+          <li v-for="f in shownFeedback" :key="f.id">
+            <div class="admin-feedback-head">
+              <button class="link-button" type="button" @click="showLearner(f.userId)">{{ f.name || f.email }}</button>
+              <span class="admin-muted">{{ f.email }}{{ f.company ? ` · ${f.company}` : "" }}</span>
+              <span v-if="f.kind" class="admin-badge" :class="{ 'is-bad': f.kind === 'bug', 'is-good': f.kind === 'praise' }">{{ FEEDBACK_KINDS[f.kind] ?? f.kind }}</span>
+              <time class="admin-muted" :title="new Date(f.createdAt).toLocaleString()">{{ ago(f.createdAt) }}</time>
+            </div>
+            <p class="admin-feedback-message">{{ f.message }}</p>
+            <p class="admin-muted admin-feedback-where">
+              <a v-if="feedbackHref(f)" :href="feedbackHref(f)" target="_blank" rel="noopener">{{ f.where || f.context?.url }}</a>
+              <span v-else>{{ f.where }}</span>
+              <span v-if="f.context?.sandbox"> · sandbox {{ f.context.sandbox }}</span>
+              <span v-if="f.context?.viewport?.width"> · {{ f.context.viewport.width }}×{{ f.context.viewport.height }}</span>
+              <span v-if="!f.emailedAt"> · not emailed</span>
+            </p>
+          </li>
+          <li v-if="!shownFeedback.length" class="admin-muted">No feedback yet.</li>
+        </ol>
       </div>
     </section>
 

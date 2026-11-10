@@ -1,4 +1,4 @@
-// Email, through Resend's HTTP API: sign-in codes, and access requests' notifications. A local
+// Email, through Resend's HTTP API: sign-in codes, access requests' notifications, and feedback. A local
 // runner without RESEND_API_KEY prints them to its console instead. The e2e tests' addresses
 // never get email.
 import { E2E_EMAIL } from "./accounts.mjs";
@@ -14,7 +14,7 @@ function page(heading, body) {
 }
 
 export function createMailer(config, { fetchImpl = fetch, log = console.log } = {}) {
-  async function send({ to, subject, html, text }) {
+  async function send({ to, subject, html, text, replyTo }) {
     const recipients = (Array.isArray(to) ? to : [to]).filter((address) => !E2E_EMAIL.test(address));
     if (!recipients.length) return;
     if (!config.resendApiKey) {
@@ -24,7 +24,7 @@ export function createMailer(config, { fetchImpl = fetch, log = console.log } = 
     const res = await fetchImpl("https://api.resend.com/emails", {
       method: "POST",
       headers: { authorization: `Bearer ${config.resendApiKey}`, "content-type": "application/json" },
-      body: JSON.stringify({ from: config.mailFrom, to: recipients, subject, html, text }),
+      body: JSON.stringify({ from: config.mailFrom, to: recipients, subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
@@ -89,6 +89,34 @@ export function createMailer(config, { fetchImpl = fetch, log = console.log } = 
         html: page(
           "Your request wasn't approved",
           `<p style="margin:0">Your request for Temporal Quest wasn't approved.</p>${request.reason ? `<p style="margin:16px 0 0;color:#374151">${escape(request.reason)}</p>` : ""}`,
+        ),
+      });
+    },
+
+    // To FEEDBACK_EMAILS: someone sent feedback. Replying answers them.
+    feedback(recipients, fb, siteOrigin) {
+      if (!recipients.length) return Promise.resolve();
+      const who = fb.name ? `${fb.name} <${fb.email}>` : fb.email;
+      const about = [fb.role, fb.company].filter(Boolean).join(", ");
+      const kind = fb.kind ? `[${fb.kind}] ` : "";
+      const where = fb.where || "somewhere";
+      const link = fb.context?.url ? `${siteOrigin}/${fb.context.url.replace(/^\//, "")}` : siteOrigin;
+      const admin = `${siteOrigin}/#/admin/feedback`;
+      const extra = [fb.context?.sandbox && `sandbox: ${fb.context.sandbox}`, fb.context?.viewport?.width && `window: ${fb.context.viewport.width}×${fb.context.viewport.height}`, fb.context?.userAgent]
+        .filter(Boolean)
+        .join(" · ");
+      return send({
+        to: recipients,
+        replyTo: fb.email,
+        subject: `${kind}Feedback from ${fb.name || fb.email}: ${where}`.slice(0, 200),
+        text: `${who}${about ? ` (${about})` : ""} sent feedback${fb.kind ? ` (${fb.kind})` : ""}.\n\nWhere: ${where}\n${link}\n\n${fb.message}\n\n${extra}\n\nAll feedback: ${admin}\nReply to this email to answer them.`,
+        html: page(
+          `Feedback${fb.kind ? `: ${escape(fb.kind)}` : ""}`,
+          `<p style="margin:0 0 4px"><strong>${escape(fb.name || fb.email)}</strong>${about ? `, ${escape(about)}` : ""}<br><span style="color:#6b7280">${escape(fb.email)}</span></p>
+<p style="margin:0 0 16px;color:#6b7280;font-size:13px">On <a href="${escape(link)}" style="color:#374151">${escape(where)}</a></p>
+<blockquote style="margin:0 0 20px;padding:12px 16px;background:#f6f7f9;border-left:3px solid #16181d;border-radius:4px;white-space:pre-wrap">${escape(fb.message)}</blockquote>
+${extra ? `<p style="margin:0 0 20px;color:#6b7280;font-size:12px">${escape(extra)}</p>` : ""}<p style="margin:0"><a href="${escape(admin)}" style="display:inline-block;background:#16181d;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px">All feedback</a></p>
+<p style="margin:16px 0 0;color:#6b7280;font-size:13px">Reply to this email to answer them.</p>`,
         ),
       });
     },
