@@ -31,6 +31,8 @@ import YAML from "yaml";
 
 import { tourRange } from "../web/src/tourRange.js";
 import { ruleBlock, ruleId, todoFor } from "../web/src/snippets.js";
+import { ICON_NAMES } from "../web/src/badgeArt.js";
+import { SKILL_RULES } from "../web/src/badges.js";
 
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("bash", bash);
@@ -754,6 +756,88 @@ export function loadQuests() {
   return { branches, modules, paths };
 }
 
+// --- Badges -----------------------------------------------------------------------------------
+
+// A class title is its boss badge's ribbon: longer than this doesn't fit.
+export const CLASS_TITLE_MAX = 20;
+const ROMAN = ["", "I", "II", "III", "IV", "V", "VI"];
+
+// Module ids as a criteria line reads them: runs of three or more as a range, the rest one by
+// one, in order: ["F1", …, "F7", "FC1", "FC2"] → "F1–F7, FC1 and FC2".
+export function idList(ids) {
+  const parse = (id) => {
+    const m = /^(.*?)(\d+)$/.exec(id);
+    return m ? { prefix: m[1], n: Number(m[2]) } : { prefix: id, n: null };
+  };
+  const sorted = [...ids].sort((a, b) => {
+    const [x, y] = [parse(a), parse(b)];
+    return x.prefix === y.prefix ? (x.n ?? 0) - (y.n ?? 0) : x.prefix.length - y.prefix.length || x.prefix.localeCompare(y.prefix);
+  });
+  const runs = [];
+  for (const id of sorted) {
+    const { prefix, n } = parse(id);
+    const last = runs.at(-1);
+    if (last && n !== null && last.prefix === prefix && last.to + 1 === n) {
+      last.to = n;
+      last.ids.push(id);
+    } else runs.push({ prefix, from: n, to: n, ids: [id] });
+  }
+  const items = runs.flatMap((r) => (r.ids.length >= 3 ? [`${r.prefix}${r.from}–${r.prefix}${r.to}`] : r.ids));
+  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+// Every badge, checked: a tier badge per tier that names one (branch.md), a boss badge per boss
+// (its class title), and the skill badges (quests/badges.yaml).
+export function loadBadges(quests) {
+  const badges = [];
+  const ids = new Set();
+  const add = (badge, source) => {
+    if (ids.has(badge.id)) throw new Error(`${source}: badge id ${badge.id} is taken`);
+    if (!ICON_NAMES.includes(badge.icon)) throw new Error(`${source}: badge icon ${badge.icon} isn't one of ${ICON_NAMES.join(", ")}`);
+    ids.add(badge.id);
+    badges.push(badge);
+  };
+  for (const branch of quests.branches) {
+    const source = `${QUESTS}/${branch.id}/branch.md`;
+    if (branch.classTitle && branch.classTitle.length > CLASS_TITLE_MAX) {
+      throw new Error(`${source}: classTitle "${branch.classTitle}" is over ${CLASS_TITLE_MAX} characters, too long for its badge`);
+    }
+    (branch.tiers ?? []).forEach((tier, i) => {
+      if (tier.badge === false) return;
+      if (!tier.badge?.name) throw new Error(`${source}: tier ${tier.name} has no badge name (badge: { name }, or badge: false for none)`);
+      const modules = branch.modules.filter((id) => quests.modules.get(id).tier === i + 1);
+      if (!modules.length) throw new Error(`${source}: tier ${tier.name}'s badge has no modules`);
+      add({
+        id: `${branch.id}-${i + 1}`,
+        kind: "tier",
+        name: tier.badge.name,
+        branch: branch.id,
+        color: branch.color,
+        icon: branch.badgeIcon,
+        tier: i + 1,
+        tierName: tier.name,
+        numeral: ROMAN[i + 1] ?? String(i + 1),
+        modules,
+        criteria: `Pass ${idList(modules)}`,
+      }, source);
+    });
+    if (branch.boss) {
+      if (!branch.classTitle) throw new Error(`${source}: a branch with a boss needs a classTitle, its boss badge`);
+      const boss = quests.modules.get(branch.boss);
+      add({ id: `${branch.id}-boss`, kind: "boss", name: branch.classTitle, branch: branch.id, color: branch.color, icon: branch.badgeIcon, module: boss.id, criteria: `Beat ${boss.title}` }, source);
+    }
+  }
+  const source = `${QUESTS}/badges.yaml`;
+  const skills = fs.existsSync(path.join(repoRoot, source)) ? (YAML.parse(read(source)) ?? []) : [];
+  for (const b of skills) {
+    for (const key of ["id", "name", "icon", "rule", "criteria"]) if (b[key] == null) throw new Error(`${source}: a badge has no ${key}`);
+    if (!SKILL_RULES.includes(b.rule)) throw new Error(`${source}: ${b.id}'s rule ${b.rule} isn't one of ${SKILL_RULES.join(", ")}`);
+    if (b.rule === "pass" && !quests.modules.has(b.module)) throw new Error(`${source}: ${b.id} passes ${b.module}, which isn't a module`);
+    add({ id: b.id, kind: "skill", name: b.name, icon: b.icon, rule: b.rule, ...(b.module ? { module: b.module } : {}), criteria: b.criteria }, source);
+  }
+  return badges;
+}
+
 // A challenge folder (challenge.md, scenario.py, recordings/): the question, its choices, and
 // each choice's recorded run. null for a module's folder.
 function loadChallenge(dir, branch) {
@@ -1011,6 +1095,7 @@ export function buildCourse() {
       ...(m.kind === "challenge" ? { after: m.after, before: m.before, choices: m.choices.length } : {}),
     })),
     paths: quests.paths.map((p) => ({ id: p.id, title: p.title, modules: p.modules })),
+    badges: loadBadges(quests),
   };
 }
 

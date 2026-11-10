@@ -8,6 +8,7 @@ quests/
   <branch>/<NN-slug>/module.md       a module: frontmatter, then the guide's text
   <branch>/<NN>x-<slug>/challenge.md  a challenge after module NN: its choices, run for real
   paths/<path>.yaml                  a path, and (for now) the exercises the site shows it as
+  badges.yaml                        the skill badges
 ```
 
 The folder's `NN-` sets a module's order in its branch. Its `id` (`F2`, `A4`, `N3`) is what everything else uses: `requires`, the authoring markers, `./quest`, the site. An id is a stable label rather than a position: a module added later between A4 and A5 gets a new id, and nothing is renumbered.
@@ -21,21 +22,40 @@ The site (`course/content/build.mjs`) and the scripts (`scripts/quests.py`) both
 id: ai-agent                 # its folder's name
 name: AI Agent
 icon: 🤖
+badgeIcon: robot             # its badges' drawn icon (course/web/src/badgeArt.js)
 color: violet
 order: 2                     # its place in lists
 column: 1                    # its column on the map, 1-5 (none: the trunk)
-classTitle: AI Agent Specialist   # earned by beating its boss
+classTitle: AI Agent Specialist   # its boss badge: at most 20 characters
 worker: uv run travel-worker      # its modules' default worker command
 agentUi: true                     # false: its modules have no Agent UI tab
 tiers:                            # rows on the map; a module's `tier` is 1-based
   - name: Durable agents
+    badge:                        # earned by passing every module and challenge in the tier
+      name: Unkillable Agent
   - name: Governance
+    badge: false                  # a tier with no badge
 ---
 
 What the branch is about, in a sentence or two.
 ```
 
 A branch's boss is `boss/boss.md`: frontmatter only (`id`, `title`, `teaser`, `learn` (what it tests), `xp`, `requires`, `status`), drawn at the bottom of its branch's column. Its quiz comes with issue 03.
+
+## Badges
+
+Every tier with a `badge` earns one, named there, for passing all its modules and challenges. Every boss earns its branch's `classTitle`. The criteria line ("Pass F1–F7, FC1 and FC2") is generated from the content. `badges.yaml` lists the skill badges, each earned once across the course:
+
+```yaml
+- id: cross-team                     # stable: it's what a learner's earned badge records
+  name: Cross-Team
+  icon: link                         # one of badgeArt.js's icons
+  rule: pass                         # clean-run | no-peeking | flawless | explorer | pass
+  module: N5                         # pass only: the module to pass
+  criteria: "Pass N5: a workflow calls another team's agent"
+```
+
+The rules live in `course/web/src/badges.js`. A badge, once earned, is kept: renaming or regrouping a tier doesn't take it away, but changing its `id` (a tier's is `<branch>-<n>`) does. [Issue 09](../.scratch/temporal-quest/issues/09-badges.md) has the design.
 
 ## module.md
 

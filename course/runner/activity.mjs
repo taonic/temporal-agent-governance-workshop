@@ -5,14 +5,20 @@
 // Events are append-only rows: { user_id, type, module_id, data, at }. The server records sign-
 // ins, the sandbox's lifecycle, helper questions, model-call counts and admin actions; the page
 // sends what happens in it (BROWSER_EVENTS).
+//
+// Badges are derived too (web/src/badges.js), and kept: the first time the server finds one
+// earned, it records a badge_earned event, so a badge stays earned when its tier grows later.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { badgeContext, earnedNow } from "../web/src/badges.js";
 import { xpFor } from "../web/src/challenge.js";
 import { transaction } from "./db.mjs";
 
-export const BROWSER_EVENTS = new Set(["module_opened", "module_passed", "check_failed", "challenge_pick", "boss_result", "path_set"]);
+export const BROWSER_EVENTS = new Set(["module_opened", "module_passed", "check_failed", "challenge_pick", "boss_result", "path_set", "solution_used"]);
+// The events that can change which badges are earned.
+const BADGE_INPUTS = new Set(["module_passed", "challenge_pick", "boss_result", "solution_used"]);
 // A heartbeat counts for at most this much time on its module (one every 60s, with slack).
 const HEARTBEAT_MAX_SECONDS = 90;
 // Someone on one module this long without passing it, and still there, is stuck.
@@ -44,10 +50,14 @@ export function catalogOf(data) {
     }
   }
   const paths = new Map((data?.paths ?? []).map((p) => [p.id, p]));
+  const badges = data?.badges ?? [];
   return {
     loaded: Boolean(data),
     modules,
     paths,
+    badges,
+    badgesById: new Map(badges.map((b) => [b.id, b])),
+    badgeContext: badgeContext([...modules.values()], (id) => right.get(id) ?? null),
     rightChoice: (id) => right.get(id) ?? null,
     choiceLabel: (id, choice) => choices.get(id)?.get(choice) ?? choice,
     knows: (id) => (data ? modules.has(id) : /^[A-Za-z0-9-]{1,40}$/.test(String(id ?? ""))),
@@ -60,10 +70,20 @@ export function catalogOf(data) {
   };
 }
 
-// Progress from a learner's events, in order: { completed, attempts, path, xp }.
+// Progress from a learner's events, in order: { completed, attempts, path, xp, solutionUsed,
+// badges, unrecorded }.
+//
+// badges: [{ id, at }], every badge earned, oldest first: those recorded (badge_earned), and
+// those the events earn, at the event that earned each. A badge counts once its criteria were
+// met, even if they aren't now (a module peeked at after its branch was done). unrecorded: the
+// ids among them with no badge_earned event yet.
 export function deriveProgress(events, catalog) {
   const completed = [];
   const attempts = {};
+  const solutionUsed = [];
+  const bossResults = [];
+  const recorded = new Map(); // badge id -> when it was earned
+  const derived = new Map();
   let path = null;
   for (const e of events) {
     const data = typeof e.data === "string" ? JSON.parse(e.data || "{}") : (e.data ?? {});
@@ -74,9 +94,21 @@ export function deriveProgress(events, catalog) {
       // As the page records them (challenge.js addPick): nothing after the right one, no repeats.
       if (!picks.includes(data.choice) && !(right && picks.includes(right))) attempts[e.module_id] = [...picks, data.choice];
     } else if (e.type === "path_set") path = data.path ?? null;
+    else if (e.type === "solution_used" && e.module_id && !solutionUsed.includes(e.module_id)) solutionUsed.push(e.module_id);
+    else if (e.type === "boss_result" && e.module_id) bossResults.push({ won: Boolean(data.won), hearts: Number(data.hearts) || 0 });
+    else if (e.type === "badge_earned" && data.badge && !recorded.has(data.badge)) recorded.set(data.badge, data.earnedAt ?? e.at);
+    if (BADGE_INPUTS.has(e.type) && catalog.badges?.length) {
+      for (const id of earnedNow(catalog.badges, catalog.badgeContext, { completed, attempts, solutionUsed, bossResults })) {
+        if (!derived.has(id)) derived.set(id, e.at ?? null);
+      }
+    }
   }
   const xp = completed.reduce((sum, id) => sum + catalog.xpOf(id, attempts), 0);
-  return { completed, attempts, path, xp };
+  // A badge no longer in the content is dropped.
+  const earned = new Map([...derived, ...recorded].filter(([id]) => !catalog.badgesById || catalog.badgesById.has(id)));
+  const badges = [...earned].map(([id, at]) => ({ id, at })).sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
+  const unrecorded = badges.filter((b) => !recorded.has(b.id)).map((b) => b.id);
+  return { completed, attempts, path, xp, solutionUsed, badges, unrecorded };
 }
 
 export class Activity {
@@ -110,6 +142,7 @@ export class Activity {
         recorded++;
       }
     });
+    if (list.some((e) => BADGE_INPUTS.has(e?.type)) && recorded) this.awardBadges(userId);
     return recorded;
   }
 
@@ -117,11 +150,25 @@ export class Activity {
     return this.db.prepare("SELECT * FROM events WHERE user_id = ? ORDER BY at, id").all(userId);
   }
 
-  // A learner's progress. The path is the one they picked, else their cohort's.
+  // A learner's progress. The path is the one they picked, else their cohort's. Badges earned
+  // and not yet recorded are recorded now (kept from then on).
   progress(userId, cohortPath = null) {
-    const derived = deriveProgress(this.eventsOf(userId), this.catalog);
+    const { unrecorded, ...derived } = this.awardBadges(userId);
     const picked = this.db.prepare("SELECT 1 FROM events WHERE user_id = ? AND type = 'path_set' LIMIT 1").get(userId);
     return { ...derived, path: picked ? derived.path : (cohortPath ?? null) };
+  }
+
+  // Records a badge_earned event for each badge the learner's events earn that has none yet,
+  // with when it was earned. Returns their progress.
+  awardBadges(userId) {
+    const derived = deriveProgress(this.eventsOf(userId), this.catalog);
+    if (derived.unrecorded.length) {
+      const at = new Map(derived.badges.map((b) => [b.id, b.at]));
+      transaction(this.db, () => {
+        for (const id of derived.unrecorded) this.record(userId, "badge_earned", null, { badge: id, earnedAt: at.get(id) ?? this.now() });
+      });
+    }
+    return derived;
   }
 
   // At a learner's first sign-in, the progress this browser had: recorded as events (source:

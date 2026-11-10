@@ -1,0 +1,34 @@
+# Skill badges: earned once across the whole course, for how a learner learned rather than
+# what they covered. Each has a rule the site knows (web/src/badges.js):
+#   clean-run   every challenge in a branch right on the first pick
+#   no-peeking  every module and challenge in a branch passed without the solution
+#   flawless    a boss beaten without losing a heart
+#   explorer    a module passed in every branch
+#   pass        the module named by `module`
+# Tier badges are named in each branch.md, under its tier; boss badges are its classTitle.
+- id: clean-run
+  name: Clean Run
+  icon: bolt
+  rule: clean-run
+  criteria: Every challenge in a branch right on the first try
+- id: no-peeking
+  name: No Peeking
+  icon: closed-eye
+  rule: no-peeking
+  criteria: Finish a branch without peeking at the solution
+- id: flawless
+  name: Flawless
+  icon: hearts
+  rule: flawless
+  criteria: Beat a boss without losing a heart
+- id: explorer
+  name: Explorer
+  icon: compass
+  rule: explorer
+  criteria: Pass a module in every branch
+- id: cross-team
+  name: Cross-Team
+  icon: link
+  rule: pass
+  module: N5
+  criteria: "Pass N5: a workflow calls another team's agent"

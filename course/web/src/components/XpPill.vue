@@ -1,10 +1,11 @@
 <script setup>
-// Your level and XP, in the top bar: a link to the map. Earning XP floats "+10 XP" off it, and
-// a new level gets confetti.
+// Your class title (its boss badge), level and XP, in the top bar: a link to your badges.
+// Earning XP floats "+10 XP" off it, and a new level gets confetti.
 import { ref, watch } from "vue";
 
+import BadgeMedal from "./BadgeMedal.vue";
 import { launchConfetti } from "../confetti.js";
-import { LEVEL_XP, level, levelXp, modulesById, progress, xp } from "../progress.js";
+import { LEVEL_XP, level, levelXp, modulesById, progress, title, titleBadge, xp } from "../progress.js";
 import { toast } from "../store.js";
 
 const gains = ref([]);
@@ -23,7 +24,7 @@ watch(
     if (gain.levelUp) {
       toast(`Level ${gain.levelUp}! ${m.id} · ${m.title} done`, 3600);
       try {
-        launchConfetti();
+        if (!progress.lastBadges || progress.lastBadges.at < gain.at) launchConfetti();
       } catch {
         /* best effort */
       }
@@ -35,7 +36,11 @@ watch(
 </script>
 
 <template>
-  <a class="xp-pill" :class="{ 'is-bumped': bump }" href="#/" :title="`Level ${level} · ${xp} XP: open the skill tree`" @animationend="bump = false">
+  <a class="xp-pill" :class="{ 'is-bumped': bump }" href="#/badges" :title="`${title} · Level ${level} · ${xp} XP: your badges`" @animationend="bump = false">
+    <span class="xp-pill-title">
+      <BadgeMedal v-if="titleBadge" :badge="titleBadge" earned :size="22" />
+      <span class="xp-pill-title-text">{{ title }}</span>
+    </span>
     <span class="xp-pill-level">Lv {{ level }}</span>
     <span class="xp-bar xp-pill-bar" aria-hidden="true"><span :style="{ width: `${(levelXp / LEVEL_XP) * 100}%` }" /></span>
     <span class="xp-pill-xp">{{ xp }} XP</span>

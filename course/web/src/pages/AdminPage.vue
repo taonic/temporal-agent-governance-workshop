@@ -54,6 +54,8 @@ const EVENT_LABELS = {
   challenge_pick: "picked in",
   boss_result: "fought",
   path_set: "chose a path",
+  solution_used: "used the solution in",
+  badge_earned: "earned a badge:",
   helper_question: "asked Temporal a question",
   model_calls: "made model calls",
   sandbox_create: "created a sandbox",
@@ -82,6 +84,7 @@ function eventText(e) {
   if (["cohort_created", "cohort_saved"].includes(e.type)) return `${label}: ${d.cohort}`;
   if (e.type === "feedback_sent") return `${label}${d.kind ? ` (${d.kind})` : ""}${e.moduleId ? ` on ${moduleLabel(e.moduleId)}` : ""}`;
   if (e.type === "boss_result") return `${label} ${e.moduleId}: ${d.won ? "won" : "lost"}`;
+  if (e.type === "badge_earned") return `${label} ${course.badges?.find((b) => b.id === d.badge)?.name ?? d.badge}`;
   if (e.moduleId) return `${label} ${moduleLabel(e.moduleId)}`;
   return label;
 }
@@ -367,6 +370,11 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
             <h3>Bosses</h3>
             <ul v-if="journey.bosses.length" class="admin-list">
               <li v-for="(b, i) in journey.bosses" :key="i">{{ moduleLabel(b.moduleId) }}: {{ b.won ? "won" : "lost" }} · {{ when(b.at) }}</li>
+            </ul>
+            <p v-else class="admin-muted">None yet.</p>
+            <h3>Badges</h3>
+            <ul v-if="journey.badges?.length" class="admin-list">
+              <li v-for="b in journey.badges" :key="b.id"><strong>{{ b.name }}</strong> <span class="admin-muted">{{ b.kind }}</span> · {{ when(b.at) }}</li>
             </ul>
             <p v-else class="admin-muted">None yet.</p>
             <h3>Sandbox sessions</h3>

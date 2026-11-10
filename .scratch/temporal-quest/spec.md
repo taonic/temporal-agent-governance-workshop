@@ -132,6 +132,7 @@ A **challenge** is a checkpoint every 3–4 modules that tests what the learner 
 - **Levels:** one every 50 XP.
 - **Title:** the **class title** of the last boss beaten (for example "Payments Specialist"), or "Initiate" before any boss.
 - **Gates are soft.** Locked nodes look locked and warn you, but you can still enter them.
+- **Badges** for each tier finished, each boss beaten (its class title) and a few ways of learning, on a shelf at `#/badges`. Agreed on 2026-11-10; the full spec is in [issue 09](issues/09-badges.md).
 
 ## Map and navigation
 

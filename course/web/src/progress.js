@@ -6,8 +6,12 @@
 //
 // While signed in, the page also tells the server which module is open, once a minute while the
 // tab is visible (a heartbeat): that's how time on a module is measured.
+//
+// Badges (badges.js) are kept once earned: { id: when }, from the server and from what this page
+// sees the learner earn. Earning one here sets lastBadges, for the earn moment (EarnMoment.vue).
 import { computed, reactive, watch } from "vue";
 
+import { badgeContext, earnedNow, isComingSoon, missingFor as badgeMissingFor } from "./badges.js";
 import { addPick, xpFor } from "./challenge.js";
 import { api, course, load, save, store } from "./store.js";
 
@@ -45,9 +49,17 @@ export const progress = reactive({
   mapView: load("map-view", null),
   // The last XP earned, for the top bar's animation: { id, amount, levelUp, at }.
   lastGain: null,
+  // The modules whose solution the learner peeked at or applied (No Peeking).
+  solutionUsed: load("solution-used", []),
+  // The badges earned, and when: { "fundamentals-1": 1762765200000 }.
+  badges: load("badges", {}),
+  // The badges just earned, for the earn moment: { ids, at }.
+  lastBadges: null,
 });
 
 watch(() => progress.completed, (ids) => save("modules", ids), { deep: true });
+watch(() => progress.solutionUsed, (ids) => save("solution-used", ids), { deep: true });
+watch(() => progress.badges, (badges) => save("badges", badges), { deep: true });
 watch(() => progress.attempts, (picks) => save("attempts", picks), { deep: true });
 watch(() => progress.path, (id) => save("path", id));
 
@@ -96,6 +108,9 @@ async function syncFromServer() {
     syncing = true;
     progress.completed = [...server.completed, ...unsent].filter((id) => modulesById.has(id));
     progress.attempts = mine ? { ...progress.attempts, ...server.attempts } : server.attempts;
+    progress.solutionUsed = [...new Set([...(mine ? progress.solutionUsed : []), ...(server.solutionUsed ?? [])])];
+    const kept = Object.fromEntries((server.badges ?? []).filter((b) => badgesById.has(b.id)).map((b) => [b.id, b.at ?? Date.now()]));
+    progress.badges = mine ? { ...progress.badges, ...kept } : kept;
     save("progress-owner", email);
     if (!pathFromUrl) progress.path = course.paths.some((p) => p.id === server.path) ? server.path : null;
     else if (server.path !== progress.path) track("path_set", null, { path: progress.path });
@@ -137,11 +152,44 @@ export function xpOf(id) {
 export const xp = computed(() => progress.completed.reduce((sum, id) => sum + xpOf(id), 0));
 export const level = computed(() => Math.floor(xp.value / LEVEL_XP) + 1);
 export const levelXp = computed(() => xp.value % LEVEL_XP);
-// The class title of the last boss beaten; "Initiate" before any.
-export const title = computed(() => {
-  const boss = [...progress.completed].reverse().map((id) => modulesById.get(id)).find((m) => m?.kind === "boss");
-  return boss ? branchesById.get(boss.branch).classTitle : "Initiate";
-});
+// --- Badges -------------------------------------------------------------------------------------
+
+export const badges = course.badges ?? [];
+export const badgesById = new Map(badges.map((b) => [b.id, b]));
+const badgeCtx = badgeContext(course.modules, (id) => rightChoice(id));
+const badgeState = () => ({ completed: progress.completed, attempts: progress.attempts, solutionUsed: progress.solutionUsed, bossResults: [] });
+// The badges the learner meets now. Any not kept yet are kept, quietly (what the server sent, or
+// a sign-in's progress): only one earned on this page gets an earn moment (complete, below).
+const meetsNow = computed(() => earnedNow(badges, badgeCtx, badgeState()));
+watch(
+  meetsNow,
+  (ids) => {
+    const fresh = ids.filter((id) => !(id in progress.badges));
+    if (fresh.length) progress.badges = { ...progress.badges, ...Object.fromEntries(fresh.map((id) => [id, Date.now()])) };
+  },
+  { immediate: true },
+);
+export const isEarned = (id) => id in progress.badges || meetsNow.value.includes(id);
+export const earnedCount = computed(() => badges.filter((b) => isEarned(b.id)).length);
+// What an earned badge's tier has gained since (it's kept): the modules not done.
+export const badgeMissing = (badge) => badgeMissingFor(badge, badgeCtx, progress.completed);
+export const badgeComingSoon = (badge) => isComingSoon(badge, badgeCtx);
+
+// The class title: the boss badge earned last. "Initiate" before any.
+export const titleBadge = computed(() =>
+  badges
+    .filter((b) => b.kind === "boss" && isEarned(b.id))
+    .sort((a, b) => (progress.badges[a.id] ?? 0) - (progress.badges[b.id] ?? 0))
+    .at(-1) ?? null,
+);
+export const title = computed(() => titleBadge.value?.name ?? "Initiate");
+
+// The learner peeked at or applied a module's solution: once per module.
+export function markSolutionUsed(id) {
+  if (!id || !modulesById.has(id) || progress.solutionUsed.includes(id)) return;
+  progress.solutionUsed = [...progress.solutionUsed, id];
+  track("solution_used", id);
+}
 
 export const isDone = (id) => progress.completed.includes(id);
 export const isPlayable = (m) => m.status === "ready" && ["module", "challenge"].includes(m.kind) && Boolean(m.exercise);
@@ -223,6 +271,12 @@ export function complete(id) {
   progress.completed = [...progress.completed, id];
   progress.lastGain = { id, amount: xpOf(id), levelUp: level.value > before ? level.value : null, at: Date.now() };
   track("module_passed", id);
+  const fresh = meetsNow.value.filter((b) => !(b in progress.badges));
+  if (fresh.length) {
+    const at = Date.now();
+    progress.badges = { ...progress.badges, ...Object.fromEntries(fresh.map((b) => [b, at])) };
+    progress.lastBadges = { ids: fresh, at };
+  }
 }
 
 // The right choice of a challenge, from the exercise that has it.
@@ -243,6 +297,8 @@ export function pick(id, choiceId) {
 export function forgetProgress() {
   progress.completed = [];
   progress.attempts = {};
+  progress.solutionUsed = [];
+  progress.badges = {};
 }
 
 // What Continue opens: on a path, its first module not done; otherwise the first playable module

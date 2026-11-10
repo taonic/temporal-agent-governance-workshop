@@ -178,6 +178,29 @@ test.describe("the site, signed out", { tag: "@public" }, () => {
     await expect(page.locator('.focus-node[data-module="F8"]')).toHaveClass(/is-next/);
   });
 
+  test("a finished tier's badge shows on the map and the shelf, and the next tier's says what earns it", async ({ page }) => {
+    await page.addInitScript(([key, view]) => {
+      localStorage.setItem(key, JSON.stringify(["F1", "F2", "F3", "F4", "F5", "FC1", "F6", "F7", "FC2"]));
+      localStorage.setItem(view, JSON.stringify("focus"));
+    }, [storageKey("modules"), storageKey("map-view")]);
+    await page.goto("/");
+    await expect(page.locator(".focus-reward")).toContainText("Finish this tier to earn Blocksmith");
+    await page.getByRole("button", { name: "Full map", exact: true }).click();
+    await expect(page.locator('.map-tier-badge[data-badge="fundamentals-1"]')).toHaveAttribute("data-earned", "true");
+    await expect(page.locator('.map-tier-badge[data-badge="fundamentals-2"]')).not.toHaveAttribute("data-earned");
+    // The top bar's pill opens the shelf.
+    await page.locator(".xp-pill").click();
+    await expect(page).toHaveURL(/#\/badges$/);
+    await expect(page.locator(".badges-head h1")).toContainText("of 19 earned");
+    const earned = page.locator('.badge-card[data-badge="fundamentals-1"]');
+    await expect(earned).toContainText("Survived the Crash");
+    await expect(earned).toContainText("Earned");
+    const next = page.locator('.badge-card[data-badge="fundamentals-2"]');
+    await expect(next).toHaveClass(/is-locked/);
+    await expect(next).toContainText("Pass F8–F13 and FC3");
+    await expect(page.locator('.badge-card[data-badge="fundamentals-boss"]')).toContainText("Coming soon");
+  });
+
   test("selecting a node says what it needs first, and one coming soon can't be entered", async ({ page }) => {
     await wholeMap(page);
     await page.getByRole("button", { name: "Full map", exact: true }).click();

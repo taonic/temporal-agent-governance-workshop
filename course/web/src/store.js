@@ -39,6 +39,7 @@ function parseRoute() {
   const hash = window.location.hash.replace(/^#\/?/, "");
   const [page, id] = hash.split("/");
   if (page === "setup") return { page: "setup" };
+  if (page === "badges") return { page: "badges" };
   if (page === "admin") return { page: "admin", id: id || "learners" };
   if (page === "exercise" && course.exercises.some((e) => e.id === id)) return { page: "exercise", id };
   if (page === "module") {

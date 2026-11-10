@@ -14,6 +14,7 @@ import MaximizeButton from "../components/MaximizeButton.vue";
 import SandboxPanes from "../components/SandboxPanes.vue";
 import TerminalDock from "../components/TerminalDock.vue";
 import Tour from "../Tour.vue";
+import { markSolutionUsed, moduleOfBeat } from "../progress.js";
 import {
   api,
   applyAllowance,
@@ -310,6 +311,7 @@ function solve() {
   const editable = exercise.value.files.filter((f) => f.editable && !f.scratch).map((f) => f.path).join(", ");
   if (window.confirm(`This runs ${exercise.value.scripts.solve}, replacing ${editable || "the exercise's files"} with the official solution.`)) {
     runInTerminal("commands", [exercise.value.scripts.solve], { interrupt: true });
+    markSolutionUsed(store.route.module ?? moduleOfBeat(exercise.value, store.guideBeat));
   }
 }
 

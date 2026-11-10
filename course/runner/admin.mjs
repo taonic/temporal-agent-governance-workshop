@@ -150,6 +150,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         picks: picks.map((choice) => ({ choice, label: catalog.choiceLabel(id, choice), right: choice === catalog.rightChoice(id) })),
       })),
       bosses,
+      badges: progress.badges.map((b) => ({ ...b, name: catalog.badgesById?.get(b.id)?.name ?? b.id, kind: catalog.badgesById?.get(b.id)?.kind ?? null })),
       sandbox: { sessions: sessions.slice(-20), minutesToday: activity.sandboxMinutesToday(userId) },
       helperQuestions,
       modelCalls,

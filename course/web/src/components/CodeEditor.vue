@@ -22,6 +22,7 @@ import { helper, openHelper } from "../helper.js";
 import { createLsp } from "../lsp.js";
 import { dedent, findSnippet, indentLines, ruleBlock, ruleId, shape, todoFor } from "../snippets.js";
 import { codeTour, currentStop, startCodeTour } from "../codeTour.js";
+import { markSolutionUsed, moduleOfBeat } from "../progress.js";
 import { api, registerHook, store, toast } from "../store.js";
 import { tourRange } from "../tourRange.js";
 import CodeTour from "./CodeTour.vue";
@@ -51,6 +52,8 @@ const tabs = computed(() => files.value.filter((file) => onBeat(file) || file.pa
 const active = ref(firstOnBeat());
 // "mine": your copy (the sandbox's, or the starter while it isn't ready); "solution".
 const view = ref("mine");
+// Peeking at the solution counts against No Peeking, for the module on show.
+watch(view, (v) => v === "solution" && markSolutionUsed(store.route.module ?? moduleOfBeat(props.exercise, store.guideBeat)));
 const docs = reactive({}); // path -> { text, saved, stamp, loading, saving, conflict }
 const host = ref(null);
 let editor = null;

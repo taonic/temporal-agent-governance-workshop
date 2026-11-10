@@ -6,12 +6,14 @@
 // trunk go to the branches that open after it.
 //
 // A click (or Enter) on a node selects it: the detail panel says what it is and how to start.
-// On a path, its modules are numbered in order, and the rest of the tree steps back.
+// On a path, its modules are numbered in order, and the rest of the tree steps back. A tier with
+// a badge leads its label with it, filled once earned: a link to the badge shelf.
 import { computed } from "vue";
 
 import NodeGlyph from "./NodeGlyph.vue";
+import { medalSvg } from "../badgeArt.js";
 import { course } from "../store.js";
-import { STATE_LABEL, activePath, branchesById, gatesOf, isDone, isPlayable, modulesById, opensAfter, routeTo, stateOf, trunk, trunkTail } from "../progress.js";
+import { STATE_LABEL, activePath, badges, branchesById, gatesOf, isDone, isEarned, isPlayable, modulesById, opensAfter, routeTo, stateOf, trunk, trunkTail } from "../progress.js";
 
 const props = defineProps({
   selected: { type: String, default: null },
@@ -30,6 +32,8 @@ const STEP = 112; // between nodes in a trunk row
 const LINE = 14; // a label's line height
 const NODE = 40; // a node's glyph
 const BOSS = 48;
+const MEDAL = 24; // a tier's badge, before its label
+const tierBadge = (branch, tier) => badges.find((b) => b.kind === "tier" && b.branch === branch && b.tier === tier) ?? null;
 
 // A title, wrapped into lines of at most `chars`, at most `max` lines.
 function wrap(text, chars, max) {
@@ -67,8 +71,8 @@ const layout = computed(() => {
     const lines = [kicker(id), ...wrap(title(id), 16, id === trunk.boss ? 2 : 3)];
     nodes.set(id, { x, y: rowY[1], label: { x, y: rowY[1] + (id === trunk.boss ? 40 : 36), anchor: "middle", lines } });
   });
-  tierLabels.push({ key: "trunk-1", x: startX - 26, y: rowY[0] - 40, text: `Tier I · ${trunk.tiers[0].name}` });
-  tierLabels.push({ key: "trunk-2", x: startX - 26, y: rowY[1] - 40, text: `Tier II · ${trunk.tiers[1].name}` });
+  tierLabels.push({ key: "trunk-1", x: startX - 26, y: rowY[0] - 40, text: `Tier I · ${trunk.tiers[0].name}`, badge: tierBadge(trunk.id, 1) });
+  tierLabels.push({ key: "trunk-2", x: startX - 26, y: rowY[1] - 40, text: `Tier II · ${trunk.tiers[1].name}`, badge: tierBadge(trunk.id, 2) });
   // The turn from tier I's end down to tier II's start, outside both rows' labels.
   const turn = { from: tierOne.at(-1), to: tierTwo[0], x: rightX + 60 };
   const trunkZone = { branch: trunk, x: 16, y: 12, w: W - 32, h: rowY[1] + 92 - 12 };
@@ -88,7 +92,7 @@ const layout = computed(() => {
     branch.tiers.forEach((tier, t) => {
       const ids = branch.modules.filter((id) => modulesById.get(id).tier === t + 1);
       if (!ids.length) return;
-      tierLabels.push({ key: `${branch.id}-${t}`, branch, x: left + 18, y, text: `${roman(t + 1)} · ${tier.name}` });
+      tierLabels.push({ key: `${branch.id}-${t}`, branch, x: left + 18, y, text: `${roman(t + 1)} · ${tier.name}`, badge: tierBadge(branch.id, t + 1) });
       y += 30;
       for (const id of ids) {
         const lines = [kicker(id), ...wrap(title(id), 21, 3)];
@@ -211,7 +215,13 @@ const nodeLabel = (m) =>
         <text v-if="!zone.branch.modules.some((id) => isPlayable(modulesById.get(id)))" class="map-header-soon" :x="zone.head.x" :y="zone.head.y + 42" text-anchor="middle">Coming soon</text>
       </g>
 
-      <text v-for="label in layout.tierLabels" :key="`tier-${label.key}`" :class="['map-tier', { 'off-route': label.branch && zoneOff(label.branch) }]" :x="label.x" :y="label.y">{{ label.text }}</text>
+      <g v-for="label in layout.tierLabels" :key="`tier-${label.key}`" :class="{ 'off-route': label.branch && zoneOff(label.branch) }">
+        <a v-if="label.badge" class="map-tier-badge" href="#/badges" :data-badge="label.badge.id" :data-earned="isEarned(label.badge.id) || null">
+          <title>{{ label.badge.name }}{{ isEarned(label.badge.id) ? " · earned" : `: ${label.badge.criteria}` }}</title>
+          <g :transform="`translate(${label.x} ${label.y - 19})`" v-html="medalSvg(label.badge, { earned: isEarned(label.badge.id), size: MEDAL })" />
+        </a>
+        <text class="map-tier" :x="label.badge ? label.x + MEDAL + 5 : label.x" :y="label.y">{{ label.text }}</text>
+      </g>
 
       <!-- Prerequisites. -->
       <path v-for="edge in edges" :key="edge.key" :class="['map-edge', `branch-${edge.color}`, { 'is-lit': edge.lit, 'is-faint': edge.faint, 'off-route': offRoute(edge.from) || offRoute(edge.to) }]" :d="edge.d" />

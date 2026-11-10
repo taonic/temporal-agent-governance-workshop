@@ -4,6 +4,7 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import Tour from "./Tour.vue";
 import AccessForm from "./components/AccessForm.vue";
 import AskSelection from "./components/AskSelection.vue";
+import EarnMoment from "./components/EarnMoment.vue";
 import FeedbackForm from "./components/FeedbackForm.vue";
 import ModuleNav from "./components/ModuleNav.vue";
 import WelcomeIntro from "./components/WelcomeIntro.vue";
@@ -11,6 +12,7 @@ import XpPill from "./components/XpPill.vue";
 import { closeFeedback, feedback, openFeedback } from "./feedback.js";
 import { closeHelper, helper, refreshHelper, resumeAfterConnect, toggleHelper } from "./helper.js";
 import { shouldShowIntro } from "./intro.js";
+import BadgesPage from "./pages/BadgesPage.vue";
 import ExercisePage from "./pages/ExercisePage.vue";
 import MapPage from "./pages/MapPage.vue";
 import SetupPage from "./pages/SetupPage.vue";
@@ -128,7 +130,7 @@ watch(
     menuOpen.value = false;
     accountOpen.value = false;
     closeFeedback(); // it's about the page it was opened on (its draft is kept)
-    if (store.route.page === "home" || store.route.page === "admin") closeHelper();
+    if (["home", "admin", "badges"].includes(store.route.page)) closeHelper();
     window.scrollTo({ top: 0 });
   },
 );
@@ -179,7 +181,7 @@ function onShortcut(event) {
     return;
   }
   if (event.key.toLowerCase() !== "k" || event.shiftKey || event.altKey || !(isMac ? event.metaKey : event.ctrlKey)) return;
-  if (store.route.page === "home" || store.route.page === "admin") return; // no Ask Temporal there
+  if (["home", "admin", "badges"].includes(store.route.page)) return; // no Ask Temporal there
   if (!isMac && event.target instanceof Element && event.target.closest(".xterm")) return;
   event.preventDefault();
   // A read-only editor never has focus, so where the selection is decides, not focus.
@@ -246,7 +248,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
         <a v-else-if="store.route.page !== 'home'" class="button button-secondary" href="#/">Map</a>
         <XpPill />
         <!-- Not on the map or in the admin panel: there, the tree (or the panel) is the only thing to do. -->
-        <template v-if="store.route.page !== 'home' && store.route.page !== 'admin' && !gated">
+        <template v-if="!['home', 'admin', 'badges'].includes(store.route.page) && !gated">
           <div v-if="store.runtime.enabled" class="sandbox-menu" data-tour="sandbox-menu">
             <button class="button sandbox-pill" :class="`state-${sandboxPillState}`" type="button" :aria-expanded="menuOpen" @click="menuOpen = !menuOpen">
               <span class="sandbox-dot" aria-hidden="true" />{{ sandboxLabel }}
@@ -306,6 +308,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
     <p v-else-if="allowanceNote" class="waiting-banner" role="status">{{ allowanceNote }}</p>
     <MapPage v-if="store.route.page === 'home'" />
     <SetupPage v-else-if="store.route.page === 'setup'" />
+    <BadgesPage v-else-if="store.route.page === 'badges'" />
     <AdminPage v-else-if="store.route.page === 'admin' && store.user?.admin" />
     <section v-else-if="store.route.page === 'admin'" class="sign-in-page">
       <div class="sign-in-card">
@@ -325,6 +328,8 @@ watch(() => store.user, (user) => !user && closeFeedback());
     </section>
     <ExercisePage v-else-if="exercise && store.authenticated" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
   </div>
+
+  <EarnMoment />
 
   <div v-if="store.gateOpen" class="modal-backdrop" @click.self="store.gateOpen = false">
     <div class="modal" role="dialog" aria-modal="true" aria-label="Sign in">

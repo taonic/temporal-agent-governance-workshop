@@ -6,9 +6,10 @@
 // full map is one click away.
 import { computed, nextTick, ref, watch } from "vue";
 
+import BadgeMedal from "./BadgeMedal.vue";
 import NodeTrail from "./NodeTrail.vue";
 import { course } from "../store.js";
-import { branchesById, isDone, isPlayable, mapOrder, modulesById, opensAfter, recommended, routeTo, trunk, trunkTail } from "../progress.js";
+import { badges, branchesById, isDone, isEarned, isPlayable, mapOrder, modulesById, opensAfter, recommended, routeTo, trunk, trunkTail } from "../progress.js";
 
 const props = defineProps({ selected: { type: String, default: null } });
 const emit = defineEmits(["select", "expand", "branch"]);
@@ -104,6 +105,8 @@ async function toggle(b) {
   expanded.value?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 const roman = (n) => ["", "I", "II", "III", "IV", "V"][n] ?? String(n);
+// The badge the tier on show earns, if it has one.
+const shownBadge = computed(() => badges.find((b) => b.kind === "tier" && b.branch === shown.value.branch.id && b.tier === shown.value.n) ?? null);
 </script>
 
 <template>
@@ -115,6 +118,11 @@ const roman = (n) => ["", "I", "II", "III", "IV", "V"][n] ?? String(n);
         {{ shown.modules.length }} short steps, about {{ shown.minutes }} minutes in all · {{ shown.done }} of {{ shown.total }} done
         <button v-if="shown.key !== here.key" type="button" class="focus-link" @click="picked = null">· Back to where you are</button>
       </p>
+      <a v-if="shownBadge" class="focus-reward" href="#/badges" :data-badge="shownBadge.id">
+        <BadgeMedal :badge="shownBadge" :earned="isEarned(shownBadge.id)" :size="44" />
+        <span v-if="isEarned(shownBadge.id)">Earned <strong>{{ shownBadge.name }}</strong></span>
+        <span v-else>Finish this tier to earn <strong>{{ shownBadge.name }}</strong></span>
+      </a>
     </header>
 
     <div class="focus-tabs" role="tablist" aria-label="Tiers">
