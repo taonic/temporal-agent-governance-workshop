@@ -352,7 +352,8 @@ export const WALKTHROUGHS = {
     await l.step("Hold a seat");
     await l.openFile("hello/hold.py");
     await l.insert();
-    await l.worker("running");
+    // "Restart the worker": the step's restart starts it, stopped as it is after Start over.
+    await l.restartWorker();
     expect(await l.runButton("uv run hello-hold 12A 20"), "hello-hold didn't start the hold").toBe(0);
     await l.openInTemporal("button[data-workflow-open]");
     await expect(l.temporal.getByText("Running", { exact: true }).first(), "the hold should be Running while it waits").toBeVisible({ timeout: 30 * SECOND });
