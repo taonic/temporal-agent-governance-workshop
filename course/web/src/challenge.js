@@ -18,6 +18,11 @@ export function xpFor(attempts, rightId, table = CHALLENGE_XP) {
 export const misses = (attempts, rightId) => attempts.filter((id) => id !== rightId);
 export const showsHint = (attempts, rightId) => misses(attempts, rightId).length >= 2 && solvedAt(attempts, rightId) === null;
 
+// Whether a live run uses up its pick: once it answers, or, if the learner leaves before it does,
+// once its workflow had started (the choice's code ran). A run that broke before then (the
+// sandbox couldn't load the workshop, say) showed nothing, and costs nothing.
+export const pickCounts = ({ done = null, left = false, started = false }) => Boolean(done) || (left && started);
+
 // A pick, added to the attempts: once it's solved, or a choice is already picked, nothing changes.
 export function addPick(attempts, choiceId, rightId) {
   if (solvedAt(attempts, rightId) !== null || attempts.includes(choiceId)) return attempts;

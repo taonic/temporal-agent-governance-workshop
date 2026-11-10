@@ -300,22 +300,27 @@ async def run_live(challenge_id: str, letter: str, run_id: str | None = None, as
 
     from travel_agent.config import settings
 
-    challenge = challenges()[challenge_id.upper()]
-    choice = challenge.choice(letter)
-    # The failures a wrong choice causes are the point: the timeline says what happened, without
-    # the SDK's tracebacks and warnings for each one.
-    logging.getLogger("temporalio").setLevel(logging.CRITICAL)
-    errors_only = TelemetryFilter(core_level="ERROR", other_level="ERROR")
-    quiet = Runtime(telemetry=TelemetryConfig(logging=LoggingConfig(filter=errors_only)))
-    client = await Client.connect(settings.temporal_address, namespace=settings.temporal_namespace,
-                                  data_converter=pydantic_data_converter, runtime=quiet)
+    async def connect():
+        # The failures a wrong choice causes are the point: the timeline says what happened,
+        # without the SDK's tracebacks and warnings for each one.
+        logging.getLogger("temporalio").setLevel(logging.CRITICAL)
+        errors_only = TelemetryFilter(core_level="ERROR", other_level="ERROR")
+        quiet = Runtime(telemetry=TelemetryConfig(logging=LoggingConfig(filter=errors_only)))
+        return await Client.connect(settings.temporal_address, namespace=settings.temporal_namespace,
+                                    data_converter=pydantic_data_converter, runtime=quiet)
+
     if as_json:
-        await run(challenge, choice.id, client)
+        challenge = challenges()[challenge_id.upper()]
+        await run(challenge, challenge.choice(letter).id, await connect())
         return
+    # The files are named from the arguments, before anything can go wrong: the browser is
+    # waiting on them, and a run that breaks (the workshop's files won't load, say) says so there
+    # at once, instead of leaving it to wait for an answer that isn't coming.
+    name = f"{challenge_id}-{letter}".upper()
+    if not re.fullmatch(r"[A-Z]{1,3}C\d{1,2}-[A-D]", name):
+        sys.exit(f"No challenge choice called {challenge_id} {letter}: try ./quest challenge FC1 B")
     RUNS.mkdir(parents=True, exist_ok=True)
-    name = f"{challenge.id}-{choice.id}"
     (RUNS / f"{name}.pid").write_text(str(os.getpid()))
-    print(f"⚡ {challenge.id} · choice {choice.id}: {choice.label}\n", flush=True)
     with (RUNS / f"{name}.jsonl").open("w") as log:
         # The run's id first, so the browser knows these lines are the run it started.
         log.write(json.dumps({"type": "start", "run": run_id}) + "\n")
@@ -329,6 +334,13 @@ async def run_live(challenge_id: str, letter: str, run_id: str | None = None, as
                 print(shown, flush=True)
 
         try:
-            await run(challenge, choice.id, client, out)
+            challenge = challenges()[challenge_id.upper()]
+            choice = challenge.choice(letter)
+            print(f"⚡ {challenge.id} · choice {choice.id}: {choice.label}\n", flush=True)
+            await run(challenge, choice.id, await connect(), out)
+        except Exception as err:
+            # What broke, for the browser; the traceback follows in the terminal.
+            out(json.dumps({"type": "error", "message": f"{type(err).__name__}: {err}"}))
+            raise
         finally:
             (RUNS / f"{name}.pid").unlink(missing_ok=True)

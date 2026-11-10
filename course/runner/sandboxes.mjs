@@ -9,7 +9,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { Daytona } from "@daytonaio/sdk";
 
 import { llmKey } from "./auth.mjs";
-import { repoRoot, sandboxRepo, workshopFiles } from "./repo-files.mjs";
+import { WORKSHOP_DIRS, repoRoot, sandboxRepo, staleFiles, workshopFiles } from "./repo-files.mjs";
 
 export const APP_LABEL = "governance-course";
 export const CONSOLE_PORT = 8000;
@@ -344,11 +344,13 @@ export class SandboxManager {
   async #bootstrap(run, sandbox, origins, { fresh }) {
     if (fresh) {
       this.#step(run, "bootstrapping", "Copying the workshop in…", { sandboxId: sandbox.id });
-      const files = workshopFiles().map((rel) => ({
+      const rels = workshopFiles();
+      const files = rels.map((rel) => ({
         source: fs.readFileSync(path.join(repoRoot, rel)),
         destination: `${sandboxRepo}/${rel}`,
       }));
       await withTimeout(sandbox.fs.uploadFiles(files, 180), 200_000, "Copying the workshop in");
+      await this.#pruneStale(sandbox, rels);
     }
     await this.#writeEnv(sandbox, run.learner, origins, { keepMode: !fresh });
 
@@ -369,6 +371,18 @@ export class SandboxManager {
       const tail = (result.result ?? "").trim().split("\n").slice(-15).join("\n");
       throw new Error(`Starting the workshop services failed:\n${tail}`);
     }
+  }
+
+  // The upload adds and replaces files but deletes none, and the snapshot has the workshop as it
+  // was when it was built: a file moved or deleted since (a module folder renamed, whose old
+  // copy would give its id twice) goes now, before anything reads the workshop.
+  async #pruneStale(sandbox, rels) {
+    const dirs = WORKSHOP_DIRS.join(" ");
+    const listed = await this.exec(sandbox, `bash -c ${shellQuote(`find ${dirs} -type f 2>/dev/null; true`)}`, 60);
+    const stale = staleFiles((listed.result ?? "").split("\n"), rels);
+    if (!stale.length) return;
+    const rm = `rm -f -- ${stale.map(shellQuote).join(" ")} && find ${dirs} -depth -type d -empty -delete 2>/dev/null; true`;
+    await this.exec(sandbox, `bash -c ${shellQuote(rm)}`, 60);
   }
 
   // The relay calls this when it can't reach the bridge: it may have exited on its own.
@@ -510,6 +524,7 @@ export class SandboxManager {
       }
     });
     const done = parsed.find((l) => l.type === "done") ?? null;
+    const broke = parsed.find((l) => l.type === "error") ?? null;
     const running = state.trim() === "running";
     return {
       // Which run these lines are: the page ignores another run's (an earlier one's, say).
@@ -517,7 +532,13 @@ export class SandboxManager {
       lines: parsed.filter((l) => l.type === "step" || l.type === "workflow"),
       done,
       running,
-      error: !done && !running && parsed.length ? "It stopped without an answer: see the commands terminal." : null,
+      error: done
+        ? null
+        : broke
+          ? `It broke before it could answer: ${broke.message} (more in the commands terminal).`
+          : !running && parsed.length
+            ? "It stopped without an answer: see the commands terminal."
+            : null,
     };
   }
 
