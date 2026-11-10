@@ -39,6 +39,6 @@ const next = computed(() => nextModule(module.value.id));
         />
       </li>
     </ol>
-    <a v-if="next" class="button button-primary module-nav-next" :href="moduleHref(next.id)" :title="`Next: ${next.id} · ${next.title}`">Next <span aria-hidden="true">→</span></a>
+    <a v-if="next" class="button button-secondary module-nav-next" :href="moduleHref(next.id)" :title="`Next: ${next.id} · ${next.title}`">Next <span aria-hidden="true">→</span></a>
   </nav>
 </template>

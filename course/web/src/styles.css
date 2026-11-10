@@ -5473,6 +5473,23 @@ g.off-route {
   gap: 6px;
 }
 
+/* Next, quietly: a text link, not a button to press. The guide's own "On to …" is the one. */
+.button.module-nav-next {
+  gap: 5px;
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.button.module-nav-next:hover,
+.button.module-nav-next:focus-visible {
+  border-color: transparent;
+  background: var(--mist);
+  color: var(--text);
+}
+
 .module-crumb {
   min-width: 0;
   max-width: 340px;
@@ -5614,10 +5631,42 @@ g.off-route {
   100% { opacity: 0; transform: translateY(14px); }
 }
 
-@media (max-width: 1500px) {
+@media (max-width: 1800px) {
   .module-minimap {
     display: none;
   }
+
+  .topbar.is-module .ask-button kbd {
+    display: none;
+  }
+}
+
+/* A module page's bar: the logo without the name (the breadcrumb says where you are), your
+   initial without your name, and your level without the title and its bar. */
+.topbar.is-module .brand-copy,
+.topbar.is-module .account-name,
+.topbar.is-module .xp-pill-title,
+.topbar.is-module .xp-pill-bar {
+  display: none;
+}
+
+.topbar.is-module .xp-pill {
+  padding-right: 10px;
+}
+
+/* Where you are sits by the logo, on the left; the rest of the bar to the right. */
+.topbar.is-module .topbar-controls {
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.topbar.is-module .module-nav {
+  margin-right: auto;
+}
+
+.topbar.is-module .account-button {
+  padding: 0 6px;
 }
 
 @media (max-width: 1280px) {

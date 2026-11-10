@@ -235,7 +235,9 @@ watch(() => store.user, (user) => !user && closeFeedback());
 
 <template>
   <div class="app-frame" :class="{ 'with-helper': helper.open, 'is-arriving': arriving }" :style="{ '--ask-width': `${helper.width}px` }" :inert="introOpen">
-    <header class="topbar">
+    <!-- On a module page the bar keeps to what the module needs: where you are, Next, your
+         level, the sandbox and Ask Temporal. The tour, feedback and the theme are in your menu. -->
+    <header class="topbar" :class="{ 'is-module': exercise }">
       <a class="brand" href="#/">
         <img class="brand-image" src="/course-visual.png" alt="">
         <span class="brand-copy">
@@ -279,10 +281,9 @@ watch(() => store.user, (user) => !user && closeFeedback());
           >
             <span class="ask-button-mark" aria-hidden="true">✦</span><span class="ask-button-label">Ask Temporal</span><kbd>{{ isMac ? "⌘K" : "Ctrl K" }}</kbd>
           </button>
-          <button class="button button-secondary" type="button" title="Take the tour" @click="startTour">Tour</button>
+          <button v-if="!(exercise && store.user)" class="button button-secondary" type="button" title="Take the tour" @click="startTour">Tour</button>
         </template>
-        <!-- On a module page the bar is full: just the icon there. -->
-        <button v-if="store.user" class="button button-secondary feedback-button" :class="{ 'is-compact': exercise }" type="button" title="Send feedback to the course team" aria-label="Feedback" @click="openFeedback()">
+        <button v-if="store.user && !exercise" class="button button-secondary feedback-button" type="button" title="Send feedback to the course team" aria-label="Feedback" @click="openFeedback()">
           <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 4h12v9H9l-4 3v-3H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
           <span class="feedback-button-label">Feedback</span>
         </button>
@@ -293,12 +294,14 @@ watch(() => store.user, (user) => !user && closeFeedback());
           </button>
           <div v-if="accountOpen" class="menu" role="menu" @keydown.escape="accountOpen = false">
             <p class="menu-note">Signed in as <strong>{{ store.user.email }}</strong>{{ store.user.cohort ? ` · ${store.user.cohort.name}` : "" }}</p>
+            <button v-if="exercise" class="menu-item" type="button" role="menuitem" @click="startTour(); accountOpen = false">Take the tour</button>
             <button class="menu-item" type="button" role="menuitem" @click="openFeedback(); accountOpen = false">Send feedback</button>
+            <button class="menu-item" type="button" role="menuitem" @click="store.theme = store.theme === 'dark' ? 'light' : 'dark'; accountOpen = false">{{ store.theme === "dark" ? "Light mode" : "Dark mode" }}</button>
             <a v-if="store.user.admin" class="menu-item" role="menuitem" href="#/admin" @click="accountOpen = false">Admin panel</a>
             <button class="menu-item" type="button" role="menuitem" @click="signOut(); accountOpen = false">Sign out</button>
           </div>
         </div>
-        <button class="button button-secondary theme-toggle" type="button" :aria-pressed="store.theme === 'dark'" :title="store.theme === 'dark' ? 'Light mode' : 'Dark mode'" @click="store.theme = store.theme === 'dark' ? 'light' : 'dark'">
+        <button v-if="!store.user" class="button button-secondary theme-toggle" type="button" :aria-pressed="store.theme === 'dark'" :title="store.theme === 'dark' ? 'Light mode' : 'Dark mode'" @click="store.theme = store.theme === 'dark' ? 'light' : 'dark'">
           {{ store.theme === "dark" ? "☀" : "☾" }}
         </button>
       </nav>
