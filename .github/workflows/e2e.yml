@@ -1,7 +1,11 @@
 # Playwright end-to-end tests against the live course site (course/e2e). Runs:
 #
 #   - every day, every tier, and emails the result whatever it is;
-#   - after each deploy (deploy.yml calls it), on what was just deployed, emailing only a failure;
+#   - after each successful deploy (deploy.yml's completion starts it, so it never holds up the
+#     next deploy), on what was just deployed: every tier when the exercises, the sandboxes or the
+#     site changed since the deploy before (it starts a real sandbox and checks each exercise's
+#     solution in it), the quick ones otherwise. It emails only a failure, and not one a newer
+#     deploy may have caused by restarting the site mid-run (that deploy gets its own run);
 #   - when the tests themselves change on main, and by hand (Actions → E2E → Run workflow).
 #
 # Repository secrets: E2E_SIGNIN_KEY (the app's; without it the @auth and @sandbox tiers skip),
@@ -30,17 +34,13 @@ on:
         type: choice
         options: [always, failure, never]
         default: always
-  workflow_call:
-    inputs:
-      tier:
-        type: string
-        default: public
-      email:
-        type: string
-        default: failure
+  workflow_run:
+    workflows: [Deploy]
+    types: [completed]
 
 permissions:
   contents: read
+  actions: read # to find the deploys: the one before this, and any newer one
 
 # One run at a time: two sandbox tiers at once would hold two sandboxes.
 concurrency:
@@ -48,21 +48,67 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Which tiers to run. After a deploy: every tier when anything a sandbox runs, the runner that
+  # drives one, or the site changed since the deploy before; the quick ones otherwise.
+  scope:
+    # After a deploy, only one that succeeded.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.scope.outputs.tier }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TIER: ${{ inputs.tier }}
+          DEPLOYED: ${{ github.event.workflow_run.head_sha }}
+          DEPLOY_RUN: ${{ github.event.workflow_run.id }}
+          DEPLOY_EVENT: ${{ github.event.workflow_run.event }}
+        run: |
+          case "$GITHUB_EVENT_NAME" in
+            schedule) tier=all ;;
+            workflow_dispatch) tier="$INPUT_TIER" ;;
+            workflow_run)
+              # The last successful deploy before this one.
+              before=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow deploy.yml --status success --limit 20 \
+                --json databaseId,headSha --jq "[.[] | select(.databaseId < $DEPLOY_RUN)][0].headSha // empty")
+              tier=auth
+              if [ "$DEPLOY_EVENT" != push ] || [ -z "$before" ] || ! git cat-file -e "$before^{commit}" 2>/dev/null; then
+                tier=all # a manual deploy, or history we can't see: test everything
+              elif git diff --name-only "$before" "$DEPLOYED" | grep -qE \
+                '^(quests|starter|tests|hello|codemode|travel_agent|policies|scripts|authoring)/|^(pyproject.toml|uv.lock|agents.toml|.env.example|quest)$|^course/(runner|snapshot|content|web)/'; then
+                tier=all
+              fi ;;
+            *) tier=auth ;; # a push to the tests: the cheap tiers
+          esac
+          echo "tier=$tier" >> "$GITHUB_OUTPUT"
+          echo "E2E tier: $tier" >> "$GITHUB_STEP_SUMMARY"
+
   e2e:
+    needs: scope
     runs-on: ubuntu-latest
     timeout-minutes: 60
     defaults:
       run:
         working-directory: course/e2e
     env:
-      # A schedule has no inputs: every tier, always emailed. A push to the tests: the cheap tiers.
-      TIER: ${{ inputs.tier || (github.event_name == 'schedule' && 'all') || 'auth' }}
+      TIER: ${{ needs.scope.outputs.tier }}
+      # A schedule has no inputs: always emailed. Anything else but a run by hand: a failure only.
       EMAIL: ${{ inputs.email || (github.event_name == 'schedule' && 'always') || 'failure' }}
       E2E_SIGNIN_KEY: ${{ secrets.E2E_SIGNIN_KEY }}
       E2E_ADMIN_EMAIL: ${{ vars.E2E_ADMIN_EMAIL }}
       E2E_SKIP_SANDBOX: ${{ vars.E2E_SKIP_SANDBOX }}
     steps:
+      - name: Note the start
+        run: echo "STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      # After a deploy, the tests as they were in what was deployed.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -108,10 +154,25 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+      # A deploy started since this run began restarted the site under it: a failure may be
+      # that, not the tests, and that deploy's own run will tell. Only after a deploy.
+      - name: Superseded?
+        id: newer
+        if: always() && github.event_name == 'workflow_run' && steps.tests.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          newer=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow deploy.yml --limit 20 --json createdAt \
+            --jq "[.[] | select(.createdAt > \"$STARTED_AT\")] | length")
+          if [ "${newer:-0}" -gt 0 ]; then
+            echo "superseded=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::A newer deploy started during this run, so its failures aren't emailed: that deploy's E2E run will report."
+          fi
+
       # Resend's HTTP API with curl, no SDK or third-party action. The message is the one
       # scripts/summary.mjs wrote.
       - name: Email the result
-        if: always() && (env.EMAIL == 'always' || (env.EMAIL == 'failure' && steps.tests.outcome != 'success'))
+        if: always() && steps.newer.outputs.superseded != 'true' && (env.EMAIL == 'always' || (env.EMAIL == 'failure' && steps.tests.outcome != 'success'))
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |

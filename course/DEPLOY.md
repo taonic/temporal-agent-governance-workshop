@@ -74,7 +74,7 @@ gh workflow run e2e.yml -f tier=all -f email=always
 
 - **Who can get it.** Resend's test sender, `onboarding@resend.dev`, only delivers to the address the Resend account signed up with. To send to others (comma-separated in `E2E_MAIL_TO`), verify a domain in Resend and set `E2E_MAIL_FROM` to an address on it.
 - **Without a key** the runs still happen and say there's no email; without `E2E_SIGNIN_KEY`, only the tier that needs no sign-in runs. Each signed-in test signs in a new learner of its own (`e2e+…@temporalquest.dev`), which the tests' admin puts on the allowlist in an `E2E` cohort and deletes after.
-- **What a run tests** after a deploy: every tier, a real sandbox included, when the exercises, the sandbox's files, the runner or the site changed; the quick tiers otherwise (`deploy.yml`, job `e2e-scope`). A failure turns the Deploy run red but doesn't roll back.
+- **After a deploy**, E2E runs as a workflow of its own, started by the Deploy run's success, so it never holds up the next deploy. It tests every tier, a real sandbox included, when the exercises, the sandbox's files, the runner or the site changed since the deploy before; the quick tiers otherwise (`e2e.yml`, job `scope`). A failure turns the E2E run red and emails, but doesn't roll back. It doesn't email when a newer deploy started during the run, since that deploy's restart may be what failed it, and that deploy gets an E2E run of its own.
 - **To run them by hand**: `gh workflow run e2e.yml -f tier=public` (or `auth`, `all`), or locally: `cd course/e2e && npm ci && npx playwright install chromium && E2E_SIGNIN_KEY=... npm test`.
 
 ## Before an event

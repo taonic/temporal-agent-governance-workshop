@@ -35,7 +35,7 @@ Failures keep a trace, a screenshot and a video (`test-results/`); the sandbox t
 
 ## Every day, by email
 
-`.github/workflows/e2e.yml` runs every tier at 14:00 UTC and emails the result, pass or fail: a subject like `✅ Course e2e passed · temporalquest.dev · 2026-10-18`, each tier's result, each failure's error, and a link to the run (the HTML report and traces are its artifacts). It also runs after every deploy (emailing only a failure) and can be run by hand: Actions → E2E → Run workflow.
+`.github/workflows/e2e.yml` runs every tier at 14:00 UTC and emails the result, pass or fail: a subject like `✅ Course e2e passed · temporalquest.dev · 2026-10-18`, each tier's result, each failure's error, and a link to the run (the HTML report and traces are its artifacts). It also runs after every successful deploy, as its own workflow so it never holds up the next one (emailing only a failure) and can be run by hand: Actions → E2E → Run workflow.
 
 To turn it on, in the repository's Settings → Secrets and variables → Actions:
 
