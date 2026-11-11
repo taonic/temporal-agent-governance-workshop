@@ -982,6 +982,46 @@ body.is-resizing iframe {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--temporal-uv);
 }
 
+/* A long guide in laps: the lap on show step by step, the others one short bar each. */
+.step-lap {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: inherit;
+}
+
+.step-progress.has-laps {
+  gap: 10px;
+}
+
+.step-progress.has-laps .step-lap {
+  gap: 4px;
+}
+
+.step-lap-mini {
+  flex: 0 0 44px;
+  position: relative;
+  height: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.step-lap-mini span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--success);
+}
+
+.step-lap-mini:hover {
+  opacity: 1;
+  background: var(--line-strong);
+}
+
 .step-progress-count {
   flex: 0 0 auto;
   margin-left: 4px;

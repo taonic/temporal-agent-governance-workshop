@@ -107,6 +107,35 @@ function restore() {
 }
 const at = ref(restore());
 const beat = computed(() => beats.value[Math.min(at.value, beats.value.length - 1)]);
+
+// A long guide's steps in laps: a lap ends at each of the exercise's challenges (the modules
+// before one, then the next lap). The bar shows the lap you're on step by step, and the others
+// as one short bar each. A guide of LAP_FROM steps or fewer is one lap.
+const LAP_FROM = 10;
+const laps = computed(() => {
+  const lapOf = new Map();
+  let lap = 0;
+  for (const id of props.exercise.modules ?? []) {
+    if (modulesById.get(id)?.kind === "challenge") lap++;
+    else lapOf.set(id, lap);
+  }
+  const groups = [];
+  for (const step of steps.value) {
+    const n = lapOf.get(moduleOfBeat(props.exercise, step.id)) ?? lap;
+    (groups[n] ??= []).push(step);
+  }
+  const out = groups.filter(Boolean);
+  return steps.value.length > LAP_FROM && out.length > 1 ? out : [steps.value];
+});
+// The lap on show: the current step's, else the next step's (on a briefing or a question), else the last.
+const lapAt = computed(() => {
+  const ahead = beats.value.slice(at.value).find((b) => b.kind === "step");
+  const i = laps.value.findIndex((l) => l.includes(ahead));
+  return i < 0 ? laps.value.length - 1 : i;
+});
+const lapDone = (lap) => lap.filter((s) => ticked.value[s.id]).length;
+// A lap's first step not done yet (or its first): where its short bar goes.
+const lapStart = (lap) => lap.find((s) => !ticked.value[s.id]) ?? lap[0];
 watch(() => beat.value?.id, (id) => (store.guideBeat = id ?? null), { immediate: true });
 const isLast = computed(() => at.value >= beats.value.length - 1);
 
@@ -814,23 +843,38 @@ function onClick(event) {
           <span v-if="exercise.bonus" class="bonus-badge" title="A bonus exercise: do it if you have the time">bonus</span>
           <span v-if="passed" class="passed-badge" title="Your check passed">✓ passed</span>
         </p>
-        <span v-if="steps.length" class="step-progress-count">{{ done }}/{{ steps.length }}</span>
+        <span v-if="steps.length" class="step-progress-count"><template v-if="laps.length > 1">Lap {{ lapAt + 1 }} of {{ laps.length }} · </template>{{ done }}/{{ steps.length }}</span>
         <button v-if="exercise.scripts.reset" class="guide-restart" type="button" :title="mode === 'browser' ? 'Start this exercise over in a new sandbox, back at the first step' : 'Start this exercise over: its code as it starts, fresh sessions, back to the first step'" @click="startOver">
           <span aria-hidden="true">↺</span> Start over
         </button>
       </div>
-      <div v-if="steps.length" class="step-progress" role="group" :aria-label="`${done} of ${steps.length} steps done`">
-        <button
-          v-for="step in steps"
-          :key="step.id"
-          class="step-progress-seg"
-          :class="{ filled: ticked[step.id], current: step === beat }"
-          type="button"
-          :title="`Step ${stepNumber(step)} · ${stepTitle(step)}${ticked[step.id] ? ' (done)' : ''}`"
-          :aria-label="`Go to step ${stepNumber(step)}: ${stepTitle(step)}`"
-          :aria-current="step === beat ? 'step' : undefined"
-          @click="goTo(beats.indexOf(step))"
-        />
+      <div v-if="steps.length" class="step-progress" :class="{ 'has-laps': laps.length > 1 }" role="group" :aria-label="`${done} of ${steps.length} steps done`">
+        <template v-for="(lap, i) in laps" :key="i">
+          <div v-if="i === lapAt" class="step-lap">
+            <button
+              v-for="step in lap"
+              :key="step.id"
+              class="step-progress-seg"
+              :class="{ filled: ticked[step.id], current: step === beat }"
+              type="button"
+              :title="`Step ${stepNumber(step)} · ${stepTitle(step)}${ticked[step.id] ? ' (done)' : ''}`"
+              :aria-label="`Go to step ${stepNumber(step)}: ${stepTitle(step)}`"
+              :aria-current="step === beat ? 'step' : undefined"
+              @click="goTo(beats.indexOf(step))"
+            />
+          </div>
+          <button
+            v-else
+            class="step-lap-mini"
+            :class="{ filled: lapDone(lap) === lap.length }"
+            type="button"
+            :title="`Lap ${i + 1}: ${lapDone(lap)} of ${lap.length} steps done`"
+            :aria-label="`Go to lap ${i + 1}: ${lapDone(lap)} of ${lap.length} steps done`"
+            @click="goTo(beats.indexOf(lapStart(lap)))"
+          >
+            <span :style="{ width: `${(lapDone(lap) / lap.length) * 100}%` }" />
+          </button>
+        </template>
       </div>
     </header>
 
