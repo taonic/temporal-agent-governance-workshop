@@ -7,7 +7,7 @@ import { e2eSignInCode, hashSignInCode, newLearnerId, newSignInCode } from "./au
 import { transaction } from "./db.mjs";
 import { RateLimiter } from "./ratelimit.mjs";
 
-export const ROLES = ["Developer", "Architect", "Engineering manager", "Platform/SRE", "Data/ML", "Other"];
+export const ROLES = ["Developer", "Architect", "Engineering manager", "Platform/SRE", "Data/ML", "Product owner", "Other"];
 export const ON_DEMAND = "On-demand";
 export const DEFAULT_ALLOWANCE_MINUTES = 8 * 60;
 

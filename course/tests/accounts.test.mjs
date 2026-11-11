@@ -1,9 +1,10 @@
 // Sign-in, the allowlist and cohorts, access requests, and the activity derived from events:
 // against an in-memory database, with a clock the tests move.
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { test } from "node:test";
 
-import { Accounts, companyOf, isPersonalEmail, normalizeEmail, parseEntry } from "../runner/accounts.mjs";
+import { Accounts, ROLES, companyOf, isPersonalEmail, normalizeEmail, parseEntry } from "../runner/accounts.mjs";
 import { Activity, catalogOf, deriveProgress } from "../runner/activity.mjs";
 import { createAdmin, toCsv } from "../runner/admin.mjs";
 import { e2eSignInCode } from "../runner/auth.mjs";
@@ -491,4 +492,10 @@ test("admins see each learner's persona, how many learn as each, and can list on
   assert.equal(journey.persona, "essentials");
   assert.deepEqual(journey.personaChanges.map((c) => c.persona), ["developer", "essentials"]);
   assert.ok(journey.personaChanges[1].at > journey.personaChanges[0].at);
+});
+
+test("the sign-in form offers the roles the runner accepts, product owners among them", () => {
+  const form = fs.readFileSync(new URL("../web/src/components/AccessForm.vue", import.meta.url), "utf8").match(/^const ROLES = (\[.*\]);$/m)[1];
+  assert.deepEqual(JSON.parse(form), ROLES);
+  assert.ok(ROLES.includes("Product owner"));
 });
