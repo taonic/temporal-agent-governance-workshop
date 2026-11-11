@@ -48,8 +48,9 @@ const jockey = (name, silks, extra = {}) => ({ name, horse: `${name}'s horse`, c
 
 test("the course: Essentials' stops in order, each post at the XP of a clean run to it", () => {
   const course = raceCourse(DATA);
-  assert.deepEqual(course.stops.map((s) => [s.id, s.at]), [["E1", 10], ["EC1", 30], ["E2", 40], ["E-boss", 90]]);
-  assert.equal(course.maxXp, 90);
+  // Every question the same (a stop's or a quick question's); the boss its own.
+  assert.deepEqual(course.stops.map((s) => [s.id, s.at]), [["E1", 10], ["EC1", 20], ["E2", 30], ["E-boss", 80]]);
+  assert.equal(course.maxXp, 80);
   assert.equal(course.bossId, "E-boss");
 });
 
@@ -130,7 +131,7 @@ test("scoring: XP from the gun to the finish, ties go to whoever got there first
   clock.now += 1000;
   const state = races.state("derby");
   const by = Object.fromEntries(state.racers.map((r) => [r.name, r]));
-  assert.equal(by.Cy.xp, 20, "10 for E1, 10 for EC1 on the second pick");
+  assert.equal(by.Cy.xp, 15, "10 for E1, 5 for EC1 on the second pick");
   assert.equal(by.Cy.stumbles, 1);
   assert.equal(by.Cy.rank, 1);
   assert.equal(by.Ben.xp, 10);
@@ -175,7 +176,7 @@ test("scoring: careful beats quick; at the same XP, fewer slips win, then the cl
   assert.equal(by.Quick.xp, 5, "half of E2's 10: right on the second try");
   assert.equal(by.Quick.stumbles, 1);
   assert.equal(by.Careful.xp, 10);
-  assert.equal(by.Sloppy.xp, 20, "E1, then EC1 on the second pick: 10 + 10");
+  assert.equal(by.Sloppy.xp, 15, "E1, then EC1 on the second pick: 10 + 5");
   assert.equal(by.Sloppy.rank, 1);
   assert.equal(by.Careful.rank, 2);
   assert.equal(by.Quick.rank, 3, "first there, but with fewer XP");

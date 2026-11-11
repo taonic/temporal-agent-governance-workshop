@@ -46,7 +46,7 @@ import {
   workerRunView,
   workerToggleView,
 } from "../store.js";
-import { choosePersona, complete, isDone, moduleHref, moduleName, moduleOfBeat, modulesById, nextModule, pick, progress, worldCheckOf, xpOf } from "../progress.js";
+import { choosePersona, complete, isDone, moduleHref, moduleName, moduleOfBeat, modulesById, nextModule, pick, progress, shownMaxXp, shownXpOf, worldCheckOf } from "../progress.js";
 import { findSnippet } from "../snippets.js";
 import { streamIn } from "../streaming.js";
 import AskSetupCard from "./AskSetupCard.vue";
@@ -215,7 +215,7 @@ const checkHere = computed(() => {
   return found ? { module: found[0], check: found[1] } : null;
 });
 const challengeHere = computed(() => (beat.value?.kind === "challenge" ? props.exercise.challenges?.[beat.value.challenge] ?? null : null));
-const questionMeta = (c) => `Challenge · ${c.choices.length} answers · ${isDone(c.id) ? `solved, +${xpOf(c.id)} XP` : `up to ${c.xp[0]} XP`}`;
+const questionMeta = (c) => `Challenge · ${c.choices.length} answers · ${isDone(c.id) ? `solved, +${shownXpOf(c.id)} XP` : `up to ${shownMaxXp(c.xp[0])} XP`}`;
 watch(passed, (now) => now && complete(props.exercise.modules.filter((id) => !isChallenge(id)).at(-1)), { immediate: true });
 
 function tick(id, value = true) {

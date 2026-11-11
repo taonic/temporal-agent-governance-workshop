@@ -9,7 +9,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 
 import { misses, pickCounts, showsHint, solvedAt } from "../challenge.js";
 import { ask } from "../helper.js";
-import { isDone, pick, progress, xpOf } from "../progress.js";
+import { isDone, pick, progress, shownMaxXp, shownXpOf } from "../progress.js";
 import { api, openPane, runInTerminal, swapInEditor, toast } from "../store.js";
 
 const props = defineProps({
@@ -26,7 +26,7 @@ const solved = computed(() => solvedAt(attempts.value, right.value.id) !== null 
 // A wrong pick is struck out once its run has shown why (one from an earlier visit, at once).
 const struck = computed(() => new Set(misses(attempts.value, right.value.id).filter((id) => !runs[id]?.running)));
 const hint = computed(() => showsHint(attempts.value, right.value.id));
-const maxXp = computed(() => props.challenge.xp[0]);
+const maxXp = computed(() => shownMaxXp(props.challenge.xp[0]));
 
 const selected = ref(null);
 const choiceOf = (id) => props.challenge.choices.find((c) => c.id === id);
@@ -175,7 +175,7 @@ const lineKind = (line) => `is-${line.kind ?? "info"}`;
     <p class="challenge-meta">
       <span class="challenge-bolt" aria-hidden="true">⚡</span>
       Challenge · {{ challenge.choices.length }} choices ·
-      <template v-if="solved">solved, +{{ xpOf(challenge.id) }} XP</template>
+      <template v-if="solved">solved, +{{ shownXpOf(challenge.id) }} XP</template>
       <template v-else>up to {{ maxXp }} XP</template>
       <span class="challenge-where">{{ live ? "Runs live in your sandbox" : "Shows each choice's recorded run" }}</span>
     </p>

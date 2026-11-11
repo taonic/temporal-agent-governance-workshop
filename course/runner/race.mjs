@@ -32,6 +32,7 @@ import {
   normalizeCode,
   normalizePitPass,
 } from "../web/src/race/avatars.js";
+import { quizXp, stopXp } from "../web/src/race/rules.js";
 import { DEFAULT_ALLOWANCE_MINUTES } from "./accounts.mjs";
 import { deriveProgress } from "./activity.mjs";
 import { newLearnerId } from "./auth.mjs";
@@ -46,8 +47,7 @@ export const GRAZE_MS = 15 * 60_000;
 const PRESENT_MS = 3 * 60_000;
 // Ghosts graze sooner: a rehearsal shouldn't wait to see it.
 export const GHOST_GRAZE_MS = 60_000;
-// A module's XP by the try its question was right on: all of it, half, then a fifth.
-export const QUIZ_SHARE = [1, 0.5, 0.2];
+export { QUESTION_XP, QUIZ_SHARE, quizXp } from "../web/src/race/rules.js";
 export const DEFAULT_DURATION = 75;
 export const MAX_RACERS = SILKS.length;
 export const GHOST_FIELD = 15;
@@ -78,8 +78,9 @@ const fail = (status, message, code) => Object.assign(new Error(message), { stat
 
 // --- The course the race runs on ------------------------------------------------------------
 
-// Essentials' stops in order (its modules, then its boss), each with where its post stands on the
-// track (the XP of a racer who has passed it and everything before it, all on the first try).
+// Essentials' stops in order (its modules, then its boss), each with its race XP (every question
+// the same, rules.js stopXp) and where it stands on the track (the XP of a racer who has passed it
+// and everything before it, all on the first try).
 export function raceCourse(data) {
   const branch = data?.branches?.find((b) => b.id === "essentials");
   const modules = new Map((data?.modules ?? []).map((m) => [m.id, m]));
@@ -103,12 +104,13 @@ export function raceCourse(data) {
   let at = 0;
   const stops = ids.map((id) => {
     const m = modules.get(id);
-    at += m.xp ?? 0;
+    const xp = stopXp(m.kind, m.xp ?? 0);
+    at += xp;
     const emoji = m.emoji ?? (m.kind === "challenge" ? "⚡" : m.kind === "boss" ? "🌙" : "•");
-    return { id, kind: m.kind, title: m.title, short: SHORT[id] ?? m.title, emoji, xp: m.xp ?? 0, at };
+    return { id, kind: m.kind, title: m.title, short: SHORT[id] ?? m.title, emoji, xp, at };
   });
   const badges = Object.fromEntries((data?.badges ?? []).map((b) => [b.id, b]));
-  return { stops, ids: new Set(ids), modules, maxXp: at, bossId: branch?.boss ?? null, right, wrong, quizRight, quizWrong, badges };
+  return { stops, ids: new Set(ids), stopXp: new Map(stops.map((s) => [s.id, s.xp])), modules, maxXp: at, bossId: branch?.boss ?? null, right, wrong, quizRight, quizWrong, badges };
 }
 
 export function loadRaceCourse(file = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "web", "src", "generated", "course-data.json")) {
@@ -120,15 +122,6 @@ export function loadRaceCourse(file = path.join(path.dirname(fileURLToPath(impor
 }
 
 // --- Scoring -----------------------------------------------------------------------------------
-
-// A module's XP for the race, by its question's picks: all of it if the first was right, then less
-// (QUIZ_SHARE). One passed with no answer recorded (a page from before answers were) gets all of it.
-export function quizXp(xp, picks, right) {
-  if (!picks?.length) return xp;
-  const at = picks.indexOf(right);
-  const tries = at < 0 ? picks.length + 1 : at + 1;
-  return Math.round(xp * QUIZ_SHARE[Math.min(tries, QUIZ_SHARE.length) - 1]);
-}
 
 // A racer's race from their events (in order, already cut to the race's window): XP, and when
 // they got it; slips (wrong answers to a module's question or a challenge, bosses lost), the
@@ -144,9 +137,13 @@ export function scoreRacer(events, catalog, course) {
   let stop = null;
   let finishedAt = null;
   let lastMoveAt = null;
+  // A stop's race XP: a question's (a challenge's, or the one ending a module) by its first right
+  // try; the boss's, all of it.
   const xpOf = (id) => {
-    if (course.quizRight.has(id)) return quizXp(course.modules?.get(id)?.xp ?? catalog.xpOf(id, attempts), answers[id], course.quizRight.get(id));
-    return catalog.xpOf(id, attempts);
+    const full = course.stopXp.get(id) ?? 0;
+    if (course.modules?.get(id)?.kind === "challenge") return quizXp(full, attempts[id], course.right.get(id) ?? catalog.rightChoice?.(id) ?? null);
+    if (course.quizRight.has(id)) return quizXp(full, answers[id], course.quizRight.get(id));
+    return full;
   };
   // A pick for a question or a challenge: kept as the page keeps it (no repeats, nothing after
   // the right one); a wrong one is a slip.

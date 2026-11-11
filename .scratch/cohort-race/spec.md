@@ -157,6 +157,8 @@ These run from the host's phone or laptop, never on the projector.
 
 - A module's race XP depends on how its question went: all 10 if the first answer is right, 5 on the second, 2 after that, as a challenge's already did. The page now records each answer as a `quiz_pick` event. The normal course XP is unchanged.
 - Ranking: XP, then fewer slips (wrong answers, bosses lost), then whoever got there first.
-- The track is marked in XP (every 25), and the finish line is a perfect score (190). Beating the boss isn't a finish, so there are no rosettes and no enclosure. The race ends when the clock runs out, or once everyone has done every stop.
+- The track is marked in XP (every 25), and the finish line is a perfect score. Beating the boss isn't a finish, so there are no rosettes and no enclosure. The race ends when the clock runs out, or once everyone has done every stop.
 - Grazing starts after 15 minutes without progress, and never for someone on a module page (reading, or asking Temporal).
 - The commentary cheers first-time answers and every 50 XP. Overtakes are announced for the podium places only.
+
+**2026-11-11: every question worth the same.** In the race, every question pays 10, 5, then 2 XP by the try it was right on: the one at the end of each of the 8 stops, and each of the 3 quick questions alike. The boss keeps its 50 XP. A perfect run is 160. The rule is in `course/web/src/race/rules.js`, which the runner scores with and the page shows. For racers, the question cards show race XP too.

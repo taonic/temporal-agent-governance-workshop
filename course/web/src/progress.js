@@ -13,6 +13,7 @@ import { computed, reactive, watch } from "vue";
 
 import { badgeContext, earnedNow, isComingSoon, missingFor as badgeMissingFor } from "./badges.js";
 import { addPick, xpFor } from "./challenge.js";
+import { QUESTION_XP, quizXp } from "./race/rules.js";
 import { keepPersona } from "./persona.js";
 import { api, course, load, save, store } from "./store.js";
 
@@ -158,6 +159,17 @@ export function xpOf(id) {
   return xpFor(progress.attempts[id] ?? [], rightChoice(id));
 }
 export const xp = computed(() => progress.completed.reduce((sum, id) => sum + xpOf(id), 0));
+
+// The XP a page shows for a module or challenge: for a racer in the Derby, the race's (every
+// question QUESTION_XP, by its first right try: race/rules.js), else the course's.
+export function shownXpOf(id) {
+  const m = modulesById.get(id);
+  if (!store.race || !m || m.kind === "boss") return xpOf(id);
+  if (m.kind === "challenge") return quizXp(QUESTION_XP, progress.attempts[id], rightChoice(id));
+  return worldCheckOf(id) ? quizXp(QUESTION_XP, quizPicks(id), quizRight(id)) : QUESTION_XP;
+}
+// The most a question can earn, as a page shows it: the race's for a racer, else `course`.
+export const shownMaxXp = (course) => (store.race ? QUESTION_XP : course);
 export const level = computed(() => Math.floor(xp.value / LEVEL_XP) + 1);
 export const levelXp = computed(() => xp.value % LEVEL_XP);
 // --- Badges -------------------------------------------------------------------------------------

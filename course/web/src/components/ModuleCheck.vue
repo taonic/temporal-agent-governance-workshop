@@ -3,7 +3,7 @@
 // and one question. Both done, the module passes (progress.js passIfChecked), with its XP.
 import { computed } from "vue";
 
-import { isDone, moduleName, modulesById, quizAnswered, quizPick, quizPicks, worldSeen, xpOf } from "../progress.js";
+import { isDone, moduleName, modulesById, quizAnswered, quizPick, quizPicks, shownXpOf, worldSeen } from "../progress.js";
 import QuestionCard from "./QuestionCard.vue";
 
 const props = defineProps({
@@ -24,7 +24,7 @@ const name = computed(() => (modulesById.has(props.module) ? moduleName(modulesB
   <section class="module-check" :class="{ 'is-done': done }" :aria-label="`${name}: its check`">
     <header class="mc-head">
       <p class="mc-kicker">Check · {{ name }}</p>
-      <p v-if="done" class="mc-done" role="status">✓ {{ title }}: done, +{{ xpOf(module) }} XP</p>
+      <p v-if="done" class="mc-done" role="status">✓ {{ title }}: done, +{{ shownXpOf(module) }} XP</p>
       <p v-else class="mc-todo">Two things pass this module: something to see happen on the board, and one question.</p>
     </header>
     <ol class="mc-parts">
