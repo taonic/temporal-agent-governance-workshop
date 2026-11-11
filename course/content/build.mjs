@@ -60,6 +60,11 @@ const repoRoot = path.resolve(courseDir, "..");
 const outFile = path.join(courseDir, "web/src/generated/course-data.json");
 const assignmentsFile = path.join(courseDir, "web/src/generated/assignments.json");
 const publicContent = path.join(courseDir, "web/public/content");
+// Where the build in progress writes it: a folder of its own, swapped in whole when the build is
+// done (publishContent), so a build that fails, or runs at the same time as another (a test
+// run's beside the dev server's), never leaves public/content half-written or gone.
+let contentDir = publicContent;
+let builds = 0;
 
 // Where repo links point when they can't be shown on the site. Unset: they render as text.
 const repoUrl = (process.env.COURSE_REPO_URL ?? "").replace(/\/$/, "");
@@ -192,7 +197,7 @@ const LOCAL_PANES = [
 
 function copyToPublic(rel) {
   const src = path.join(repoRoot, rel);
-  const dest = path.join(publicContent, rel.replace(/^docs\//, ""));
+  const dest = path.join(contentDir, rel.replace(/^docs\//, ""));
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.copyFileSync(src, dest);
   return `content/${rel.replace(/^docs\//, "")}`;
@@ -1091,7 +1096,7 @@ function buildExercise(md, quests, ex, number) {
             mods.flatMap((m) => {
               const rel = `${path.dirname(m.source)}/walkthrough.json`;
               if (!fs.existsSync(path.join(repoRoot, rel))) return [];
-              const dest = path.join(publicContent, "walkthroughs", `${m.id}.json`);
+              const dest = path.join(contentDir, "walkthroughs", `${m.id}.json`);
               fs.mkdirSync(path.dirname(dest), { recursive: true });
               fs.copyFileSync(path.join(repoRoot, rel), dest);
               return [[m.id, `content/walkthroughs/${m.id}.json`]];
@@ -1209,9 +1214,45 @@ function buildReadme(md) {
 }
 
 export function buildCourse() {
+  const staging = `${publicContent}.building-${process.pid}-${++builds}`;
+  contentDir = staging;
+  try {
+    const course = assembleCourse();
+    publishContent(staging);
+    return course;
+  } finally {
+    contentDir = publicContent;
+    fs.rmSync(staging, { recursive: true, force: true });
+  }
+}
+
+// A finished build's files in place of the last one's: two renames, retried if another build
+// swaps its own in at the same moment.
+function publishContent(staging) {
+  fs.mkdirSync(staging, { recursive: true });
+  for (let attempt = 0; ; attempt++) {
+    const old = `${publicContent}.old-${process.pid}-${builds}-${attempt}`;
+    try {
+      if (fs.existsSync(publicContent)) fs.renameSync(publicContent, old);
+      fs.renameSync(staging, publicContent);
+      fs.rmSync(old, { recursive: true, force: true });
+      return;
+    } catch (err) {
+      // The last build's files back, if they were moved aside and nothing took their place.
+      try {
+        if (fs.existsSync(old) && !fs.existsSync(publicContent)) fs.renameSync(old, publicContent);
+      } catch {
+        /* another build's files went in first */
+      }
+      fs.rmSync(old, { recursive: true, force: true });
+      if (attempt >= 5 || !["ENOTEMPTY", "EEXIST", "ENOENT", "EPERM"].includes(err.code)) throw err;
+    }
+  }
+}
+
+function assembleCourse() {
   knownFiles.clear();
   collectFiles();
-  fs.rmSync(publicContent, { recursive: true, force: true });
   const quests = loadQuests();
   const exercises = quests.paths.flatMap((p) => p.exercises ?? []);
   moduleExercise.clear();

@@ -20,3 +20,4 @@ course/.data
 course/web/dist
 course/web/src/generated
 course/web/public/content
+course/web/public/content.*
