@@ -292,8 +292,18 @@ export function openTrip(key) {
 // "board-sfo-jfk-"), in the Temporal UI pane, on one of its tabs ("history"…) with tab.
 // The latest workflow whose id is the prefix and one more part (hello-sfo-jfk-1a2b): not an
 // itinerary's legs (itinerary-sfo-jfk-lhr-1a2b-leg-1), which start the same way.
-export function openWorkflow(prefix, tab = null) {
-  const workflow = store.trips.list?.find((t) => t.id.startsWith(prefix) && !t.id.slice(prefix.length).includes("-"));
+const findWorkflow = (prefix) => store.trips.list?.find((t) => t.id.startsWith(prefix) && !t.id.slice(prefix.length).includes("-"));
+
+// Opens the latest workflow whose id starts with `prefix`. One started a moment ago may not be in
+// the page's list yet (it's polled every few seconds, and Temporal's list can lag a second
+// behind): ask for the list again, for a few seconds, before saying it isn't there.
+export async function openWorkflow(prefix, tab = null) {
+  let workflow = findWorkflow(prefix);
+  for (let i = 0; !workflow && hooks.poll && i < 4; i++) {
+    if (i) await new Promise((resolve) => setTimeout(resolve, 1000));
+    await hooks.poll();
+    workflow = findWorkflow(prefix);
+  }
   if (!workflow) return toast("Start it first: it isn't in Temporal yet");
   openPane("temporal", tab ? { workflow: workflow.id, tab } : `/namespaces/default/workflows/${encodeURIComponent(workflow.id)}`);
 }
