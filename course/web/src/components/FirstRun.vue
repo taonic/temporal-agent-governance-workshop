@@ -4,11 +4,16 @@
 // and where it all leads, as a row of chips. No toolbar, legend or stats: "Show the whole map"
 // (or a chip, for that branch's way there) opens the full page, which takes over for good once
 // the first module is done.
+//
+// A branch with a welcome (Essentials) gets a leaner screen still: its goal in two lines, the idea
+// acted out (TripLoop), what they're starting and why it's a trip, and Let's begin. No way to
+// the whole map: it opens once their first module is done (MapPage.vue).
 import { computed, ref } from "vue";
 
 import NodeDetail from "./NodeDetail.vue";
 import NodeTrail from "./NodeTrail.vue";
-import { branchesById, modulesById, recommended, trunk, trunkTail } from "../progress.js";
+import TripLoop from "./TripLoop.vue";
+import { branchesById, moduleHref, modulesById, recommended, trunk, trunkTail } from "../progress.js";
 import { course, store } from "../store.js";
 
 const emit = defineEmits(["everything", "branch"]);
@@ -34,7 +39,31 @@ const personaLabel = computed(() => course.personas.find((p) => p.id === store.p
 </script>
 
 <template>
-  <section :class="['first-run', `branch-${branch.color}`]" aria-labelledby="first-run-title">
+  <section v-if="branch.welcome" :class="['first-run', 'first-run-lean', `branch-${branch.color}`]" aria-labelledby="first-run-title">
+    <p class="map-persona first-run-persona">
+      Learning as <strong>{{ personaLabel }}</strong>
+      <button type="button" class="focus-link" @click="store.personaPicker = true">Switch</button>
+    </p>
+    <header class="first-run-head">
+      <h1 id="first-run-title">{{ branch.welcome.title }}</h1>
+      <p class="first-run-goal">{{ branch.welcome.goal }}</p>
+    </header>
+
+    <TripLoop />
+
+    <dl v-if="branch.welcome.about?.length" class="first-run-about">
+      <div v-for="a in branch.welcome.about" :key="a.title">
+        <dt>{{ a.title }}</dt>
+        <dd>{{ a.text }}</dd>
+      </div>
+    </dl>
+
+    <div class="first-run-go">
+      <a class="button button-primary first-run-start" :href="moduleHref(first.id)">Let's begin <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <section v-else :class="['first-run', `branch-${branch.color}`]" aria-labelledby="first-run-title">
     <header class="first-run-head">
       <p class="eyebrow">Temporal Quest</p>
       <h1 id="first-run-title">Your quest starts here</h1>
@@ -60,7 +89,6 @@ const personaLabel = computed(() => course.personas.find((p) => p.id === store.p
         <button type="button" class="first-run-everything" @click="emit('everything')">Show the whole map <span aria-hidden="true">→</span></button>
       </p>
       <p v-else>
-        <strong>No code, no terminals.</strong> Each step is a few minutes: you click, and watch what a trip does when things go wrong.
         <button type="button" class="first-run-everything" @click="emit('everything')">Show the whole map <span aria-hidden="true">→</span></button>
       </p>
       <ul v-if="specializations.length">

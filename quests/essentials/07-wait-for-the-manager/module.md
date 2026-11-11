@@ -1,6 +1,8 @@
 ---
 id: E7
 title: Wait for the manager
+emoji: "👍"
+note: "waiting on a yes"
 teaser: "An expensive trip needs the manager's OK. You're the manager: approve it while nobody is on shift, and see the answer kept."
 learn: "A trip on Temporal can wait for a person's decision for as long as it takes, and never lose the answer."
 minutes: 6
@@ -54,7 +56,9 @@ Give your answer anyway:
 
 [Approve](#board/approve)
 
-The approval is written into the trip's logbook straight away, though no coordinator is there to act on it yet. Open [the trip's logbook](#latest-trip) and find it there.
+The approval is written into the trip's logbook straight away, though no coordinator is there to act on it yet. Find it there:
+
+[Open the trip's logbook](#latest-trip)
 
 ## 4. Put a coordinator on shift
 
@@ -62,7 +66,13 @@ The approval is written into the trip's logbook straight away, though no coordin
 
 The coordinator reads the logbook, finds your yes, and books the trip.
 
-Try it the other way, too, if you like: start another trip, and this time [Reject](#board/reject) it. The trip ends, and nothing is booked.
+Try it the other way, too, if you like. Start another trip:
+
+[Start a trip](#board/start-trip)
+
+This time, turn it down. The trip ends, and nothing is booked:
+
+[Reject](#board/reject)
 
 <p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> Your answer is a <strong>signal</strong>: a message sent to a running workflow, and written into its event history the moment it arrives.</p>
 

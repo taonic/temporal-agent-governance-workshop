@@ -182,3 +182,10 @@ test("a step the last coordinator didn't finish is said plainly, not as a timeou
   assert.match(t.steps[3].detail, /^Attempt 2: the last coordinator stopped in the middle of it/);
   assert.match(t.status.text, /^Carrying on from “charge the card”/);
 });
+
+test("the airline's bad minute counts down on the board's clock, between polls, and ends on time", () => {
+  const state = { module: "E3", at: 1000, flaky: true, flakyFor: 16.4, trips: [] };
+  assert.deepEqual([0, 1, 2, 3].map((s) => boardView(state, 1000 + s).flakyFor), [17, 16, 15, 14]);
+  assert.equal(boardView(state, 1016.5).flaky, false);
+  assert.equal(boardView({ ...state, flaky: false }, 1000).flakyFor, 0);
+});

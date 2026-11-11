@@ -1,6 +1,8 @@
 ---
 id: E8
 title: "Card declined: undo it cleanly"
+emoji: "💳"
+note: "declined, so undo it"
 teaser: "The card is declined after the flight and hotel are booked. Watch the trip cancel them, newest first, and leave nothing half-done."
 learn: "When a step fails for good, a trip on Temporal undoes what it already did, and finishes the undoing through anything."
 minutes: 5
@@ -23,7 +25,7 @@ check:
         right: true
         explanation: Retrying is for failures that pass, like the airline's bad minute. A no from the bank is final, so the trip's job becomes leaving nothing half-done.
       - label: Temporal only retries the airline.
-        explanation: Temporal retries any step that fails. It tried the hotel again and again in E2. This failure says "don't bother", so it doesn't.
+        explanation: Temporal retries any step that fails. It tried the hotel again and again while the hotel step had a mistake in it. This failure says "don't bother", so it doesn't.
       - label: It had used up its attempts.
         explanation: The trip's steps have no limit on attempts. It stopped because the card network's answer was a definite no, not because it ran out.
 questions:
@@ -44,11 +46,14 @@ This traveler's card will be declined:
 
 [Start a trip](#board/start-trip)
 
-The trip books the flight and the hotel, and then the card network says no. The trip doesn't try the card again. Instead, it starts undoing: it cancels the hotel, then the flight, newest first, the way you'd unpack a suitcase. Watch the outside world: each booking is cancelled, and nothing is left behind.
+The trip books the flight and the hotel, then the card is declined. Rather than trying again, it undoes what it booked, newest first: the hotel, then the flight. Watch each booking get cancelled.
 
-The undoing steps are steps like any other: written into the logbook, and tried again if they fail. If you like, start another trip, and pull the plug while it's undoing. When a coordinator is back on shift, the undoing carries on from where it stopped.
+The undo steps go in the logbook too, so a crash only pauses them. See the cancellations there:
 
-<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> Undoing the finished steps, newest first, when a later one fails for good, is a <strong>saga</strong>. Each step has an undo step, and Temporal makes sure the undoing finishes.</p>
+[Open the trip's logbook](#latest-trip)
+
+<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> Undoing the finished steps, newest first, when a later one fails for good, is a <strong>saga</strong>.</p>
+
 
 ## Undoing, without Temporal
 
@@ -59,25 +64,23 @@ The undoing steps are steps like any other: written into the logbook, and tried 
 
 ## Spot it in your business
 
-That's the whole story: a list of steps, a logbook in a safe, and coordinators who come and go. Every process that takes more than a moment and talks to other systems has the same needs. Here are three. Before you open each one, think about what could go wrong.
+What could go wrong in each? Think, then open it.
 
 <details class="spot-it">
-<summary><strong>An online order:</strong> take the payment, reserve the stock, ship it, email the customer.</summary>
-<p><strong>What could go wrong:</strong> the warehouse system is down for an hour. Or the server crashes after the payment but before the stock is reserved.</p>
-<p><strong>What Temporal does:</strong> the order waits at the warehouse step and carries on when it's back, and a crash means the next worker carries on from the stock. Nobody is charged twice, and no order is forgotten.</p>
+<summary><strong>An online order:</strong> payment, stock, shipping, email.</summary>
+<p>The warehouse is down for an hour. Temporal waits, then carries on. Nobody is charged twice. <a href="https://temporal.io/resources/case-studies/instacart-simplifies-complex-workflows" target="_blank" rel="noopener">How Instacart does it ↗</a></p>
 </details>
 
 <details class="spot-it">
-<summary><strong>A loan application:</strong> check the applicant's identity and credit, wait for an underwriter, send the decision.</summary>
-<p><strong>What could go wrong:</strong> the credit bureau times out, and the underwriter takes a week to look at it.</p>
-<p><strong>What Temporal does:</strong> the credit check is tried again until it gets an answer, and the application waits for the underwriter's decision for as long as it takes, through any number of restarts in between.</p>
+<summary><strong>A loan application:</strong> credit check, an underwriter, the decision.</summary>
+<p>The underwriter takes a week. Temporal waits as long as it takes. <a href="https://temporal.io/resources/case-studies/anz-story" target="_blank" rel="noopener">How ANZ does home loans ↗</a></p>
 </details>
 
 <details class="spot-it">
-<summary><strong>Onboarding a new hire:</strong> create their accounts, order a laptop, add them to payroll, remind their manager after a week.</summary>
-<p><strong>What could go wrong:</strong> the payroll system rejects the details after the accounts and the laptop are done. Or the reminder is due on a day the servers are being upgraded.</p>
-<p><strong>What Temporal does:</strong> a rejection undoes what's been set up (or waits for a fix, if it was a mistake), and the reminder fires on time, because the clock is Temporal's, not the server's.</p>
+<summary><strong>Onboarding a new customer:</strong> identity checks, an account, a welcome email.</summary>
+<p>The identity check takes days. Temporal waits, then sets the account up once. <a href="https://temporal.io/resources/on-demand/reimagining-customer-onboarding-at-mollie" target="_blank" rel="noopener">Mollie's talk ↗</a></p>
 </details>
+
 
 ## A process of your own
 

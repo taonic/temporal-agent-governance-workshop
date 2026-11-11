@@ -22,9 +22,25 @@ async function reset() {
   window.location.replace(window.location.pathname);
 }
 
+// ?purge: clears the site's cookies, and nothing else. It signs out (the session cookie) and
+// disconnects the docs (Ask Temporal's), but keeps the sandbox and what this browser keeps
+// (progress, the persona). The cookies are HttpOnly, so the runner clears them. Then the same
+// page loads again, without ?purge.
+async function purge() {
+  document.getElementById("app").textContent = "Clearing your cookies…";
+  const call = (path, method) => fetch(path, { method, credentials: "same-origin" }).catch(() => null);
+  await call("/api/helper/connect", "DELETE");
+  await call("/api/session", "DELETE");
+  params.delete("purge");
+  const rest = params.toString();
+  window.location.replace(`${window.location.pathname}${rest ? `?${rest}` : ""}${window.location.hash}`);
+}
+
 const params = new URLSearchParams(window.location.search);
 if (params.has("reset")) {
   reset();
+} else if (params.has("purge")) {
+  purge();
 } else {
   // ?forget: just after Start over (store.js resetSandbox). The old sandbox's work is forgotten
   // again here, before the app reads anything, in case a page wrote some back as it unloaded.

@@ -3,7 +3,7 @@
 // branch's modules as a mini-map (each a link), and Next (the path's next, or the branch's).
 import { computed } from "vue";
 
-import { branchPosition, branchesById, isPlayable, moduleHref, modulesById, nextModule, stateOf } from "../progress.js";
+import { branchPosition, branchesById, idOf, isPlayable, moduleHref, moduleName, modulesById, nextModule, numbered, stateOf } from "../progress.js";
 import { store } from "../store.js";
 
 const props = defineProps({ exercise: { type: Object, required: true } });
@@ -24,21 +24,21 @@ const next = computed(() => nextModule(module.value.id));
     <div class="module-crumb">
       <p class="module-crumb-branch">
         <span aria-hidden="true">{{ branch.icon }}</span> {{ branch.name }}
-        <span class="module-crumb-pos">· {{ where.index }} of {{ where.total }}</span>
+        <span class="module-crumb-pos">· {{ numbered(module) ? "" : "Step " }}{{ where.index }} of {{ where.total }}</span>
       </p>
-      <p class="module-crumb-title" :title="`${module.id} · ${module.title}`"><span class="module-crumb-id">{{ module.id }}</span>{{ module.title }}</p>
+      <p class="module-crumb-title" :title="moduleName(module)"><span v-if="idOf(module)" class="module-crumb-id">{{ module.id }}</span>{{ module.title }}</p>
     </div>
     <ol class="module-minimap" aria-label="This branch's modules">
       <li v-for="m in siblings" :key="m.id">
         <a
           :href="moduleHref(m.id)"
           :class="['minimap-dot', `is-${stateOf(m)}`, { 'is-current': m.id === module.id }]"
-          :title="`${m.id} · ${m.title}`"
-          :aria-label="`${m.id}: ${m.title}`"
+          :title="moduleName(m)"
+          :aria-label="moduleName(m)"
           :aria-current="m.id === module.id ? 'step' : null"
         />
       </li>
     </ol>
-    <a v-if="next" class="button button-secondary module-nav-next" :href="moduleHref(next.id)" :title="`Next: ${next.id} · ${next.title}`">Next <span aria-hidden="true">→</span></a>
+    <a v-if="next" class="button button-secondary module-nav-next" :href="moduleHref(next.id)" :title="`Next: ${moduleName(next)}`">Next <span aria-hidden="true">→</span></a>
   </nav>
 </template>

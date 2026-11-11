@@ -14,6 +14,7 @@ import { closeFeedback, feedback, openFeedback } from "./feedback.js";
 import { closeHelper, helper, refreshHelper, resumeAfterConnect, toggleHelper } from "./helper.js";
 import { shouldShowIntro } from "./intro.js";
 import BadgesPage from "./pages/BadgesPage.vue";
+import BossPage from "./pages/BossPage.vue";
 import ExercisePage from "./pages/ExercisePage.vue";
 import MapPage from "./pages/MapPage.vue";
 import SetupPage from "./pages/SetupPage.vue";
@@ -64,7 +65,7 @@ const menuOpen = ref(false);
 const accountOpen = ref(false);
 // Module pages need a sign-in (the map and the setup page don't): until the session is known,
 // nothing; then the page, or the sign-in in its place.
-const gated = computed(() => store.route.page === "exercise" && store.runtime.checked && !store.authenticated);
+const gated = computed(() => ["exercise", "boss"].includes(store.route.page) && store.runtime.checked && !store.authenticated);
 // Ten minutes or less of sandbox time left, with the sandbox running: say so, and when it stops.
 const allowanceNote = computed(() => {
   const a = store.allowance;
@@ -339,6 +340,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
       </div>
     </section>
     <ExercisePage v-else-if="exercise && store.authenticated" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
+    <BossPage v-else-if="store.route.page === 'boss' && store.authenticated" :id="store.route.id" :key="store.route.id" />
   </div>
 
   <EarnMoment />

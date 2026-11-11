@@ -1,0 +1,164 @@
+# The Night Shift's stories: things going wrong mid-trip, and what a trip on Temporal does next.
+# Two for each module; each fight draws one per module, in the course's order (web/src/boss.js),
+# so every fight covers every module, with a new draw on each retry.
+#
+# Each: an id, the module that teaches it, the story, three choices (one `right`), and why.
+- id: logbook-next-shift
+  module: E1
+  story: A trip has found a flight, booked it and booked the hotel. Then its coordinator goes home sick. How does the next coordinator know where the trip is?
+  choices:
+    - label: They read the trip's logbook, which Temporal keeps.
+      right: true
+    - label: They phone the airline and the hotel to find out.
+    - label: They start the trip again from the top, to be safe.
+  why: Every finished step is written in the logbook, and the logbook lives in Temporal, not with the coordinator. So the next one carries on from the card.
+
+- id: logbook-what-it-is
+  module: E1
+  story: Your team writes down the steps of a refund. Check the order, refund the card, email the customer. On Temporal, what is that list of steps?
+  choices:
+    - label: A workflow. Each step that talks to another system is an activity.
+      right: true
+    - label: A worker, which keeps the list in its memory.
+    - label: A logbook, written before anything happens.
+  why: The list is the workflow, and the steps that reach out to other systems are its activities. The logbook is what Temporal writes down as each step happens.
+
+- id: mistake-stuck-trips
+  module: E2
+  story: Someone ships a mistake in the hotel step, and for an hour every trip fails there. What happens to the trips it catches?
+  choices:
+    - label: They wait at the hotel step, trying again, with their flights still booked.
+      right: true
+    - label: They're lost, and someone has to rebook each one by hand.
+    - label: They skip the hotel and carry on to the card.
+  why: A failed step is tried again, and the steps already done stay done. The trips are paused, not lost, waiting for a fix.
+
+- id: mistake-after-fix
+  module: E2
+  story: The fix for the hotel step ships. What do the trips that were stuck do now?
+  choices:
+    - label: Each one carries on from the hotel step and finishes. No flight is booked twice.
+      right: true
+    - label: Each one starts over from the top, now that the code is fixed.
+    - label: They stay stuck until someone restarts them.
+  why: The fix is the clean-up. Every waiting trip tries the hotel again, now it works, and finishes from where it was.
+
+- id: blip-card-down
+  module: E3
+  story: The card network stops answering for three minutes, just as a trip reaches "Charge the card". What does the trip do?
+  choices:
+    - label: It tries again, waiting a little longer each time, and charges the card once the network is back.
+      right: true
+    - label: It tries three times, then tells the customer the booking failed.
+    - label: It skips the card and sends the confirmation anyway.
+  why: That's a retry policy. A blip that passes shouldn't fail a booking, and the growing waits give the network room to recover.
+
+- id: blip-while-waiting
+  module: E3
+  story: Between two tries at a flaky airline, a trip waits a few seconds. What's running while it waits?
+  choices:
+    - label: Nothing. Temporal wakes the trip up when it's time to try again.
+      right: true
+    - label: A coordinator, watching the airline the whole time.
+    - label: A program in a loop, asking the airline every millisecond.
+  why: Temporal keeps the schedule of the next try, so waiting costs nothing. That's why a trip can ride out a bad minute, or a bad hour.
+
+- id: empty-office-request
+  module: E4
+  story: A customer books a trip at 3 a.m., when no coordinator is on shift. What happens to the request?
+  choices:
+    - label: It waits in Temporal, and starts as soon as a coordinator comes on shift.
+      right: true
+    - label: It's lost, because nobody was there to take it.
+    - label: The customer gets an error and has to book again in the morning.
+  why: The trip is written down in Temporal the moment it's asked for. Coordinators come and go; the work waits for one.
+
+- id: empty-office-morning
+  module: E4
+  story: Ten trips have piled up overnight. In the morning, three coordinators come on shift at once. What happens?
+  choices:
+    - label: Each trip is picked up by one coordinator and done once.
+      right: true
+    - label: Every coordinator does every trip, so each is booked three times.
+    - label: Only the first coordinator works. The other two wait.
+  why: Temporal hands each step to one coordinator at a time, so the work is shared out and nothing is done twice.
+
+- id: crash-after-hotel
+  module: E5
+  story: The power goes out just after a trip books its hotel. When a coordinator is back on shift, what does the trip do?
+  choices:
+    - label: It carries on from charging the card. The flight and hotel aren't booked again.
+      right: true
+    - label: It starts over, booking the flight and the hotel a second time.
+    - label: It stays stopped until someone looks at it.
+  why: The logbook says the flight and hotel are booked, so the next coordinator starts at the first step that isn't. That's the difference from the plain twin.
+
+- id: crash-why-safe
+  module: E5
+  story: A plain program and a trip on Temporal both crash halfway. Only the Temporal trip carries on where it stopped. Why?
+  choices:
+    - label: Its logbook was in Temporal, not in the program's memory, so the crash didn't wipe it.
+      right: true
+    - label: Temporal's servers never crash.
+    - label: The hotel remembered the booking and told the trip.
+  why: A crash wipes a program's memory. On Temporal, what the trip knows is written into its logbook as it goes, so a new coordinator knows it too.
+
+- id: hold-restarts
+  module: E6
+  story: A trip holds a seat for three days before booking it. The servers are restarted twice during those days. What happens on day three?
+  choices:
+    - label: The trip books the seat, right on time.
+      right: true
+    - label: The three days start again at each restart.
+    - label: The hold is forgotten, and nobody books the seat.
+  why: The wait is a timer Temporal keeps, written in the logbook. Restarts don't touch it.
+
+- id: hold-what-runs
+  module: E6
+  story: A free trial ends in 30 days, and the process should send a reminder then. On Temporal, what runs during those 30 days?
+  choices:
+    - label: Nothing. Temporal keeps the clock and wakes the process when it's time.
+      right: true
+    - label: A scheduled job that checks a table of reminders every few minutes.
+    - label: A coordinator who stays on shift for the whole 30 days.
+  why: A durable timer is one line in the plan, with nothing running while it waits. Without Temporal, you'd build and babysit the job and the table.
+
+- id: approval-nobody-on-shift
+  module: E7
+  story: The manager approves a trip while no coordinator is on shift. What happens to the approval?
+  choices:
+    - label: It's written into the trip's logbook, and the trip books once a coordinator is back.
+      right: true
+    - label: It's lost, so the manager has to approve again later.
+    - label: The trip books itself, with nobody on shift.
+  why: The answer is a signal, kept in the logbook the moment it arrives. The next coordinator finds it there and carries on.
+
+- id: approval-two-weeks
+  module: E7
+  story: The manager takes two weeks to answer. What does the trip do in the meantime?
+  choices:
+    - label: It waits, for as long as it takes, with nothing running.
+      right: true
+    - label: It gives up after a day and cancels itself.
+    - label: It books the trip anyway, to keep things moving.
+  why: A trip on Temporal can wait for a person's answer for days or months. When the answer comes, it carries on.
+
+- id: undo-declined
+  module: E8
+  story: The flight and the hotel are booked. Then the card is declined, and the bank says the answer won't change. What does the trip do?
+  choices:
+    - label: It cancels the hotel, then the flight, and stops.
+      right: true
+    - label: It keeps trying the card until it goes through.
+    - label: It leaves the bookings for someone to sort out.
+  why: A declined card is an answer, not a blip, so the trip undoes what it did, newest first. That's a saga.
+
+- id: undo-crash
+  module: E8
+  story: A trip is undoing a declined booking. It has cancelled the hotel when the power goes out. What happens when a coordinator is back?
+  choices:
+    - label: It carries on and cancels the flight. The hotel isn't cancelled twice.
+      right: true
+    - label: The flight stays booked, because the undoing was cut short.
+    - label: It starts the whole trip again, from the flight.
+  why: The undo steps go in the logbook like any other, so the undoing picks up where it stopped and finishes.

@@ -3,7 +3,7 @@
 // and one question. Both done, the module passes (progress.js passIfChecked), with its XP.
 import { computed } from "vue";
 
-import { isDone, modulesById, quizAnswered, quizPick, quizPicks, worldSeen, xpOf } from "../progress.js";
+import { isDone, moduleName, modulesById, quizAnswered, quizPick, quizPicks, worldSeen, xpOf } from "../progress.js";
 import QuestionCard from "./QuestionCard.vue";
 
 const props = defineProps({
@@ -16,12 +16,14 @@ const seen = computed(() => worldSeen(props.module));
 const answered = computed(() => quizAnswered(props.module));
 const done = computed(() => isDone(props.module));
 const title = computed(() => modulesById.get(props.module)?.title ?? props.module);
+// "M3 · Title", or the title alone where ids aren't shown (Essentials).
+const name = computed(() => (modulesById.has(props.module) ? moduleName(modulesById.get(props.module)) : props.module));
 </script>
 
 <template>
-  <section class="module-check" :class="{ 'is-done': done }" :aria-label="`${module}'s check`">
+  <section class="module-check" :class="{ 'is-done': done }" :aria-label="`${name}: its check`">
     <header class="mc-head">
-      <p class="mc-kicker">Check · {{ module }}</p>
+      <p class="mc-kicker">Check · {{ name }}</p>
       <p v-if="done" class="mc-done" role="status">✓ {{ title }}: done, +{{ xpOf(module) }} XP</p>
       <p v-else class="mc-todo">Two things pass this module: something to see happen on the board, and one question.</p>
     </header>

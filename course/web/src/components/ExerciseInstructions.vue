@@ -46,7 +46,7 @@ import {
   workerRunView,
   workerToggleView,
 } from "../store.js";
-import { choosePersona, complete, isDone, moduleHref, moduleOfBeat, modulesById, nextModule, pick, progress, worldCheckOf, xpOf } from "../progress.js";
+import { choosePersona, complete, isDone, moduleHref, moduleName, moduleOfBeat, modulesById, nextModule, pick, progress, worldCheckOf, xpOf } from "../progress.js";
 import { findSnippet } from "../snippets.js";
 import { streamIn } from "../streaming.js";
 import AskSetupCard from "./AskSetupCard.vue";
@@ -296,7 +296,11 @@ onBeforeUnmount(() => stream?.finish());
 // --- Getting started ------------------------------------------------------------------------
 
 // Only the guide on the page while Ask Temporal is set up; the workspace arrives with its tour.
-watch(() => beat.value.id, (id) => (store.guideOnly = id === "start-ask"), { immediate: true });
+// The Trip board's too, before its first step (the introduction and the story that opens it):
+// nothing to do on the board yet, so it arrives with the first step that uses it.
+const firstStep = computed(() => beats.value.findIndex((b) => b.kind === "step"));
+const beforeTheBoard = computed(() => isBoard.value && firstStep.value >= 0 && at.value < firstStep.value);
+watch(() => [beat.value.id, beforeTheBoard.value], ([id, before]) => (store.guideOnly = id === "start-ask" || before), { immediate: true });
 onBeforeUnmount(() => (store.guideOnly = false));
 
 const askReady = computed(() => !helper.status.enabled || (helper.status.signedIn && helper.status.docs === "ready"));
@@ -606,18 +610,50 @@ function paintSandboxButtons() {
 watch([() => ({ ...store.sandbox }), () => store.authenticated, page, beat], () => nextTick(paintSandboxButtons), { immediate: true });
 
 // The Trip board's buttons in the text (#board/… links): off without a sandbox, or while an action
-// runs; Ship the fix says when it's shipped.
+// runs; Ship the fix says when it's shipped, and Make the airline flaky while the airline is down
+// (it comes back after 20 seconds, and the button with it, to try again), and Start a trip while
+// the latest trip is under way; Approve and Reject only while a trip is waiting for an answer.
+// A trip's Temporal status once it's over (essentials/board.py STATUS); anything else is under way.
+const CLOSED = ["completed", "failed", "canceled", "terminated", "timed_out"];
 function paintBoardActions() {
   const state = store.board.state;
   for (const button of scroller.value?.querySelectorAll("button[data-board-action]") ?? []) {
     const action = button.dataset.boardAction;
     button.disabled = !props.live || Boolean(store.board.pending);
     button.classList.toggle("is-pending", store.board.pending === action);
-    const shipped = action === "ship-fix" && state && state.module === currentModule.value && !state.mistake;
+    const here = state && state.module === currentModule.value;
+    const shipped = action === "ship-fix" && here && !state.mistake;
+    const down = action === "flaky" && here && Boolean(state.flaky);
+    // One trip at a time: Start a trip waits for the latest to finish (done, undone or turned down).
+    const latestTrip = here ? state.trips?.at(-1) : null;
+    const underWay = action === "start-trip" && Boolean(latestTrip) && !CLOSED.includes(latestTrip.temporal?.status);
     if (!button.dataset.label) button.dataset.label = button.textContent;
-    button.textContent = shipped ? "✓ Fix shipped" : store.board.pending === action ? `${button.dataset.label}…` : button.dataset.label;
-    if (shipped) button.disabled = true;
-    button.title = props.live ? "" : "Start your sandbox first";
+    button.textContent = shipped ? "✓ Fix shipped" : down ? "✓ The airline is down" : store.board.pending === action ? `${button.dataset.label}…` : button.dataset.label;
+    // The manager's answer: only to a trip waiting for one. Once given, it says which.
+    const decision = latestTrip?.temporal?.decision ?? null;
+    const asking = Boolean(latestTrip?.plan?.approval) && !CLOSED.includes(latestTrip.temporal?.status) && !decision;
+    const answer = action === "approve" || action === "reject";
+    const gave = answer && decision && decision.approved === (action === "approve");
+    if (gave) button.textContent = action === "approve" ? "✓ Approved" : "✓ Rejected";
+    // Pull the plug: done once nobody's on shift. One that waits for a step (data-after) waits
+    // until it's done on the trip and its twin, saying so, and then lights up: now's the moment.
+    const pulled = action === "pull-plug" && here && !state.worker;
+    const after = button.dataset.after;
+    const stepDone = (t) => t?.temporal?.steps?.find((x) => x.id === after)?.state === "done" && (!t.plain || (t.plain.done ?? []).includes(after));
+    const tooSoon = Boolean(after) && !pulled && !(latestTrip && !CLOSED.includes(latestTrip.temporal?.status) && stepDone(latestTrip));
+    if (pulled) button.textContent = "✓ Plug pulled";
+    else if (tooSoon && button.dataset.waiting) button.textContent = button.dataset.waiting;
+    button.classList.toggle("is-now", Boolean(after) && !pulled && !tooSoon && props.live);
+    if (shipped || down || underWay || (answer && !asking) || pulled || tooSoon) button.disabled = true;
+    button.title = !props.live
+      ? "Start your sandbox first"
+      : underWay
+        ? "The trip is still under way: start another once it's finished"
+        : answer && !asking && !gave
+          ? "No trip is waiting for an answer: start one first"
+          : tooSoon
+            ? button.dataset.waiting ?? "Not yet"
+            : "";
   }
 }
 watch([() => store.board, () => props.live, page, beat], () => nextTick(paintBoardActions), { immediate: true, deep: true });
@@ -820,7 +856,7 @@ function onClick(event) {
           <div v-if="showPassed" class="guide-passed">
             <span class="guide-tada" aria-hidden="true">🎉</span>
             <span class="visually-hidden">{{ label(exercise) }} passed.</span>
-            <a v-if="next" class="button button-primary guide-next" :href="moduleHref(next.id)" @click="finish()">On to {{ next.id }} · {{ next.title }} →</a>
+            <a v-if="next" class="button button-primary guide-next" :href="moduleHref(next.id)" @click="finish()">On to {{ moduleName(next) }} →</a>
             <a v-else class="button button-primary guide-next" href="#/" @click="finish()">Back to the map →</a>
             <button v-if="mode === 'browser'" class="button" type="button" :disabled="!live" @click="emit('check')">✓ Run the check again</button>
           </div>
@@ -873,7 +909,7 @@ function onClick(event) {
         </template>
         <template v-else-if="!showPassed">
           <button v-if="beat.kind === 'step' && !ticked[beat.id]" class="guide-reply" type="button" @click="tick(beat.id)">Mark this step done</button>
-          <a v-if="next" class="guide-reply is-primary" :href="moduleHref(next.id)" @click="finish()">On to {{ next.id }} · {{ next.title }} →</a>
+          <a v-if="next" class="guide-reply is-primary" :href="moduleHref(next.id)" @click="finish()">On to {{ moduleName(next) }} →</a>
           <a v-else class="guide-reply is-primary" href="#/" @click="finish()">Back to the map →</a>
         </template>
       </div>

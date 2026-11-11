@@ -1,6 +1,8 @@
 ---
 id: E2
 title: A mistake pauses, it doesn't lose
+emoji: "🐞"
+note: "a bug sneaks in"
 teaser: Start a trip with a mistake in it. Watch one trip get lost and the other wait, then ship the fix.
 learn: "A step with a mistake in it pauses a trip on Temporal instead of losing it, so the fix finishes the same trip."
 minutes: 6
@@ -39,24 +41,34 @@ Every button acts on both trips at once, so you can see the difference for yours
 
 ## 1. Start a trip with a mistake in it
 
-Someone has shipped a mistake in the hotel step: it asks for a room in a city that doesn't exist. Nobody has noticed yet.
+Someone has shipped a mistake in the hotel step, and nobody has noticed yet.
 
 [Start a trip](#board/start-trip)
 
-Both trips book the flight. Then both reach the hotel step, and both fail.
+Both trips book the flight, then fail at the hotel.
 
-- **The plain twin** crashes, and the trip is lost. The customer has a flight and no hotel, and nothing is working on it any more. Someone would have to notice, sort out the half-booked trip, and start over.
-- **The Temporal trip** pauses at the hotel step. It tries again every few seconds (watch the attempts climb), and the steps it already did stay done. It's waiting for a fix, for as long as that takes.
+- **The plain twin** crashes, and the trip is lost: a flight, no hotel, and nobody working on it.
+- **The Temporal trip** pauses at the hotel and tries again every few seconds. The flight stays booked. It's waiting for a fix.
+
 
 ## 2. Ship the fix
 
-In real life, an engineer finds the mistake, fixes it and deploys the fix, and the coordinators start again with it. Here, one button does all of that:
+Curious? See the hotel step failing, try after try:
+
+[Open the stuck trip](#latest-trip/pending-activities)
+
+An engineer would fix the mistake. Here, one button does it:
 
 [Ship the fix](#board/ship-fix)
 
-Watch the Temporal trip carry on from the hotel step and finish. It's the same trip, not a new one, and the flight isn't booked a second time. The plain twin's trip stays lost.
+The Temporal trip carries on from the hotel and finishes: the same trip, with the flight booked once. The plain twin's trip stays lost.
 
-<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> <strong>Durable execution</strong>: a workflow keeps its place through failures, so a fix finishes the runs that were stuck, rather than leaving them for someone to clean up.</p>
+See it finished, with the hotel step's last error and its tries still in the logbook:
+
+[Open the finished trip](#latest-trip)
+
+<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> <strong>Durable execution</strong>: a workflow keeps its place through failures, so a fix finishes the runs that were stuck.</p>
+
 
 ## Why it matters
 

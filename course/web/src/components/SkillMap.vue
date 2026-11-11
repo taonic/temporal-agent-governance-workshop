@@ -13,7 +13,7 @@ import { computed } from "vue";
 import NodeGlyph from "./NodeGlyph.vue";
 import { medalSvg } from "../badgeArt.js";
 import { course } from "../store.js";
-import { STATE_LABEL, activePath, badges, branchesById, gatesOf, isDone, isEarned, isPlayable, modulesById, opensAfter, routeTo, stateOf, trunk, trunkTail } from "../progress.js";
+import { STATE_LABEL, activePath, badges, branchesById, gatesOf, idOf, isDone, isEarned, isPlayable, modulesById, opensAfter, routeTo, stateOf, trunk, trunkTail } from "../progress.js";
 
 const props = defineProps({
   selected: { type: String, default: null },
@@ -124,7 +124,8 @@ function title(id) {
 }
 function kicker(id) {
   const m = modulesById.get(id);
-  return m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : m.id;
+  // A module whose id isn't shown (Essentials) is headed by its minutes, as on the focus trail.
+  return m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : idOf(m) || `${m.minutes} min`;
 }
 function roman(n) {
   return ["", "I", "II", "III", "IV", "V"][n] ?? String(n);
@@ -180,8 +181,9 @@ const edges = computed(() => {
   return out;
 });
 
+const nodeTag = (m) => (m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : idOf(m));
 const nodeLabel = (m) =>
-  `${m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : m.id}: ${m.title}. ${STATE_LABEL[stateOf(m)]}${isPlayable(m) ? "" : ", coming soon"}`;
+  `${nodeTag(m) ? `${nodeTag(m)}: ` : ""}${m.title}. ${STATE_LABEL[stateOf(m)]}${isPlayable(m) ? "" : ", coming soon"}`;
 </script>
 
 <template>
@@ -258,7 +260,7 @@ const nodeLabel = (m) =>
         <NodeGlyph
           :kind="m.kind"
           :state="stateOf(m)"
-          :label="m.id"
+          :label="idOf(m)"
           :soon="!isPlayable(m)"
           :size="m.kind === 'boss' ? BOSS : NODE"
           :x="layout.nodes.get(m.id).x"

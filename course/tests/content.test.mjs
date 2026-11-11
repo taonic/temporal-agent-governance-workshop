@@ -348,7 +348,7 @@ test("each persona sees its own branches, paths and badges, and what it sees bui
   assert.deepEqual(course.paths.find((p) => p.id === "essentials").personas, ["essentials"]);
   assert.deepEqual(course.paths.find((p) => p.id === "agent-governance-4h").personas, ["developer"]);
   const skills = (persona) => course.badges.filter((b) => b.kind === "skill" && b.personas.includes(persona)).map((b) => b.id);
-  assert.deepEqual(skills("essentials"), ["clean-run", "flawless"]);
+  assert.deepEqual(skills("essentials"), ["clean-run", "flawless", "logbook-keeper", "fix-forward", "storm-rider", "night-owl", "crash-proof", "time-keeper", "signed-off", "clean-undo"]);
   assert.deepEqual(skills("developer"), ["clean-run", "no-peeking", "flawless", "explorer", "cross-team"]);
   const essentials = course.exercises.find((e) => e.id === "07-essentials");
   assert.equal(essentials.layout, "board");
@@ -376,8 +376,38 @@ test("in the browser, a #board link is the board's action button; anything else 
   const html = essentials.modes.browser.sections.map((s) => s.html).join("\n");
   assert.match(html, /<button class="board-action" type="button" data-board-action="start-trip">Start a trip<\/button>/);
   assert.match(html, /data-board-action="ship-fix"/);
-  // #latest-trip opens the board's latest trip, its own workflow, in the Temporal UI.
-  assert.match(html, /<button class="workflow-link" type="button" data-board-trip title="[^"]+">Open the trip's logbook<\/button>/);
+  // #board/pull-plug/after-book_hotel waits for that step, and says so (its link's title).
+  assert.match(html, /data-board-action="pull-plug" data-after="book_hotel" data-waiting="Pull the plug once the hotel is booked"/);
+  // #latest-trip is a button that opens the board's latest trip, its own workflow, in the Temporal
+  // UI: on its compact event history, or on the tab the link names.
+  assert.match(html, /<button class="board-action is-open" type="button" data-board-trip data-workflow-tab="compact" title="[^"]+">Open the trip's logbook<\/button>/);
+  assert.match(html, /data-board-trip data-workflow-tab="pending-activities"[^>]*>Open the stuck trip</);
   const local = essentials.modes.local.sections.map((s) => s.html).join("\n");
   assert.ok(!local.includes("data-board-action") && !local.includes("data-board-trip"));
+});
+
+test("a branch that shows no module ids can't name one in its copy, but may in its ids and links", async () => {
+  const { checkUnnumbered, loadQuests } = await import("../content/build.mjs");
+  const branch = { id: "essentials", modules: ["E1", "EC1"] };
+  const module = (id, extra) => ({ id, kind: "module", source: `${id}.md`, requires: ["E1"], after: "E1", body: "Start a trip.", ...extra });
+  const fine = new Map([["E1", module("E1")], ["EC1", module("EC1", { choices: [{ id: "A", explanation: "You'll see one at the end." }] })]]);
+  assert.doesNotThrow(() => checkUnnumbered(branch, fine));
+  const named = new Map([...fine, ["EC1", module("EC1", { choices: [{ id: "A", explanation: "You'll see one in E1." }] })]]);
+  assert.throws(() => checkUnnumbered(branch, named), /EC1\.md: names E1/);
+  const inBody = new Map([...fine, ["E1", module("E1", { body: "As in EC1, the card…" })]]);
+  assert.throws(() => checkUnnumbered(branch, inBody), /E1\.md: names EC1/);
+  // And Essentials' own copy names none.
+  const quests = loadQuests();
+  assert.equal(quests.branches.find((b) => b.id === "essentials").numbered, false);
+});
+
+test("a branch with maxWords keeps each guide message that short, counting the words a learner reads", async () => {
+  const { checkWords, wordsIn, buildCourse: build } = await import("../content/build.mjs");
+  assert.equal(wordsIn('<p>Start <strong>a trip</strong>, then <button class="board-action">Ship the fix</button>.</p>'), 7);
+  const page = (words) => ({ intro: "<p>Hi.</p>", sections: [{ title: "Run a trip", html: `<p>${"word ".repeat(words)}</p>` }] });
+  assert.doesNotThrow(() => checkWords(page(100), 100, "here"));
+  assert.throws(() => checkWords(page(101), 100, "here"), /"Run a trip" is 101 words; its branch keeps each message to 100/);
+  // Essentials' own messages are all within it.
+  const essentials = build().exercises.find((e) => e.id === "07-essentials").modes.browser;
+  assert.ok([essentials.intro, ...essentials.sections.map((s) => s.html)].every((html) => wordsIn(html) <= 100));
 });

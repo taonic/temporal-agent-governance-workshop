@@ -70,6 +70,41 @@ const ICONS = {
     <path d="M26 9 L22.5 22.5 L14 31 L17.5 17.5 Z" fill="var(--paper)" stroke="${ink}" stroke-width="1.8" stroke-linejoin="round"/>
     <path d="M26 9 L22.5 22.5 L17.5 17.5 Z" fill="${ink}"/>
     <circle cx="20" cy="20" r="1.8" fill="var(--paper)"/>`,
+  // Essentials' module badges (quests/badges.yaml): one for each thing a trip on Temporal survives.
+  logbook: (ink, tint) => `
+    <path d="M8 5 H30 A2 2 0 0 1 32 7 V35 H10 A3 3 0 0 1 7 32 V6 A1 1 0 0 1 8 5 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M7 31 A3 3 0 0 1 10 28 H32" fill="none" stroke="${ink}" stroke-width="2.2"/>
+    <path d="M13 12 H26 M13 17 H26 M13 22 H21" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M26 5 V14 L29 11.5 L32 14 V5" fill="${ink}"/>`,
+  wrench: (ink, tint) => `
+    <path d="M27 5 A8 8 0 0 0 20.5 15.8 L6.5 29.8 A3 3 0 0 0 10.7 34 L24.7 20 A8 8 0 0 0 35.5 13.5 L30.5 15.5 L26 14 L24.5 9.5 L27 5 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <circle cx="9" cy="31.5" r="1.6" fill="${ink}"/>`,
+  umbrella: (ink, tint) => `
+    <path d="M4 20 A16 14 0 0 1 36 20 Q32 17 28 20 Q24 17 20 20 Q16 17 12 20 Q8 17 4 20 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M20 6 V3 M20 20 V32 A3 3 0 0 1 14 32" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M8 27 L6 31 M31 26 L29 30 M34 33 L33 35" stroke="${ink}" stroke-width="2" stroke-linecap="round" opacity=".6"/>`,
+  moon: (ink, tint) => `
+    <path d="M24 5 A15 15 0 1 0 35 26 A12 12 0 1 1 24 5 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M30 6 L31.2 9 L34 10 L31.2 11 L30 14 L28.8 11 L26 10 L28.8 9 Z" fill="${ink}"/>`,
+  plug: (ink, tint) => `
+    <path d="M14 4 V11 M26 4 V11" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M9 11 H31 V18 A11 11 0 0 1 20 29 A11 11 0 0 1 9 18 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M20 29 V33 Q20 37 24 37 H30" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M21.5 14 L17.5 20 H22 L18.5 25" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`,
+  hourglass: (ink, tint) => `
+    <path d="M9 4 H31 M9 36 H31" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M11 4 V9 C11 15 18 17 18 20 C18 23 11 25 11 31 V36 H29 V31 C29 25 22 23 22 20 C22 17 29 15 29 9 V4" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M14 33 C15 29 18 28 20 27 C22 28 25 29 26 33 Z M15.5 10 H24.5 C23 13 21 14 20 15.5 C19 14 17 13 15.5 10 Z" fill="${ink}"/>`,
+  stamp: (ink, tint) => `
+    <circle cx="20" cy="8" r="5" fill="${tint}" stroke="${ink}" stroke-width="2.4"/>
+    <path d="M17 13 L16 20 H24 L23 13" fill="${tint}" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/>
+    <rect x="6" y="20" width="28" height="7" rx="2" fill="${tint}" stroke="${ink}" stroke-width="2.4"/>
+    <path d="M5 33 H35" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M14 23.5 L17.5 25 L26 22" fill="none" stroke="${ink}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>`,
+  undo: (ink, tint) => `
+    <path d="M12 12 H25 A10 10 0 0 1 25 32 H11" fill="none" stroke="${ink}" stroke-width="4.6" stroke-linecap="round"/>
+    <path d="M12 12 H25 A10 10 0 0 1 25 32 H11" fill="none" stroke="${tint}" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M15 4 L5 12 L15 20 Z" fill="${ink}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>`,
   link: (ink) => `
     <g transform="rotate(-45 20 20)">
       <rect x="2" y="13" width="20" height="14" rx="7" fill="none" stroke="${ink}" stroke-width="3.2"/>
@@ -141,8 +176,19 @@ export function medalSvg(badge, { earned = false, size = 96, label = null } = {}
     ? `<path d="M2 104 h116 l-6 9 l6 9 h-116 l6 -9 z" fill="${locked ? "var(--line)" : col}" stroke="${locked ? "var(--line-strong)" : `color-mix(in srgb, ${col} 70%, black)`}" stroke-width="1.2"/>` +
       `<text x="60" y="114" text-anchor="middle" dominant-baseline="middle" font-size="${ribbon.length > 17 ? 8.6 : 9.6}" font-weight="700" fill="${locked ? "var(--faint)" : "white"}" letter-spacing=".3">${escape(ribbon.toUpperCase())}</text>`
     : "";
+  // An earned medal's shine: a band of light, clipped to its shape, waiting off to its left. CSS
+  // sweeps it across (.badge-shine: the earn moment, and hovering it on the badges page).
+  const clip = skill ? `<circle cx="60" cy="72" r="52"/>` : `<polygon points="${hex(60, 72, 54)}"/>`;
+  const shine =
+    !locked && !small
+      ? `<g clip-path="url(#${id}-clip)"><polygon class="badge-shine" points="-46,0 -14,0 -44,136 -76,136" fill="url(#${id}-shine)"/></g>`
+      : "";
+  const shineDefs =
+    !locked && !small
+      ? `<clipPath id="${id}-clip">${clip}</clipPath><linearGradient id="${id}-shine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="white" stop-opacity="0"/><stop offset=".5" stop-color="white" stop-opacity=".75"/><stop offset="1" stop-color="white" stop-opacity="0"/></linearGradient>`
+      : "";
   const a11y = label ? `role="img" aria-label="${escape(label)}"` : 'aria-hidden="true"';
   return `<svg class="badge-medal${locked ? " is-locked" : ""}" width="${size}" height="${(size * 136) / 120}" viewBox="0 0 120 136" ${a11y}>
-<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hi}"/><stop offset="1" stop-color="${col}"/></linearGradient></defs>
-${shape}${crown}${icon}${num}${rib}</svg>`;
+<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hi}"/><stop offset="1" stop-color="${col}"/></linearGradient>${shineDefs}</defs>
+${shape}${crown}${icon}${num}${shine}${rib}</svg>`;
 }

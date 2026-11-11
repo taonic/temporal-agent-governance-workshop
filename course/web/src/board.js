@@ -4,6 +4,9 @@
 
 // The board's actions (essentials/board.py ACTIONS, the same list), each a fixed command the
 // runner runs in the sandbox.
+// The Temporal trip's steps, by id (essentials/shared.py): a guide button can wait for one
+// (#board/pull-plug/after-book_hotel).
+export const BOARD_STEPS = ["find_flight", "book_flight", "book_hotel", "charge_card", "send_confirmation", "hold_seat", "wait_hold", "approval"];
 export const BOARD_ACTIONS = ["setup", "reset", "start-trip", "pull-plug", "start-worker", "flaky", "ship-fix", "approve", "reject"];
 
 // The world checks a module can name (check.world): essentials/checks.py CHECKS, the same list.
@@ -173,13 +176,16 @@ function checkView(state) {
 export function boardView(state, now = state?.at ?? Date.now() / 1000) {
   if (!state) return null;
   const trips = state.trips ?? [];
+  // The airline's bad minute, counted down on the board's clock (the state says how long was left
+  // at its `at`), so it ticks every second between polls, and ends on time.
+  const flakyFor = state.flaky ? Math.max(0, Math.ceil((state.at ?? now) + (state.flakyFor ?? 0) - now)) : 0;
   return {
     module: state.module,
     twin: Boolean(state.twin),
     coordinator: Boolean(state.worker),
     plainRunning: Boolean(state.plain),
-    flaky: Boolean(state.flaky),
-    flakyFor: state.flakyFor ?? 0,
+    flaky: flakyFor > 0,
+    flakyFor,
     mistake: Boolean(state.mistake),
     declined: Boolean(state.declined),
     check: checkView(state),

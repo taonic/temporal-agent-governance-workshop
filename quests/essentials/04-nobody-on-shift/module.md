@@ -1,6 +1,8 @@
 ---
 id: E4
 title: Nobody on shift
+emoji: "🌙"
+note: "nobody's home"
 teaser: "Ask for a trip while nobody is working. One request is lost; the other waits in the safe until a coordinator arrives."
 learn: "A trip on Temporal waits for a worker, instead of being dropped when none is running."
 minutes: 5

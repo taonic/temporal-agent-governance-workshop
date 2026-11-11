@@ -71,7 +71,9 @@ function sendBuffered(req, res, status, headers, entry) {
 // .click() fails SvelteKit's which===1 check, hence the constructed MouseEvent. Given a
 // workflow (and a tab) instead of a path, it looks up the latest run with the UI's own API. The
 // UI writes its history filter to ?category= but doesn't read it back on load (2.50), so for
-// history?category=… the loader sets the Filter menu itself.
+// history?category=… the loader sets the Filter menu itself. The compact view isn't in the URL
+// either (it's the UI's eventView preference): for the tab "compact", it opens the history and
+// presses Compact.
 //
 // It also sets the UI's own preferences before the UI reads them: dark mode, to match the
 // course, and the side nav collapsed, since the pane is narrower than a browser window. They're
@@ -106,6 +108,8 @@ setTimeout(function(){if(a.parentNode)a.remove();},0);
 reply({__course:prevented?'navok':'navfail',path:path});
 }catch(err){reply({__course:'navfail',path:path});}}
 var LABELS={activity:'Activity','local-activity':'Local Activity',signal:'Signal',timer:'Timer',update:'Update','child-workflow':'Child Workflow',nexus:'Nexus',workflow:'Workflow',other:'Other'};
+function compact(tries){var b=[].slice.call(document.querySelectorAll('button,label,[role=radio],[role=tab]')).filter(function(x){return x.textContent.trim()==='Compact';})[0];
+if(!b){if(tries<40)setTimeout(function(){compact(tries+1);},250);return;}b.click();}
 function filterTo(cats,tries){var btn=[].slice.call(document.querySelectorAll('button')).filter(function(b){return b.textContent.trim()==='Filter';})[0];
 if(!btn){if(tries<40)setTimeout(function(){filterTo(cats,tries+1);},250);return;}
 function box(n){return document.querySelector('input[type=checkbox][data-track-text="'+n+'"]');}
@@ -113,9 +117,9 @@ function pick(left){cats.forEach(function(c){var b=box(LABELS[c]||c);if(b&&!b.ch
 setTimeout(function(){var ok=cats.every(function(c){var b=box(LABELS[c]||c);return b&&b.checked;});if(!ok&&left>0)pick(left-1);else btn.click();},250);}
 btn.click();setTimeout(function(){var none=box('None');if(none)none.click();setTimeout(function(){pick(4);},250);},300);}
 window.addEventListener('message',function(e){var d=e.data;if(!d||d.__course!=='nav')return;
-if(d.workflow){var wf='/namespaces/default/workflows/'+encodeURIComponent(d.workflow);var tab=d.tab||'history';
+if(d.workflow){var wf='/namespaces/default/workflows/'+encodeURIComponent(d.workflow);var tab=d.tab||'history';var view=tab==='compact';if(view)tab='history';
 fetch('/api/v1'+wf).then(function(r){return r.json();}).then(function(j){go(wf+'/'+j.workflowExecutionInfo.execution.runId+'/'+tab);
-var m=tab.match(/^history\\?category=([\\w,-]+)/);if(m)setTimeout(function(){filterTo(m[1].split(','),0);},300);})
+var m=tab.match(/^history\\?category=([\\w,-]+)/);if(m)setTimeout(function(){filterTo(m[1].split(','),0);},300);if(view)setTimeout(function(){compact(0);},300);})
 .catch(function(){reply({__course:'navfail',path:wf});});return;}
 if(d.path)go(d.path);});})();</script>`;
 

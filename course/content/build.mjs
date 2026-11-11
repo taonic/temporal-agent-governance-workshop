@@ -33,7 +33,7 @@ import { tourRange } from "../web/src/tourRange.js";
 import { ruleBlock, ruleId, todoFor } from "../web/src/snippets.js";
 import { ICON_NAMES } from "../web/src/badgeArt.js";
 import { SKILL_RULES } from "../web/src/badges.js";
-import { BOARD_ACTIONS, WORLD_CHECKS } from "../web/src/board.js";
+import { BOARD_ACTIONS, BOARD_STEPS, WORLD_CHECKS } from "../web/src/board.js";
 
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("bash", bash);
@@ -234,7 +234,8 @@ function createRenderer() {
   // #workflow/board-sfo-jfk ([open it](#workflow/board-sfo-jfk/query)) opens the latest of
   // exercise 1's workflows whose id starts with that, in the Temporal UI pane, on a tab if one
   // follows (history, pending-activities, query…). #trip/SFO-JFK is short for #workflow/hello-sfo-jfk.
-  // On the Trip board, #latest-trip opens its latest trip's workflow (#latest-trip/query: on a tab).
+  // On the Trip board, [Open the trip's logbook](#latest-trip) is a button that opens its latest
+  // trip's workflow, on its compact event history (#latest-trip/pending-activities: on that tab).
   // Locally, they're all just their words.
   md.core.ruler.push("action_links", (state) => {
     for (const block of state.tokens) {
@@ -245,7 +246,13 @@ function createRenderer() {
         const href = token.type === "link_open" ? token.attrGet("href") ?? "" : "";
         const trip = href.match(/^#trip\/([A-Za-z]{3})-([A-Za-z]{3})(?:\/([a-z-]+))?$/);
         const flow = trip ? [null, `hello-${trip[1]}-${trip[2]}`.toLowerCase(), trip[3]] : href.match(/^#workflow\/([a-z0-9-]+)(?:\/([a-z-]+))?$/);
-        const boardAction = href.match(/^#board\/([a-z-]+)$/)?.[1];
+        // #board/pull-plug/after-book_hotel: the button waits for that step to be done on the trip (and
+        // its twin), saying so in the link's title ("Pull the plug once the hotel is booked").
+        const boardMatch = href.match(/^#board\/([a-z-]+)(?:\/after-([a-z_]+))?$/);
+        const boardAction = boardMatch?.[1];
+        const after = boardMatch?.[2] ?? null;
+        if (after && !BOARD_STEPS.includes(after)) throw new Error(`${state.env.sourceFile}: #board/${boardAction}/after-${after}: ${after} isn't one of the trip's steps (${BOARD_STEPS.join(", ")})`);
+        const waiting = token.attrGet?.("title") ?? null;
         const latest = href.match(/^#latest-trip(?:\/([a-z-]+))?$/);
         const persona = href.match(/^#persona\/([a-z-]+)$/)?.[1];
         if (persona && !loadPersonas().some((p) => p.id === persona)) throw new Error(`${state.env.sourceFile}: #persona/${persona} isn't a persona (quests/personas.yaml)`);
@@ -264,13 +271,13 @@ function createRenderer() {
           state.env.mode !== "browser"
             ? md.utils.escapeHtml(label)
             : boardAction
-              ? `<button class="board-action" type="button" data-board-action="${boardAction}">${escapeAttr(label)}</button>`
+              ? `<button class="board-action" type="button" data-board-action="${boardAction}"${after ? ` data-after="${after}"` : ""}${after && waiting ? ` data-waiting="${escapeAttr(waiting)}"` : ""}>${escapeAttr(label)}</button>`
               : persona
               ? `<button class="button" type="button" data-persona-switch="${persona}">${escapeAttr(label)}</button>`
               : share
               ? `<button class="button button-primary" type="button" data-share>${escapeAttr(label)}</button>`
               : latest
-              ? `<button class="workflow-link" type="button" data-board-trip${latest[1] ? ` data-workflow-tab="${latest[1]}"` : ""} title="Open the latest trip in the Temporal UI">${escapeAttr(label)}</button>`
+              ? `<button class="board-action is-open" type="button" data-board-trip data-workflow-tab="${latest[1] ?? "compact"}" title="Open the latest trip in the Temporal UI">${escapeAttr(label)}</button>`
               : flow
               ? `<button class="workflow-link" type="button" data-workflow-open="${flow[1]}-"${flow[2] ? ` data-workflow-tab="${flow[2]}"` : ""} title="Open it in the Temporal UI">${escapeAttr(label)}</button>`
               : `<button class="sandbox-start" type="button" data-sandbox-start>${escapeAttr(label)}</button>`;
@@ -713,6 +720,8 @@ export function loadQuests() {
     for (const id of branch.personas) {
       if (!personas.some((p) => p.id === id)) throw new Error(`${branchFile}: persona ${id} isn't one of ${personas.map((p) => p.id).join(", ")} (quests/personas.yaml)`);
     }
+    if (branch.welcome && !(branch.welcome.title && branch.welcome.goal)) throw new Error(`${branchFile}: its welcome needs a title and a goal`);
+    for (const a of branch.welcome?.about ?? []) if (!(a.title && a.text)) throw new Error(`${branchFile}: each of its welcome's about needs a title and a text`);
     if (!LAYOUTS.includes(branch.layout)) throw new Error(`${branchFile}: layout ${branch.layout} isn't one of ${LAYOUTS.join(", ")}`);
     for (const moduleDir of subdirs(`${QUESTS}/${dir}`)) {
       const challenge = loadChallenge(`${QUESTS}/${dir}/${moduleDir}`, dir);
@@ -753,7 +762,9 @@ export function loadQuests() {
         if (b[key] == null) throw new Error(`${bossFile}: no ${key} in its frontmatter`);
       }
       if (modules.has(b.id)) throw new Error(`${bossFile}: id ${b.id} is also ${modules.get(b.id).source}'s`);
-      modules.set(b.id, { ...b, kind: "boss", branch: dir, source: bossFile, status: b.status ?? "ready", requires: b.requires ?? [], check: { kind: "quiz" }, files: [], body: "" });
+      const pool = loadBossPool(`${QUESTS}/${dir}/boss/pool.yaml`, modules, dir);
+      if ((b.status ?? "ready") === "ready" && pool.length < BOSS_ROUNDS) throw new Error(`${bossFile}: it's ready, but its pool.yaml has ${pool.length} stories (a fight draws ${BOSS_ROUNDS})`);
+      modules.set(b.id, { ...b, kind: "boss", branch: dir, source: bossFile, status: b.status ?? "ready", requires: b.requires ?? [], check: { kind: "quiz" }, files: [], body: "", pool });
       branch.boss = b.id;
     }
     // A challenge sits after its module, takes its tier, and gates the next module.
@@ -766,6 +777,7 @@ export function loadQuests() {
       const rest = branch.modules.slice(branch.modules.indexOf(id) + 1).map((m) => modules.get(m));
       ch.before = rest.find((m) => m.kind === "module")?.id ?? null;
     }
+    if (branch.numbered === false) checkUnnumbered(branch, modules);
     branches.push(branch);
   }
   branches.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
@@ -868,7 +880,7 @@ export function loadBadges(quests) {
         tierName: tier.name,
         numeral: ROMAN[i + 1] ?? String(i + 1),
         modules,
-        criteria: `Pass ${idList(modules)}`,
+        criteria: branch.numbered === false ? `Finish every step of ${tier.name}` : `Pass ${idList(modules)}`,
       }, source);
     });
     if (branch.boss) {
@@ -893,6 +905,48 @@ export function loadBadges(quests) {
 // A challenge folder (challenge.md, scenario.py, recordings/): the question, its choices, and
 // each choice's recorded run. null for a module's folder.
 //
+// The fields of a module that aren't copy the learner reads.
+const NOT_COPY = new Set(["id", "after", "before", "requires", "branch", "source", "status", "kind", "files", "worker", "board", "world", "recording", "code"]);
+
+// A branch with `numbered: false` (Essentials) shows its learners no module ids (E1, EC1…), so its
+// copy can't name one either: "you'll see one at the end", not "in E8".
+export function checkUnnumbered(branch, modules) {
+  const ids = branch.modules;
+  const named = new RegExp(`\\b(${ids.map((id) => id.replace(/[^A-Za-z0-9]/g, "")).join("|")})\\b`);
+  const walk = (value, where) => {
+    if (typeof value === "string") {
+      const hit = value.match(named);
+      if (hit) throw new Error(`${where}: names ${hit[1]}, but ${branch.id} shows its learners no module ids (numbered: false). Say it in words: "at the end", "when you pulled the plug"`);
+    } else if (Array.isArray(value)) value.forEach((v) => walk(v, where));
+    else if (value && typeof value === "object") {
+      for (const [key, v] of Object.entries(value)) if (!NOT_COPY.has(key)) walk(v, where);
+    }
+  };
+  for (const id of ids) walk(modules.get(id), modules.get(id).source);
+}
+
+// A boss's stories (boss/pool.yaml): each a story, three or four choices with one right, why, and
+// the module that teaches it (a wrong answer links back to it). A fight draws BOSS_ROUNDS of them
+// (web/src/boss.js). No pool: the boss is coming soon.
+const BOSS_ROUNDS = 8;
+function loadBossPool(source, modules, branch) {
+  const text = readIfExists(source);
+  if (!text) return [];
+  const pool = YAML.parse(text) ?? [];
+  const ids = new Set();
+  for (const q of pool) {
+    for (const key of ["id", "module", "story", "choices", "why"]) if (q[key] == null) throw new Error(`${source}: a story has no ${key} (${q.id ?? "no id"})`);
+    if (ids.has(q.id)) throw new Error(`${source}: two stories are ${q.id}`);
+    ids.add(q.id);
+    const m = modules.get(q.module);
+    if (!m || m.branch !== branch) throw new Error(`${source}: ${q.id} is taught by ${q.module}, which isn't a module in ${branch}`);
+    if (q.choices.length < 3 || q.choices.length > 4 || q.choices.filter((c) => c.right).length !== 1) {
+      throw new Error(`${source}: ${q.id} needs three or four choices, one of them right`);
+    }
+  }
+  return pool.map((q) => ({ id: q.id, module: q.module, story: q.story, why: q.why, choices: q.choices.map((c) => ({ label: c.label, right: Boolean(c.right) })) }));
+}
+
 // A question challenge (Essentials') has no file, no block it replaces and no code in its
 // choices: nothing runs, so it has no scenario and no recordings. Its choices are plain answers.
 function loadChallenge(dir, branch) {
@@ -1122,6 +1176,8 @@ function buildExercise(md, quests, ex, number) {
     modes: Object.fromEntries(
       MODES.map((mode) => {
         const page = renderPage(md, body, mode, mods[0].source, files);
+        const maxWords = quests.branches.find((b) => b.id === mods[0].branch)?.maxWords;
+        if (maxWords) checkWords(page, maxWords, where);
         for (const section of page.sections) {
           if (section.kind === "challenge") section.challenge = challenges.find((c) => beats.get(c.id)[0] === section.id).id;
         }
@@ -1129,6 +1185,18 @@ function buildExercise(md, quests, ex, number) {
       }),
     ),
   };
+}
+
+// A branch with `maxWords` (Essentials: 100) keeps each of the guide's messages that short, so
+// each one can be read at a glance. Words as the learner reads them: the HTML's text.
+export function wordsIn(html) {
+  return html.replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/gi, " ").split(/\s+/).filter((t) => /[\p{L}\p{N}]/u.test(t)).length;
+}
+export function checkWords(page, max, where) {
+  for (const beat of [{ title: "its introduction", html: page.intro }, ...page.sections]) {
+    const n = wordsIn(beat.html ?? "");
+    if (n > max) throw new Error(`${where}: "${beat.title}" is ${n} words; its branch keeps each message to ${max} (maxWords)`);
+  }
 }
 
 // How a module's Trip board starts (essentials/board.py BOARD_DEFAULTS reads the same keys).
@@ -1279,6 +1347,9 @@ function assembleCourse() {
       status: m.status,
       check: m.check.kind,
       exercise: moduleExercise.get(m.source) ?? null,
+      ...(m.emoji ? { emoji: m.emoji } : {}),
+      ...(m.note ? { note: m.note } : {}),
+      ...(m.kind === "boss" ? { pool: m.pool ?? [] } : {}),
       // A challenge: the module it follows, and the one it gates.
       ...(m.kind === "challenge" ? { after: m.after, before: m.before, choices: m.choices.length } : {}),
     })),

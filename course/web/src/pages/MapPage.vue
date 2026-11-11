@@ -12,6 +12,7 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 
 import FirstRun from "../components/FirstRun.vue";
+import SketchMap from "../components/SketchMap.vue";
 import FocusMap from "../components/FocusMap.vue";
 import NodeDetail from "../components/NodeDetail.vue";
 import NodeGlyph from "../components/NodeGlyph.vue";
@@ -22,6 +23,8 @@ import {
   STATE_LABEL,
   activePath,
   branchesById,
+  idOf,
+  numbered,
   isDone,
   isPlayable,
   level,
@@ -33,12 +36,19 @@ import {
   recommended,
   stateOf,
   title,
+  trunk,
   xp,
 } from "../progress.js";
 
-// The first-run view: nothing done yet, no node linked to, and the whole map not asked for.
+// The first-run view: nothing done yet, no node linked to, and the whole map not asked for. A
+// branch with a welcome (Essentials) keeps it until its first module is done, however asked: its
+// map is too much to take in before then.
 const everything = ref(load("map-everything", false));
-const firstRun = computed(() => !progress.completed.length && !store.route.focus && !everything.value);
+// A branch with `map: sketch` (Essentials) is drawn as a sketchbook page, on its own: no views
+// to switch, no paths to pick, no legend (the page shows where you are).
+const sketch = trunk.map === "sketch";
+const doneHere = computed(() => progress.completed.some((id) => modulesById.has(id)));
+const firstRun = computed(() => !doneHere.value && (Boolean(trunk.welcome) || (!store.route.focus && !everything.value)));
 function showEverything() {
   everything.value = true;
   save("map-everything", true);
@@ -109,6 +119,8 @@ const tiersOf = (branch) =>
 const listBranches = computed(() =>
   course.branches.map((b) => ({ ...b, after: opensAfter(b), hasNext: b.modules.some((id) => stateOf(modulesById.get(id)) === "next") })),
 );
+// The legend's sample ids: none where the course shows its learners none (Essentials).
+const legendId = numbered(modulesById.get(trunk.modules[0])) ? ["F2", "P1"] : ["", ""];
 const LEGEND = [
   { state: "next", text: "Next: your next step" },
   { state: "open", text: "Available" },
@@ -157,6 +169,8 @@ const LEGEND = [
         </aside>
 
         <section class="map-main" aria-label="The skill tree">
+          <SketchMap v-if="sketch" class="map-desktop" :selected="selected" @select="select" />
+          <template v-else>
           <div class="map-toolbar">
             <div class="map-view-toggle" role="group" aria-label="View">
               <button type="button" :class="['button', mapView === 'focus' ? 'active' : '']" :aria-pressed="mapView === 'focus'" @click="setView('focus')">Focus</button>
@@ -178,8 +192,8 @@ const LEGEND = [
             </p>
           </div>
           <ul class="map-legend" aria-label="Legend">
-            <li v-for="item in LEGEND" :key="item.state"><NodeGlyph :state="item.state" label="F2" color="green" :size="22" />{{ item.text }}</li>
-            <li><NodeGlyph state="open" label="P1" color="slate" soon :size="22" />Coming soon (not playable yet)</li>
+            <li v-for="item in LEGEND" :key="item.state"><NodeGlyph :state="item.state" :label="legendId[0]" color="green" :size="22" />{{ item.text }}</li>
+            <li><NodeGlyph state="open" :label="legendId[1]" color="slate" soon :size="22" />Coming soon (not playable yet)</li>
           </ul>
           <p class="map-rule">
             <strong>Prerequisites are recommended, not required.</strong> Every node you can play can be entered:
@@ -193,6 +207,7 @@ const LEGEND = [
               <button type="button" class="button" @click="toward = null">Show the whole tree</button>
             </p>
             <SkillMap class="map-desktop" :selected="selected" :toward="toward" @select="select" />
+          </template>
           </template>
         </section>
       </div>
@@ -221,8 +236,8 @@ const LEGEND = [
                 :aria-expanded="opened === m.id"
                 @click="opened = opened === m.id ? null : m.id"
               >
-                <NodeGlyph :kind="m.kind" :state="stateOf(m)" :label="m.id" :soon="!isPlayable(m)" :size="26" />
-                <span class="map-list-title"><span :class="['node-num', 'map-list-id', { 'is-kind': m.kind !== 'module' }]">{{ m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : m.id }}</span>{{ m.title }}</span>
+                <NodeGlyph :kind="m.kind" :state="stateOf(m)" :label="idOf(m)" :soon="!isPlayable(m)" :size="26" />
+                <span class="map-list-title"><span v-if="m.kind !== 'module' || idOf(m)" :class="['node-num', 'map-list-id', { 'is-kind': m.kind !== 'module' }]">{{ m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : m.id }}</span>{{ m.title }}</span>
                 <span class="map-list-state">{{ isPlayable(m) ? STATE_LABEL[stateOf(m)] : "Soon" }}</span>
               </button>
               <div v-if="opened === m.id" class="map-list-detail">

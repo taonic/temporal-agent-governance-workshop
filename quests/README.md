@@ -29,6 +29,14 @@ column: 1                    # its column on the map, 1-5 (none: the trunk)
 classTitle: AI Agent Specialist   # its boss badge: at most 20 characters
 worker: uv run travel-worker      # its modules' default worker command
 agentUi: true                     # false: its modules have no Agent UI tab
+numbered: true                    # false: its learners see no module ids (Essentials), so its copy can't name one
+maxWords: 100                     # optional: each of the guide's messages is at most this many words (Essentials)
+map: sketch                       # optional: its map is a sketchbook page (Essentials), each stop with its module's `emoji:` and `note:`
+welcome:                          # optional: a lean starting screen (Essentials): its goal, in two lines
+  title: Things go wrong. Your process shouldn't.
+  goal: Follow one trip through crashes…
+  about:                          # optional: short blocks under it, each a title and a text
+    - { title: Why a trip?, text: Everyone has booked one… }
 tiers:                            # rows on the map; a module's `tier` is 1-based
   - name: Durable agents
     badge:                        # earned by passing every module and challenge in the tier
@@ -40,7 +48,7 @@ tiers:                            # rows on the map; a module's `tier` is 1-base
 What the branch is about, in a sentence or two.
 ```
 
-A branch's boss is `boss/boss.md`: frontmatter only (`id`, `title`, `teaser`, `learn` (what it tests), `xp`, `requires`, `status`), drawn at the bottom of its branch's column. Its quiz comes with issue 03.
+A branch's boss is `boss/boss.md`: frontmatter only (`id`, `title`, `teaser`, `learn` (what it tests), `xp`, `requires`, `status`), drawn at the bottom of its branch's column. Its fight is `boss/pool.yaml`: stories, each with an `id`, the `module` that teaches it, the `story`, three or four `choices` (one `right: true`) and `why`. A fight draws one story per module, then more as misses need them; the boss has 8 HP and the learner 3 hearts (`course/web/src/boss.js`). A boss without a pool stays `status: coming-soon`.
 
 ## Badges
 

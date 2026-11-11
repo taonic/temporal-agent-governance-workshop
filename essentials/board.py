@@ -314,7 +314,7 @@ class Board:
             "mistake": bool(switches["mistake"]),
             "declined": bool(switches["declined"]),
             "flaky": switches["flaky_until"] > time.time(),
-            "flakyFor": max(0, round(switches["flaky_until"] - time.time())),
+            "flakyFor": max(0, round(switches["flaky_until"] - time.time(), 1)),
             "worker": self.processes.running("worker"),
             "plain": self.processes.running("plain"),
             "trips": shown,

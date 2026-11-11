@@ -14,7 +14,6 @@ import MaximizeButton from "../components/MaximizeButton.vue";
 import SandboxPanes from "../components/SandboxPanes.vue";
 import TerminalDock from "../components/TerminalDock.vue";
 import TripBoard from "../components/TripBoard.vue";
-import { actionsIn } from "../board.js";
 import Tour from "../Tour.vue";
 import { markSolutionUsed, moduleOfBeat, modulesById } from "../progress.js";
 import {
@@ -48,10 +47,6 @@ const boardModule = computed(() => {
   if (!board.value) return null;
   const id = store.route.module ?? exercise.value.modules[0];
   return modulesById.get(id)?.kind === "challenge" ? modulesById.get(id).after : id;
-});
-const boardActions = computed(() => {
-  const beats = exercise.value.moduleBeats?.[boardModule.value] ?? [];
-  return actionsIn(exercise.value.modes.browser.sections.filter((s) => beats.includes(s.id)).map((s) => s.html).join("\n"));
 });
 const live = computed(() => mode.value === "browser" && store.sandbox.state === "ready");
 // Exercise 1 starts trips from buttons, which show each trip's workflow: the poll lists them.
@@ -418,7 +413,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="workspace-views">
-        <TripBoard v-if="board" v-show="store.workspaceView === 'code'" :exercise="exercise" :module="boardModule" :actions="boardActions" :live="live" />
+        <TripBoard v-if="board" v-show="store.workspaceView === 'code'" :exercise="exercise" :module="boardModule" :live="live" />
         <CodeEditor
           v-else
           v-show="mode === 'local' || store.workspaceView === 'code'"

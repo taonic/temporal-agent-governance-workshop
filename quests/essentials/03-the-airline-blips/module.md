@@ -1,6 +1,8 @@
 ---
 id: E3
 title: "The airline's system blips"
+emoji: "✈️"
+note: "the airline goes quiet"
 teaser: "The airline's system fails for a while. Watch the trip keep trying, waiting a little longer each time, while the plain program gives up."
 learn: "Automatic retries: a trip on Temporal rides out a failing service by itself."
 minutes: 5
@@ -48,14 +50,15 @@ Then start a trip straight away, while it's still down:
 
 ## 2. Watch who gets through
 
-Both trips ask the airline for a flight, and both get no answer.
+Both trips ask the airline for a flight, and get no answer.
 
-- **The plain twin** tries three times, quickly, and gives up. The customer has nothing booked, and nothing is still working on it. Someone would have to notice and try again by hand.
-- **The Temporal trip** keeps trying. It waits a second, then two, then four, and keeps going at that pace. Watch the attempts climb under "Finding a flight".
+- **The plain twin** tries three times, quickly, and gives up. Nothing is booked, and nobody is on it.
+- **The Temporal trip** keeps trying, waiting a little longer each time. Watch the attempts climb under "Finding a flight".
 
-When the airline comes back, the next attempt gets through, and the trip carries on as if nothing had happened. While it waited, nothing was running: the waiting costs nothing.
+When the airline is back, the next try gets through, and the trip carries on.
 
-<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> How a step tries again (how long to wait first, how much longer each time, and when, if ever, to stop) is its <strong>retry policy</strong>. It's set once, for every step, and Temporal does the trying.</p>
+<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> How a step tries again is its <strong>retry policy</strong>: set once, for every step, and Temporal does the trying.</p>
+
 
 ## Why a bad minute matters
 

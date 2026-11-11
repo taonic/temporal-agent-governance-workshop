@@ -101,3 +101,5 @@ The site also does a few things by itself, in the browser only:
 A check that passes leaves `.course/passed/<exercise>` and `.course/passed/<module>` (from `./quest check`), which is how the page knows to mark it passed.
 
 To see the course as a new learner does, open it with `?reset` (`http://localhost:4173/?reset`). It deletes your sandbox, disconnects the docs, signs you out and clears everything the site keeps in your browser, then loads the home page.
+
+To clear only the cookies, open it with `?purge` (`http://localhost:4173/?purge`). It signs you out and disconnects the docs, but keeps your sandbox, your progress and your persona, then loads the same page again.

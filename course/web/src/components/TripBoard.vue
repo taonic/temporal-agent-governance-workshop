@@ -2,7 +2,8 @@
 // The Trip board: what an Essentials module shows in place of the editor and terminals. The
 // booking trip's logbook as steps that tick off, the coordinator on or off shift, the plain twin's
 // trip beside it in the modules that have one, and the outside world, where every booking lands.
-// Its buttons are the board's actions (store.js boardAction), the same ones the guide's text has.
+// What to do to the trip is in the guide's text, as buttons (store.js boardAction), one place for
+// each: the board only offers Start over.
 //
 // It reads the state essentials/board.py reports, through the sandbox poll (ExercisePage), and
 // sets the module's board up on arrival (anew for another module; as it is for the same one).
@@ -19,7 +20,6 @@ const props = defineProps({
   exercise: { type: Object, required: true },
   // The module on show: its board (twin, mistake) and the actions its text uses.
   module: { type: String, default: null },
-  actions: { type: Array, default: () => [] },
   live: { type: Boolean, default: false },
 });
 
@@ -109,7 +109,6 @@ watch(
   { immediate: true },
 );
 
-const offers = (action) => props.actions.includes(action);
 function act(action) {
   boardAction(action, props.module);
 }
@@ -134,7 +133,7 @@ const MARK = { done: "✓", active: "", retrying: "↻", todo: "", lost: "✕", 
     <template v-else>
       <div v-if="watching" class="tb-recording" role="group" aria-label="A recording of this module">
         <div class="tb-recording-top">
-          <p class="tb-recording-title"><span class="tb-rec-dot" aria-hidden="true" /> A recording of {{ module }}, as its steps go</p>
+          <p class="tb-recording-title"><span class="tb-rec-dot" aria-hidden="true" /> A recording of this step, as it goes</p>
           <button class="button button-primary tb-recording-start" type="button" :disabled="sandboxStartView().disabled" @click="startSandbox()">
             {{ sandboxStartView().label }} to run it yourself
           </button>
@@ -162,16 +161,7 @@ const MARK = { done: "✓", active: "", retrying: "↻", todo: "", lost: "✕", 
         </div>
       </header>
 
-      <div v-if="!watching" class="tb-actions" role="group" aria-label="What to do to the trip">
-        <button class="tb-act is-primary" type="button" :disabled="!ready || !!pending" @click="act('start-trip')">{{ pending === "start-trip" ? "Starting…" : "▶ Start a trip" }}</button>
-        <button v-if="ready && view.coordinator && (offers('pull-plug') || offers('start-worker'))" class="tb-act is-danger" type="button" :disabled="!!pending" @click="act('pull-plug')">🔌 Pull the plug</button>
-        <button v-if="ready && !view.coordinator" class="tb-act" type="button" :disabled="!!pending" @click="act('start-worker')">🧑‍💼 Put a coordinator on shift</button>
-        <button v-if="offers('flaky')" class="tb-act" type="button" :disabled="!ready || !!pending || view.flaky" @click="act('flaky')">⚡ Make the airline flaky</button>
-        <template v-if="offers('approve') && ready && latest?.temporal.asking">
-          <button class="tb-act is-good" type="button" :disabled="!!pending" @click="act('approve')">👍 Approve</button>
-          <button class="tb-act is-danger" type="button" :disabled="!!pending" @click="act('reject')">👎 Reject</button>
-        </template>
-        <button v-if="offers('ship-fix')" class="tb-act" type="button" :disabled="!ready || !!pending || !view.mistake" @click="act('ship-fix')">{{ ready && !view.mistake ? "✓ Fix shipped" : "🛠 Ship the fix" }}</button>
+      <div v-if="!watching" class="tb-actions" role="group" aria-label="The board">
         <button class="tb-act is-quiet" type="button" :disabled="!ready || !!pending" title="Stop its trips and clear the outside world, as the module starts" @click="startOver">↺ Start over</button>
       </div>
 

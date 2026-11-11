@@ -7623,8 +7623,65 @@ a.menu-item {
   margin: 14px 0 8px;
 }
 
+.earn-glory {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
 .earn-centre {
-  animation: earn-medal 900ms cubic-bezier(0.25, 1.5, 0.5, 1) both;
+  position: relative;
+  z-index: 1;
+  animation: earn-flip 1100ms cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.earn-centre .badge-shine {
+  animation: earn-shine 3.6s ease-in-out 1s infinite;
+}
+
+/* Gold rays behind the medal, fading out at their ends, turning slowly. */
+.earn-rays {
+  position: absolute;
+  z-index: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--gold) 38%, transparent) 0deg 7deg, transparent 7deg 22.5deg);
+  -webkit-mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+  mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+  animation: earn-rays-in 700ms ease-out 250ms both, earn-spin 16s linear infinite;
+  pointer-events: none;
+}
+
+/* Sparks: twelve gold stars bursting out from behind the medal as it lands. */
+.earn-sparks {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.earn-sparks i {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  background: var(--gold-hi);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  opacity: 0;
+  animation: earn-spark 1000ms cubic-bezier(0.1, 0.8, 0.3, 1) 650ms both;
+}
+
+.earn-sparks i:nth-child(3n) {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: var(--gold);
+}
+
+/* On the badges page, an earned medal shines when you point at it. */
+.badge-medal-wrap:hover .badge-shine {
+  animation: earn-shine 1.1s ease-in-out;
 }
 
 .earn-name {
@@ -7673,11 +7730,46 @@ a.menu-item {
   100% { transform: none; }
 }
 
+/* The medal flips in like a coin, lands a touch big, and settles. */
+@keyframes earn-flip {
+  0% { opacity: 0; transform: perspective(700px) translateY(-36px) rotateY(-540deg) scale(0.35); }
+  55% { opacity: 1; transform: perspective(700px) translateY(4px) rotateY(18deg) scale(1.12); }
+  75% { transform: perspective(700px) rotateY(-6deg) scale(0.97); }
+  100% { transform: none; }
+}
+
+@keyframes earn-rays-in {
+  from { opacity: 0; scale: 0.4; }
+}
+
+@keyframes earn-spin {
+  to { rotate: 1turn; }
+}
+
+@keyframes earn-spark {
+  0% { opacity: 0; transform: rotate(var(--a)) translateX(10px) scale(0.2); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--a)) translateX(var(--d)) scale(1) rotate(90deg); }
+}
+
+/* Across the medal and out, then a pause before the next. */
+@keyframes earn-shine {
+  0% { transform: translateX(0); }
+  35%, 100% { transform: translateX(220px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .earn-backdrop,
   .earn-card,
-  .earn-centre {
+  .earn-centre,
+  .earn-rays,
+  .earn-centre .badge-shine,
+  .badge-medal-wrap:hover .badge-shine {
     animation: none;
+  }
+
+  .earn-sparks {
+    display: none;
   }
 }
 
@@ -8213,6 +8305,45 @@ a.menu-item {
   opacity: 0.55;
   cursor: default;
 }
+/* Pulling the plug: a warning, with its plug, as the board had it. */
+.board-action[data-board-action="pull-plug"] {
+  color: var(--danger);
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 45%, var(--line));
+}
+.board-action[data-board-action="pull-plug"]::before {
+  content: "🔌";
+  font-size: 1em;
+}
+.board-action[data-board-action="pull-plug"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 10%, var(--paper));
+}
+/* A button whose moment has come (it waited for a step): it pulses until it's pressed. */
+.board-action.is-now {
+  animation: board-now 1.1s ease-in-out infinite;
+}
+@keyframes board-now {
+  50% { box-shadow: inset 0 0 0 1px var(--danger), 0 0 0 6px color-mix(in srgb, var(--danger) 22%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .board-action.is-now { animation: none; box-shadow: inset 0 0 0 2px var(--danger); }
+}
+
+/* A button that opens the trip in the Temporal UI: quieter than an action, and it says it opens. */
+.board-action.is-open {
+  color: var(--temporal-uv);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--temporal-uv);
+}
+.board-action.is-open::before {
+  content: none;
+}
+.board-action.is-open::after {
+  content: "↗";
+}
+.board-action.is-open:hover:not(:disabled) {
+  background: var(--temporal-uv-soft);
+}
 .eng-word {
   margin: 14px 0;
   padding: 10px 14px;
@@ -8488,4 +8619,614 @@ a.menu-item {
 }
 .mc-quiz .question-card {
   margin-top: 6px;
+}
+
+/* The lean first run (a branch with a welcome: Essentials): the goal, the idea acted out
+   (TripLoop), what they're starting and why it's a trip, and Let's begin. */
+
+.first-run-lean {
+  max-width: 640px;
+  justify-items: center;
+  text-align: center;
+  gap: clamp(14px, 2.6vh, 24px);
+  padding-top: clamp(8px, 4vh, 40px);
+}
+
+.first-run-lean .first-run-persona {
+  margin: 0;
+}
+
+.first-run-lean .first-run-head h1 {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 4.4vw, 40px);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.first-run-goal {
+  margin: 0 auto;
+  max-width: 34em;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+.first-run-about {
+  width: min(100%, 600px);
+  margin: 0;
+  display: grid;
+  gap: 14px;
+  text-align: left;
+}
+
+.first-run-about dt {
+  margin-bottom: 2px;
+  color: var(--faint);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.first-run-about dd {
+  margin: 0;
+  line-height: 1.5;
+}
+
+@media (min-width: 700px) {
+  .first-run-about {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 28px;
+  }
+}
+
+.first-run-go {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.first-run-start {
+  padding: 12px 22px;
+  font-size: 16px;
+}
+
+/* --- Trip loop (TripLoop.vue) ---------------------------------------------------------------- */
+/* Each part rests on the loop's last frame (all booked, the lights on, the last caption); its
+   keyframes start from the trip's beginning. One 7s timeline, played twice:
+     10%  flight booked      21%  hotel booked
+     30%–54%  the power's out (the steps dark, the logbook lit)
+     64%  card booked        74%  "Booked" */
+
+.trip-loop {
+  --tl-time: 7s;
+  --tl-runs: 2;
+  width: min(100%, 520px);
+  margin: 0;
+  padding: 18px 16px 14px;
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.trip-loop * {
+  animation-duration: var(--tl-time);
+  animation-iteration-count: var(--tl-runs);
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.tl-stage {
+  position: relative;
+  border-radius: 10px;
+}
+
+.tl-steps {
+  display: flex;
+  justify-content: center;
+  gap: clamp(6px, 2vw, 14px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+
+.tl-step {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 2px solid var(--success);
+  border-radius: 999px;
+  background: var(--success-soft);
+  font-weight: 650;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.tl-icon {
+  font-size: 1.1em;
+}
+
+.tl-tick {
+  color: var(--success);
+  font-weight: 800;
+}
+
+.tl-wait {
+  position: absolute;
+  right: 10px;
+  opacity: 0;
+  color: var(--muted);
+  animation-name: tl-wait;
+}
+
+.tl-step-1 { animation-name: tl-box-1; }
+.tl-step-2 { animation-name: tl-box-2; }
+.tl-step-3 { animation-name: tl-box-3; }
+.tl-show-1 { animation-name: tl-show-1; }
+.tl-show-2 { animation-name: tl-show-2; }
+.tl-show-3 { animation-name: tl-show-3; }
+
+.tl-dark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  /* The lights out, in either theme. */
+  background: rgba(6, 7, 10, 0.94);
+  opacity: 0;
+  pointer-events: none;
+  animation-name: tl-dark;
+}
+
+.tl-bolt {
+  font-size: 26px;
+}
+
+.tl-logbook {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 8px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--muted);
+  animation-name: tl-glow;
+}
+
+.tl-log-label {
+  font-weight: 650;
+  color: var(--text);
+}
+
+.tl-entry {
+  color: var(--success);
+  font-weight: 650;
+}
+
+.tl-captions {
+  display: grid;
+  min-height: 1.5em;
+  font-weight: 600;
+}
+
+.tl-caption {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+
+.tl-caption-1 { animation-name: tl-caption-1; }
+.tl-caption-2 { animation-name: tl-caption-2; }
+.tl-caption-3 { animation-name: tl-caption-3; }
+.tl-caption-4 { opacity: 1; animation-name: tl-caption-4; }
+
+@keyframes tl-box-1 {
+  0%, 8% { border-color: var(--line-strong); background: var(--surface); }
+  10%, 100% { border-color: var(--success); background: var(--success-soft); }
+}
+
+@keyframes tl-box-2 {
+  0%, 19% { border-color: var(--line-strong); background: var(--surface); }
+  21%, 100% { border-color: var(--success); background: var(--success-soft); }
+}
+
+@keyframes tl-box-3 {
+  0%, 62% { border-color: var(--line-strong); background: var(--surface); }
+  64%, 100% { border-color: var(--success); background: var(--success-soft); }
+}
+
+@keyframes tl-show-1 {
+  0%, 8% { opacity: 0; }
+  10%, 100% { opacity: 1; }
+}
+
+@keyframes tl-show-2 {
+  0%, 19% { opacity: 0; }
+  21%, 100% { opacity: 1; }
+}
+
+@keyframes tl-show-3 {
+  0%, 62% { opacity: 0; }
+  64%, 100% { opacity: 1; }
+}
+
+/* The card, under way: before the power cut, and again once it's back. */
+@keyframes tl-wait {
+  0%, 22% { opacity: 0; }
+  24%, 61% { opacity: 1; }
+  63%, 100% { opacity: 0; }
+}
+
+@keyframes tl-dark {
+  0%, 29% { opacity: 0; }
+  31%, 52% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+@keyframes tl-glow {
+  0%, 29% { border-color: var(--line-strong); box-shadow: none; }
+  31%, 52% { border-color: var(--success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 22%, transparent); }
+  55%, 100% { border-color: var(--line-strong); box-shadow: none; }
+}
+
+@keyframes tl-caption-1 {
+  0%, 28% { opacity: 1; }
+  30%, 100% { opacity: 0; }
+}
+
+@keyframes tl-caption-2 {
+  0%, 30% { opacity: 0; }
+  32%, 53% { opacity: 1; }
+  55%, 100% { opacity: 0; }
+}
+
+@keyframes tl-caption-3 {
+  0%, 55% { opacity: 0; }
+  57%, 72% { opacity: 1; }
+  74%, 100% { opacity: 0; }
+}
+
+@keyframes tl-caption-4 {
+  0%, 72% { opacity: 0; }
+  74%, 100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-loop * {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .tl-step {
+    padding: 6px 9px;
+    font-size: 13px;
+  }
+}
+
+/* --- The sketchbook (SketchMap.vue): Essentials' map ------------------------------------------ */
+/* Paper in either theme: cream and ruled, with a red margin, binder holes and a soft shadow. */
+
+.sketch-map {
+  --ink: #1f2a6b;
+  --pencil: #5b6170;
+  --red-ink: #c2410c;
+  --tick: #2f9e6f;
+  --marker: #7c3aed;
+  position: relative;
+  padding: 24px 28px 16px 74px;
+  border-radius: 6px 16px 16px 6px;
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, transparent 54px, #e9a1a1 54px, #e9a1a1 56px, transparent 56px),
+    repeating-linear-gradient(#fbf7ee 0 27px, #dfe6f0 27px 28px);
+  box-shadow: 0 1px 0 #d9d2c0, 0 18px 40px rgba(0, 0, 0, 0.28), inset 14px 0 18px -14px rgba(0, 0, 0, 0.3);
+  font-family: Caveat, "Segoe Print", "Bradley Hand", cursive;
+}
+
+.sketch-map::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 20px;
+  bottom: 20px;
+  width: 14px;
+  background: radial-gradient(circle at 7px 7px, var(--off-white) 5px, transparent 6px) 0 0 / 14px 34px repeat-y;
+}
+
+.sketch-title {
+  margin: 0;
+  color: var(--ink);
+  font: 700 34px/1.05 Caveat, cursive;
+}
+
+.sketch-sub {
+  margin: 2px 0 0;
+  color: var(--pencil);
+  font: 500 20px/1.2 Caveat, cursive;
+}
+
+.sketch-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.sketch-route {
+  fill: none;
+  stroke: var(--pencil);
+  stroke-width: 2.2;
+  stroke-dasharray: 7 6;
+  stroke-linecap: round;
+}
+
+.sketch-route.is-done {
+  stroke: var(--tick);
+  stroke-width: 3;
+  stroke-dasharray: none;
+}
+
+.sketch-stop {
+  cursor: pointer;
+  outline: none;
+}
+
+.sketch-stamp {
+  fill: #fffdf6;
+  stroke: #2b2a33;
+  stroke-width: 2;
+}
+
+.sketch-stop.is-done .sketch-stamp {
+  fill: #e6f6ee;
+  stroke: var(--tick);
+}
+
+.sketch-stop.kind-challenge .sketch-stamp {
+  fill: #fff3a8;
+  stroke: #b48a00;
+}
+
+.sketch-stop.kind-boss .sketch-stamp {
+  fill: #ffe7b8;
+  stroke: #9a3412;
+}
+
+.sketch-stop.is-locked,
+.sketch-stop.is-soon {
+  opacity: 0.8;
+}
+
+.sketch-stop:focus-visible .sketch-stamp {
+  stroke: var(--marker);
+  stroke-width: 3;
+}
+
+.sketch-emoji {
+  font: 26px system-ui, sans-serif;
+}
+
+.sketch-tick {
+  fill: var(--tick);
+  font: 700 30px Caveat, cursive;
+}
+
+.sketch-name {
+  fill: var(--ink);
+  font: 700 22px Caveat, cursive;
+}
+
+.sketch-stop.kind-boss .sketch-name {
+  fill: #9a3412;
+  font-size: 26px;
+}
+
+.sketch-stop:hover .sketch-name {
+  text-decoration: underline;
+}
+
+.sketch-note {
+  fill: var(--red-ink);
+  font: 500 18px Caveat, cursive;
+}
+
+.sketch-pick {
+  fill: none;
+  stroke: var(--pencil);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 4;
+}
+
+.sketch-here {
+  fill: none;
+  stroke: var(--marker);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.sketch-here-note {
+  fill: var(--marker);
+  font: 700 20px Caveat, cursive;
+}
+
+/* --- A boss fight (BossPage.vue) ------------------------------------------------------------ */
+
+.boss-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(12px, 4vh, 40px) 16px 40px;
+}
+
+.boss-card {
+  padding: 22px 24px 24px;
+  border: 1px solid color-mix(in srgb, var(--branch) 30%, var(--line));
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.boss-head h1 {
+  margin: 2px 0 10px;
+  font-size: clamp(26px, 4vw, 34px);
+}
+
+.boss-meters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-bottom: 14px;
+}
+
+.boss-hp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.boss-face {
+  margin-right: 6px;
+  font-size: 22px;
+}
+
+.boss-face.is-hit {
+  animation: boss-hit 420ms ease-out;
+}
+
+.boss-seg {
+  width: 22px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--gold);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.boss-seg.is-gone {
+  opacity: 0.18;
+  transform: scaleY(0.6);
+}
+
+.boss-hearts {
+  display: flex;
+  gap: 4px;
+  font-size: 20px;
+}
+
+.boss-heart.is-lost {
+  animation: boss-heart 500ms ease-out;
+}
+
+.boss-teaser,
+.boss-text {
+  margin: 0 0 12px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.boss-rules {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.boss-rules span {
+  display: inline-block;
+  width: 1.6em;
+}
+
+.boss-done {
+  margin: 0 0 12px;
+  color: var(--success);
+  font-weight: 650;
+}
+
+.boss-kicker {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.boss-why {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border-left: 3px solid var(--success);
+  background: var(--success-soft);
+}
+
+.boss-why.is-wrong {
+  border-left-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+}
+
+.boss-why p {
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.boss-revisit a {
+  color: var(--temporal-uv);
+  font-weight: 650;
+}
+
+.boss-end {
+  text-align: center;
+}
+
+.boss-end-big {
+  margin: 4px 0;
+  font-size: 54px;
+  animation: earn-flip 900ms cubic-bezier(0.2, 1.2, 0.4, 1) both;
+}
+
+.boss-end h2 {
+  margin: 0 0 6px;
+}
+
+.boss-end p {
+  color: var(--muted);
+}
+
+.boss-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+@keyframes boss-hit {
+  25% { transform: translateX(-5px) rotate(-12deg) scale(1.15); }
+  50% { transform: translateX(5px) rotate(10deg); }
+  75% { transform: translateX(-3px) rotate(-6deg); }
+}
+
+@keyframes boss-heart {
+  0% { transform: scale(1.5); }
+  40% { transform: scale(0.8) rotate(-12deg); }
+  100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-face.is-hit,
+  .boss-heart.is-lost,
+  .boss-end-big {
+    animation: none;
+  }
 }

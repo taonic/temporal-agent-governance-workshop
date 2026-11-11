@@ -1,6 +1,8 @@
 ---
 id: E6
 title: Hold the seat for three days
+emoji: "⏳"
+note: "three days on hold"
 teaser: "The traveler wants the seat held while they decide. Pull the plug during the wait, and see the clock keep going."
 learn: "A trip on Temporal can wait days, or months, through outages, and carry on the moment the wait is over."
 minutes: 5
@@ -62,7 +64,7 @@ The coordinator reads the logbook, sees that the three days are up, and books th
 
 <div class="without-temporal">
 <p class="without-temporal-title">Without Temporal, this would…</p>
-<p>need a database table of "seats to book on Friday", a scheduled job that checks it every few minutes, and someone making sure that job runs, never twice and never not at all. Most of the work would be making a simple wait survive restarts.</p>
+<p>need a table of "seats to book on Friday", a job that checks it every few minutes, and someone making sure that job runs exactly once.</p>
 </div>
 
-In real life, the wait could be much longer: a free trial that ends in 30 days, a subscription that renews every year, a reminder if a customer hasn't paid in two weeks. On Temporal, each is one line in the trip's plan, and nothing is running while it waits.
+Real waits are often longer: a 30-day free trial, a yearly renewal, a reminder when a bill is late. On Temporal, each is one line in the plan, with nothing running while it waits.

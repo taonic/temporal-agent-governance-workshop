@@ -86,6 +86,8 @@ test("criteria lines: runs of three or more as a range, the rest one by one", ()
   assert.equal(idList(["A2", "A4"]), "A2 and A4");
 });
 
+const ESSENTIALS_MODULE_BADGES = ["logbook-keeper", "fix-forward", "storm-rider", "night-owl", "crash-proof", "time-keeper", "signed-off", "clean-undo"];
+
 test("the course's badges: a tier badge per named tier, a boss badge per boss, and the skills", () => {
   // Read, not built: buildCourse() rewrites web/public/content, and content.test.mjs builds it
   // at the same time in another process.
@@ -102,7 +104,11 @@ test("the course's badges: a tier badge per named tier, a boss badge per boss, a
     assert.ok(boss.name.length <= CLASS_TITLE_MAX);
   }
   assert.equal(course.badges.find((b) => b.id === "fundamentals-1").criteria, "Pass F1–F7, FC1 and FC2");
-  assert.deepEqual(course.badges.filter((b) => b.kind === "skill").map((b) => b.id), ["clean-run", "no-peeking", "flawless", "explorer", "cross-team"]);
+  assert.deepEqual(course.badges.filter((b) => b.kind === "skill").map((b) => b.id), ["clean-run", "no-peeking", "flawless", "explorer", "cross-team", ...ESSENTIALS_MODULE_BADGES]);
+  // Essentials' module badges: one per module, E1 to E8, each earned by passing it.
+  const modules = ESSENTIALS_MODULE_BADGES.map((id) => course.badges.find((b) => b.id === id));
+  assert.deepEqual(modules.map((b) => [b.rule, b.module]), ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8"].map((m) => ["pass", m]));
+  assert.ok(modules.every((b) => b.personas.join() === "essentials"));
 });
 
 test("a medal is drawn locked or earned, and small without its numeral and ribbon", () => {

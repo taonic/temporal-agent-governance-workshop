@@ -1,6 +1,8 @@
 ---
 id: E1
 title: Meet the coordinator
+emoji: "📒"
+note: "every step, written down"
 teaser: Run a trip from start to finish, and see the logbook that lets it survive anything.
 learn: "What a Temporal workflow is, in plain words: a list of steps, and a logbook of every one that's done."
 minutes: 5
@@ -28,48 +30,40 @@ questions:
   - What kinds of business processes is Temporal used for?
 ---
 
-Every business runs processes that take more than a moment: an online order, a loan application, onboarding a new hire, booking a trip. Each one is a list of steps, and most steps talk to somebody else's system: an airline, a bank, a warehouse, an email service.
+Every business runs processes that take more than a moment: an order, a loan application, a trip booking. Each one is a list of steps, and most steps rely on somebody else's system.
 
-Things go wrong along the way. A system stops answering for a minute. A server restarts in the middle of the night. Someone ships a mistake. Each time, the question is the same: **where was this process, and what has it already done?**
+Things go wrong along the way. Each time, the question is the same: **where was this process, and what has it already done?**
 
-That's the question Temporal answers. In this course you won't write any code. You'll run a trip booking, break it in the ways real systems break, and watch what happens.
+Temporal answers it. Here you'll run a trip, break it, and watch what happens.
 
 ## The coordinator and the logbook
 
-Picture a travel office. Each trip is a to-do list, and a **coordinator** works through it:
+Picture a travel office. Each trip is a to-do list that a **coordinator** works through: find a flight, book it, book the hotel, charge the card, send the confirmation.
 
-1. Find a flight
-2. Book the flight
-3. Book the hotel
-4. Charge the card
-5. Send the confirmation
+After every step, the coordinator writes it down in a **logbook**, kept in the office **safe**.
 
-The coordinator has one habit that matters more than anything else. After every step, they write down what happened in a **logbook**, and the office keeps that logbook in a **safe**.
+If they go home sick halfway, the next coordinator reads the logbook and carries on from the card. Nothing is booked twice.
 
-So if the coordinator goes home sick halfway through, nothing is lost. The next coordinator on shift opens the logbook, sees that the flight and the hotel are already booked, and carries on with the card. Nobody books the flight twice, and nobody has to ask the customer where things were.
-
-Temporal is that office: it keeps the logbook safe, so whoever picks a trip up next knows exactly where it was.
+Temporal is that office: it keeps the logbook safe.
 
 ## 1. Run a trip
 
-On the left is the **Trip board**: the trip's logbook, the coordinator on shift, and the **outside world**, where every booking lands (the airline, the hotel, the card and the email).
+On the left is the **Trip board**: the trip's logbook, the coordinator on shift, and the **outside world**, where every booking lands.
 
 [Start a trip](#board/start-trip)
 
-Watch the logbook tick off, one step every few seconds, as the coordinator finishes each one. In the outside world, each booking appears exactly once.
+Watch the logbook tick off each step. In the outside world, each booking appears exactly once.
 
 <p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> The trip's to-do list is a <strong>workflow</strong>, and each step that talks to the outside world is an <strong>activity</strong>.</p>
 
 ## 2. Look inside the logbook
 
-The logbook isn't something the board made up: Temporal keeps it, and you can read it.
-
-Your latest trip has a page of its own in Temporal. Open it, on the tab above the board:
+Temporal keeps the logbook, and you can read it. Open your trip's page, on the tab above the board:
 
 [Open the trip's logbook](#latest-trip)
 
-Under **Event History**, each step is there in order: when it was asked for, when it started, and when it finished. Every line the coordinator wrote is a line here.
+Under **Event History**, each step is there in order: asked for, started, finished.
 
-That record lives in Temporal, not with the coordinator. That's what the rest of this course leans on.
+That record lives in Temporal, not with the coordinator. The rest of the course leans on it.
 
-<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> The logbook is the workflow's <strong>event history</strong>, and the coordinator on shift is a <strong>worker</strong>: a program that does the steps, and can be stopped and started again.</p>
+<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> The logbook is the workflow's <strong>event history</strong>. The coordinator on shift is a <strong>worker</strong>: a program that does the steps.</p>

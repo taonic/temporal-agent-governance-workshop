@@ -37,3 +37,60 @@
   rule: pass
   module: N5
   criteria: "Pass N5: a workflow calls another team's agent"
+# Essentials' module badges: one for each thing a trip on Temporal survives, earned with its module.
+- id: logbook-keeper
+  personas: [essentials]
+  name: Logbook Keeper
+  icon: logbook
+  rule: pass
+  module: E1
+  criteria: Run a trip on Temporal, and read its logbook
+- id: fix-forward
+  personas: [essentials]
+  name: Fix Forward
+  icon: wrench
+  rule: pass
+  module: E2
+  criteria: Finish a stuck trip by shipping the fix
+- id: storm-rider
+  personas: [essentials]
+  name: Storm Rider
+  icon: umbrella
+  rule: pass
+  module: E3
+  criteria: Ride out the airline's bad minute
+- id: night-owl
+  personas: [essentials]
+  name: Night Owl
+  icon: moon
+  rule: pass
+  module: E4
+  criteria: Keep a trip waiting safely while nobody is on shift
+- id: crash-proof
+  personas: [essentials]
+  name: Crash Proof
+  icon: plug
+  rule: pass
+  module: E5
+  criteria: Pull the plug mid-trip, and book nothing twice
+- id: time-keeper
+  personas: [essentials]
+  name: Time Keeper
+  icon: hourglass
+  rule: pass
+  module: E6
+  criteria: Keep a three-day hold through a crash
+- id: signed-off
+  personas: [essentials]
+  name: Signed Off
+  icon: stamp
+  rule: pass
+  module: E7
+  criteria: Wait for the manager's yes, however long it takes
+- id: clean-undo
+  personas: [essentials]
+  name: Clean Undo
+  icon: undo
+  rule: pass
+  module: E8
+  criteria: Undo a declined trip cleanly, newest first

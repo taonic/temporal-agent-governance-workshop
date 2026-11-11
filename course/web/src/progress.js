@@ -56,6 +56,8 @@ export const progress = reactive({
   badges: load("badges", {}),
   // The badges just earned, for the earn moment: { ids, at }.
   lastBadges: null,
+  // Each boss fight's result: [{ module, won, hearts, at }] (Flawless: a win with every heart).
+  bossResults: load("boss-results", []),
 });
 
 watch(() => progress.completed, (ids) => save("modules", ids), { deep: true });
@@ -63,6 +65,7 @@ watch(() => progress.solutionUsed, (ids) => save("solution-used", ids), { deep: 
 watch(() => progress.badges, (badges) => save("badges", badges), { deep: true });
 watch(() => progress.attempts, (picks) => save("attempts", picks), { deep: true });
 watch(() => progress.path, (id) => save("path", id));
+watch(() => progress.bossResults, (results) => save("boss-results", results), { deep: true });
 
 // --- The server's copy ------------------------------------------------------------------------
 
@@ -162,7 +165,7 @@ export const levelXp = computed(() => xp.value % LEVEL_XP);
 export const badges = course.badges ?? [];
 export const badgesById = new Map(badges.map((b) => [b.id, b]));
 const badgeCtx = badgeContext(course.modules, (id) => rightChoice(id));
-const badgeState = () => ({ completed: progress.completed, attempts: progress.attempts, solutionUsed: progress.solutionUsed, bossResults: [] });
+const badgeState = () => ({ completed: progress.completed, attempts: progress.attempts, solutionUsed: progress.solutionUsed, bossResults: progress.bossResults });
 // The badges the learner meets now. Any not kept yet are kept, quietly (what the server sent, or
 // a sign-in's progress): only one earned on this page gets an earn moment (complete, below).
 const meetsNow = computed(() => earnedNow(badges, badgeCtx, badgeState()));
@@ -197,7 +200,16 @@ export function markSolutionUsed(id) {
 }
 
 export const isDone = (id) => progress.completed.includes(id);
-export const isPlayable = (m) => m.status === "ready" && ["module", "challenge"].includes(m.kind) && Boolean(m.exercise);
+// Whether the learner sees a module's id (M3, EC1…): not on a branch with `numbered: false`
+// (Essentials), which names its modules by title alone.
+export const numbered = (m) => branchesById.get(m.branch)?.numbered !== false;
+// A module's id where it's shown, else "". moduleName: "M3 · Title", or the title alone.
+export const idOf = (m) => (numbered(m) ? m.id : "");
+export const moduleName = (m) => (numbered(m) ? `${m.id} · ${m.title}` : m.title);
+
+// A boss is playable with its pool of stories (BossPage); a module or challenge in its exercise.
+export const isPlayable = (m) =>
+  m.status === "ready" && (m.kind === "boss" ? Boolean(m.pool?.length) : ["module", "challenge"].includes(m.kind) && Boolean(m.exercise));
 // A challenge gates the module after it, softly: that module looks locked until it's done.
 const gates = new Map();
 for (const m of course.modules) if (m.kind === "challenge" && m.before) gates.set(m.before, [...(gates.get(m.before) ?? []), m.id]);
@@ -282,6 +294,14 @@ export function complete(id) {
     progress.badges = { ...progress.badges, ...Object.fromEntries(fresh.map((b) => [b, at])) };
     progress.lastBadges = { ids: fresh, at };
   }
+}
+
+// A boss fight's end: recorded (here, and on the server, for Flawless), and a win completes the
+// boss, with its XP and its badges (the result first, so Flawless is earned with it).
+export function finishBoss(id, won, hearts) {
+  progress.bossResults = [...progress.bossResults, { module: id, won, hearts, at: Date.now() }];
+  track("boss_result", id, { won, hearts });
+  if (won) complete(id);
 }
 
 // The right choice of a challenge, from the exercise that has it.
@@ -387,9 +407,12 @@ export function nextModule(id) {
   }
   const m = modulesById.get(id);
   if (!m) return null;
-  const branch = branchesById.get(m.branch).modules;
-  const next = branch.slice(branch.indexOf(id) + 1).find((other) => isPlayable(modulesById.get(other)));
-  return next ? modulesById.get(next) : null;
+  const branch = branchesById.get(m.branch);
+  const next = branch.modules.slice(branch.modules.indexOf(id) + 1).find((other) => isPlayable(modulesById.get(other)));
+  if (next) return modulesById.get(next);
+  // The branch's last step leads to its boss, once it's playable.
+  const boss = branch.boss && id !== branch.boss ? modulesById.get(branch.boss) : null;
+  return boss && isPlayable(boss) ? boss : null;
 }
 
 // Where a module sits in its branch: { index (1-based), total } over the playable ones.

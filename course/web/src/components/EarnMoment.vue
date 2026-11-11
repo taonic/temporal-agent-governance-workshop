@@ -3,6 +3,10 @@
 // centre (the class title, unlocked), with the rest beside it; otherwise the first badge is.
 // Nothing queues: badges earned together share the card, and a later one replaces it.
 // It closes with ×, Keep going, Esc (wherever the focus is), a click outside it, or a new page.
+//
+// The centre medal makes an entrance: it flips in, gold rays turn behind it, sparks burst out, and
+// a shine sweeps across it every few seconds (styles.css, "Earn moment"). With reduced motion it's
+// simply there, rays still.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import BadgeMedal from "./BadgeMedal.vue";
@@ -49,7 +53,11 @@ watch(() => [store.route.page, store.route.module], close);
       <p class="earn-kicker">{{ kicker }}</p>
       <div class="earn-stack">
         <BadgeMedal v-for="b in beside.slice(0, 1)" :key="b.id" :badge="b" earned :size="64" />
-        <BadgeMedal class="earn-centre" :badge="centre" earned :size="132" />
+        <span :key="shown.at" class="earn-glory">
+          <span class="earn-rays" aria-hidden="true" />
+          <span class="earn-sparks" aria-hidden="true"><i v-for="n in 12" :key="n" :style="{ '--a': `${n * 30 + (n % 2) * 12}deg`, '--d': `${90 + (n % 3) * 28}px` }" /></span>
+          <BadgeMedal class="earn-centre" :badge="centre" earned :size="132" />
+        </span>
         <BadgeMedal v-for="b in beside.slice(1, 3)" :key="b.id" :badge="b" earned :size="64" />
       </div>
       <h2 class="earn-name">{{ centre.name }}</h2>

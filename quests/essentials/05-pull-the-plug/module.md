@@ -1,6 +1,8 @@
 ---
 id: E5
 title: Pull the plug mid-trip
+emoji: "🔌"
+note: "power cut!"
 teaser: "Pull the plug after the hotel is booked. One program starts over and books it all twice; the other carries on from the card."
 learn: "A trip on Temporal survives a crash mid-way: the next worker carries on from the logbook, booking nothing twice."
 minutes: 6
@@ -30,31 +32,26 @@ questions:
   - What if the plug is pulled in the middle of a step?
 ---
 
-## 1. Start a trip
+## 1. Start a trip, and pull the plug
 
 [Start a trip](#board/start-trip)
 
-Both trips set off: finding a flight, booking it, booking the hotel.
+Both trips set off: find a flight, book it, book the hotel. Once **"Booked the hotel"** ticks off on both, pull the plug, the way a crash or a power cut would:
 
-## 2. Pull the plug after the hotel
+[Pull the plug](#board/pull-plug/after-book_hotel "Pull the plug once the hotel is booked")
 
-Wait until **"Booked the hotel"** ticks off on both trips, and then pull the plug. The coordinator and the plain program are stopped dead, mid-trip, the way a crash or a power cut stops them:
+- **The plain twin** has stopped. Everything it knew was in its memory, and that's gone.
+- **The Temporal trip** waits in the safe. Its logbook says the flight and the hotel are booked: next is "Charge the card".
 
-[Pull the plug](#board/pull-plug)
-
-- **The plain twin** has stopped. Everything it knew about the trip (how far it had got, the flight it found) was in its memory, and that's gone.
-- **The Temporal trip** is waiting in the safe. Its logbook says the flight and the hotel are booked, and it's waiting at "Charge the card".
-
-## 3. Put a coordinator back on shift
+## 2. Put a coordinator back on shift
 
 [Put a coordinator on shift](#board/start-worker)
 
-Watch what each one does when it starts again:
+- **The plain twin** doesn't know how far it got, so it starts from the top and books the flight and the hotel again. Check the outside world.
+- **The Temporal trip**'s new coordinator reads the logbook and carries on from the card. One flight, one hotel.
 
-- **The plain twin** finds the trip on its to-do list, doesn't know how far it got, and starts again from the top. It books the flight and the hotel a second time. Look at the outside world.
-- **The Temporal trip**'s new coordinator re-reads the logbook, sees what's done, and carries on from the card. One flight, one hotel.
+<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> A new <strong>worker</strong> reads the <strong>event history</strong> and carries on from the first step that isn't finished.</p>
 
-<p class="eng-word"><span class="eng-word-kicker">What engineers call it</span> A new <strong>worker</strong> catches up on a <strong>workflow</strong> by reading its <strong>event history</strong>, and continues from the first step that isn't finished, without doing the finished ones again.</p>
 
 ## The memory nobody saved
 

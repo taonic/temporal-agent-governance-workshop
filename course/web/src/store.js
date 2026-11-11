@@ -39,7 +39,7 @@ function initialTheme() {
 }
 
 // #/ (the map), #/setup, #/module/A4 (the exercise page that has it, at its first beat),
-// #/exercise/02-durable-session, #/admin/<tab>. A module that isn't playable yet opens the map,
+// #/exercise/02-durable-session, #/admin/<tab>. A boss with its stories: its fight (#/module/E-boss). A module that isn't playable yet opens the map,
 // on its card.
 function parseRoute() {
   const hash = window.location.hash.replace(/^#\/?/, "");
@@ -51,6 +51,8 @@ function parseRoute() {
   if (page === "module") {
     const exercise = course.exercises.find((e) => e.modules.includes(id));
     if (exercise) return { page: "exercise", id: exercise.id, module: id };
+    const boss = course.modules.find((m) => m.id === id && m.kind === "boss" && m.status === "ready" && m.pool?.length);
+    if (boss) return { page: "boss", id };
     if (course.modules.some((m) => m.id === id)) return { page: "home", focus: id };
   }
   return { page: "home" };

@@ -7,7 +7,7 @@ after: E5
 hint: What's in the safe when the lights come back on?
 choices:
   - label: Starts the trip again from the top, to be safe
-    explanation: "Starting over books the flight and the hotel a second time: the plain twin's double booking in E5. Starting over is only \"safe\" when nothing remembers how far you got."
+    explanation: "Starting over books the flight and the hotel a second time: the plain twin's double booking when you pulled the plug. Starting over is only \"safe\" when nothing remembers how far you got."
   - label: Reads the logbook and carries on from charging the card
     right: true
     explanation: "The logbook says the flight and the hotel are booked, so the next coordinator carries on from the first step that isn't: the card. Nothing is done twice, and nothing is skipped."

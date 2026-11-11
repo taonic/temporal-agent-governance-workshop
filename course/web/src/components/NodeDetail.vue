@@ -11,9 +11,11 @@ import {
   branchesById,
   firstStepTo,
   gatesOf,
+  idOf,
   isPlayable,
   missingFor,
   moduleHref,
+  moduleName,
   modulesById,
   recommended,
   stateOf,
@@ -79,13 +81,13 @@ onBeforeUnmount(() => clearTimeout(glowTimer));
 </script>
 
 <template>
-  <section v-if="m" :class="['node-detail', `branch-${branch.color}`, `is-${state}`]" aria-live="polite" :aria-label="`${m.id}: ${m.title}`">
+  <section v-if="m" :class="['node-detail', `branch-${branch.color}`, `is-${state}`]" aria-live="polite" :aria-label="moduleName(m)">
     <p class="node-detail-where"><span aria-hidden="true">{{ branch.icon }}</span> {{ branch.name }} · {{ where }}</p>
     <div class="node-detail-head">
-      <NodeGlyph :kind="m.kind" :state="state" :label="m.id" :color="branch.color" :soon="soon" :size="40" />
+      <NodeGlyph :kind="m.kind" :state="state" :label="idOf(m)" :color="branch.color" :soon="soon" :size="40" />
       <div>
         <p class="node-detail-tags">
-          <span :class="['node-num', 'node-detail-id', { 'is-kind': m.kind !== 'module' }]">{{ m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : m.id }}</span>
+          <span v-if="m.kind !== 'module' || idOf(m)" :class="['node-num', 'node-detail-id', { 'is-kind': m.kind !== 'module' }]">{{ m.kind === "boss" ? "Boss" : m.kind === "challenge" ? "Challenge" : m.id }}</span>
           <span :class="['state-tag', `is-${state}`]">{{ STATE_LABEL[state] }}</span>
           <span v-if="soon" class="state-tag is-soon">Coming soon</span>
         </p>
@@ -113,8 +115,8 @@ onBeforeUnmount(() => clearTimeout(glowTimer));
           <ul class="node-detail-needs">
             <li v-for="r in before.direct" :key="r.id">
               <button type="button" class="node-detail-need" @click="emit('select', r.id)">
-                <NodeGlyph :kind="r.kind" :state="stateOf(r)" :label="r.id" :color="branchesById.get(r.branch).color" :soon="!isPlayable(r)" :size="18" />
-                <span><span class="node-num">{{ r.id }}</span> {{ r.title }}</span>
+                <NodeGlyph :kind="r.kind" :state="stateOf(r)" :label="idOf(r)" :color="branchesById.get(r.branch).color" :soon="!isPlayable(r)" :size="18" />
+                <span><span v-if="idOf(r)" class="node-num">{{ r.id }}</span> {{ r.title }}</span>
                 <span class="node-detail-need-state">{{ stateOf(r) === "done" ? "Done" : "Not yet" }}</span>
               </button>
             </li>
@@ -130,21 +132,21 @@ onBeforeUnmount(() => clearTimeout(glowTimer));
       </template>
       <template v-else-if="state === 'locked'">
         <a v-if="firstStep" :class="['button', 'button-primary', 'node-detail-go', { 'is-glowing': glowing }]" :href="moduleHref(firstStep.id)">
-          <svg class="node-detail-play" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor" /></svg> Start with {{ firstStep.id }} <span class="node-detail-go-what">{{ firstStep.title }}</span>
+          <svg class="node-detail-play" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor" /></svg> Start with {{ idOf(firstStep) }} <span class="node-detail-go-what">{{ firstStep.title }}</span>
         </a>
         <p class="node-detail-rule">
-          Doing {{ before.missing.map((r) => r.id).join(" and ") }} first is recommended, not required.
-          <a :href="moduleHref(m.id)">Skip ahead to {{ m.id }}</a> and we fill in the code it builds on for you.
+          Doing {{ before.missing.map(moduleName).join(" and ") }} first is recommended, not required.
+          <a :href="moduleHref(m.id)">Skip ahead to {{ idOf(m) || m.title }}</a><template v-if="branch.layout === 'code'"> and we fill in the code it builds on for you</template>.
         </p>
       </template>
       <a v-else-if="state === 'done'" :class="['button', 'button-secondary', 'node-detail-go', { 'is-glowing': glowing }]" :href="moduleHref(m.id)">
-        Do {{ m.id }} again <span aria-hidden="true">→</span>
+        Do {{ idOf(m) || "it" }} again <span aria-hidden="true">→</span>
       </a>
       <a v-else :class="['button', 'button-primary', 'node-detail-go', { 'is-glowing': glowing }]" :href="moduleHref(m.id)">
-        <svg class="node-detail-play" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor" /></svg> Start {{ m.id }} <span class="node-detail-go-what">{{ m.title }}</span>
+        <svg class="node-detail-play" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z" fill="currentColor" /></svg> Start {{ idOf(m) }} <span class="node-detail-go-what">{{ m.title }}</span>
       </a>
       <button v-if="!compact && !isNext && recommended" type="button" class="node-detail-back" @click="emit('select', recommended.id)">
-        ← Back to your next step: {{ recommended.id }} {{ recommended.title }}
+        ← Back to your next step: {{ idOf(recommended) }} {{ recommended.title }}
       </button>
     </div>
   </section>

@@ -25,24 +25,50 @@ test.describe("Essentials, signed out", { tag: "@public" }, () => {
     await expect(choice).toBeVisible();
     await choice.getByRole("button", { name: /Why Temporal\?/ }).click();
     // Another persona's course is another site: the page loads again, on its map.
-    await expect(page.locator(".first-run")).toBeVisible();
-    await expect(page.locator('.focus-node[data-module="E1"]')).toHaveClass(/is-next/);
+    // The lean first run: the goal, the trip acted out, what they're starting and why a trip, and Let's begin.
+    const firstRun = page.locator(".first-run-lean");
+    await expect(firstRun.locator("h1")).toHaveText("Things go wrong. Your process shouldn't.");
+    await expect(firstRun.getByRole("img", { name: /the trip carries on from the card/ })).toBeVisible();
+    await expect(firstRun.locator(".first-run-about dt")).toHaveText(["What you're starting", "Why a trip?"]);
+    await expect(firstRun.getByRole("link", { name: /Let's begin/ })).toHaveAttribute("href", "#/module/E1");
+    // Its learners see no module ids, here or on the map.
+    await expect(firstRun).not.toContainText(/\bEC?\d\b/);
     // Switching is there from the first visit, before any module is done.
     await expect(page.locator(".first-run-persona")).toContainText("Learning as Why Temporal?");
     await page.locator(".first-run-persona").getByRole("button", { name: "Switch" }).click();
     await expect(page.getByRole("dialog", { name: "Switch how you learn" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
-    await page.getByRole("button", { name: /Show the whole map/ }).click();
+    // The whole map isn't offered, or shown, until the first module is done: not even to one
+    // who asked for it on an earlier visit.
+    await expect(page.getByRole("button", { name: /Show the whole map/ })).toHaveCount(0);
+    await page.evaluate((key) => localStorage.setItem(key, "true"), storageKey("map-everything"));
+    await page.reload();
+    await expect(page.locator(".first-run-lean")).toBeVisible();
+    await page.evaluate((key) => localStorage.setItem(key, JSON.stringify(["E1"])), storageKey("modules"));
+    await page.goto("/");
     await expect(page.locator(".map-persona")).toContainText("Why Temporal?");
-    await page.getByRole("button", { name: "Full map", exact: true }).click();
+    // Its map is the sketchbook, left to right, the boss at its end: no views to switch.
+    await expect(page.getByRole("button", { name: "Full map", exact: true })).toHaveCount(0);
+    const stops = page.locator(".sketch-stop");
+    await expect(stops).toHaveCount(12);
+    expect(await stops.evaluateAll((els) => els.map((e) => e.dataset.module))).toEqual(["E1", "E2", "E3", "EC1", "E4", "E5", "EC2", "E6", "E7", "E8", "EC3", "E-boss"]);
     // Fundamentals and the specializations aren't locked or coming soon: they aren't there.
-    for (const id of ["E1", "E5", "E8", "EC1", "EC3"]) await expect(page.locator(`.map-node[data-module="${id}"]`)).toBeVisible();
-    for (const id of ["F1", "A1", "N1", "F-boss"]) await expect(page.locator(`.map-node[data-module="${id}"]`)).toHaveCount(0);
+    for (const id of ["F1", "A1", "N1", "F-boss"]) await expect(page.locator(`[data-module="${id}"]`)).toHaveCount(0);
+    // A stop opens its card.
+    await page.locator('.sketch-stop[data-module="E7"]').click();
+    await expect(page.locator(".map-detail-selected .node-detail-title")).toHaveText("Wait for the manager");
+    await expect(page.locator(".map-page")).not.toContainText(/\bEC?\d\b/);
     // And it's kept: the next visit asks nothing.
     await page.goto("/?persona-choice");
     await expect(page.locator(".map-persona")).toContainText("Why Temporal?");
     await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+
+  test("the boss, The Night Shift, asks for a sign-in too", async ({ page }) => {
+    await page.goto(essentials("#/module/E-boss"));
+    await expect(page.locator(".sign-in-page h2")).toHaveText("Sign in to start this module");
+    await expect(page.locator(".boss-card")).toHaveCount(0);
   });
 
   test("an Essentials module asks for a sign-in, as every module does", async ({ page }) => {

@@ -5,7 +5,7 @@ import { ref, watch } from "vue";
 
 import BadgeMedal from "./BadgeMedal.vue";
 import { launchConfetti } from "../confetti.js";
-import { LEVEL_XP, level, levelXp, modulesById, progress, title, titleBadge, xp } from "../progress.js";
+import { LEVEL_XP, level, levelXp, moduleName, modulesById, progress, title, titleBadge, xp } from "../progress.js";
 import { toast } from "../store.js";
 
 const gains = ref([]);
@@ -22,14 +22,14 @@ watch(
     requestAnimationFrame(() => (bump.value = true));
     const m = modulesById.get(gain.id);
     if (gain.levelUp) {
-      toast(`Level ${gain.levelUp}! ${m.id} · ${m.title} done`, 3600);
+      toast(`Level ${gain.levelUp}! ${moduleName(m)} done`, 3600);
       try {
         if (!progress.lastBadges || progress.lastBadges.at < gain.at) launchConfetti();
       } catch {
         /* best effort */
       }
     } else {
-      toast(`${m.id} · ${m.title} done: +${gain.amount} XP`, 2600);
+      toast(`${moduleName(m)} done: +${gain.amount} XP`, 2600);
     }
   },
 );
