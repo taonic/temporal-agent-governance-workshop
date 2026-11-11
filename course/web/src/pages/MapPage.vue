@@ -148,7 +148,7 @@ const LEGEND = [
                 <p class="map-level-meta">{{ xp }} XP · {{ LEVEL_XP - levelXp }} to level {{ level + 1 }}</p>
               </div>
             </div>
-            <p class="map-persona">
+            <p v-if="!store.race" class="map-persona">
               Learning as <strong>{{ personaLabel }}</strong>
               <button type="button" class="focus-link" @click="store.personaPicker = true">Switch</button>
             </p>

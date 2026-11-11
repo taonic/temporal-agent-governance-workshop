@@ -4,6 +4,7 @@
 // (Activity), what they tell us (Feedback), and the sandboxes. Refreshes every 10 seconds while the tab is visible.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
+import AdminRaces from "../race/AdminRaces.vue";
 import { api, fullCourse as course, navigate, store, toast } from "../store.js";
 
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { id: "activity", label: "Activity" },
   { id: "feedback", label: "Feedback" },
   { id: "sandboxes", label: "Sandboxes" },
+  { id: "events", label: "Events 🏇" },
 ];
 const tab = computed(() => (TABS.some((t) => t.id === store.route.id) ? store.route.id : "learners"));
 
@@ -76,6 +78,13 @@ const EVENT_LABELS = {
   user_unblocked: "was unblocked",
   user_deleted: "a learner was deleted",
   feedback_sent: "sent feedback",
+  race_joined: "joined the race",
+  race_created: "race created",
+  race_start: "race started",
+  race_end: "race ended",
+  race_podium: "podium revealed",
+  race_reset: "race reset",
+  race_deleted: "race deleted",
 };
 function eventText(e) {
   const d = e.data ?? {};
@@ -641,6 +650,7 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
     </section>
 
     <!-- Sandboxes -->
+    <AdminRaces v-else-if="tab === 'events'" />
     <section v-else-if="tab === 'sandboxes'" class="admin-section">
       <p class="admin-muted">{{ sandboxes.sandboxes.length }} sandboxes, at most {{ sandboxes.max }} running.</p>
       <div class="admin-card table-scroll">

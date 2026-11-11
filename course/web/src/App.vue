@@ -15,6 +15,9 @@ import { closeHelper, helper, refreshHelper, resumeAfterConnect, toggleHelper } 
 import { shouldShowIntro } from "./intro.js";
 import BadgesPage from "./pages/BadgesPage.vue";
 import BossPage from "./pages/BossPage.vue";
+import RaceLobby from "./race/RaceLobby.vue";
+import RacePill from "./race/RacePill.vue";
+import { raceWaiting } from "./race/racing.js";
 import ExercisePage from "./pages/ExercisePage.vue";
 import MapPage from "./pages/MapPage.vue";
 import SetupPage from "./pages/SetupPage.vue";
@@ -243,7 +246,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
 </script>
 
 <template>
-  <div class="app-frame" :class="{ 'with-helper': helper.open, 'is-arriving': arriving }" :style="{ '--ask-width': `${helper.width}px` }" :inert="introOpen">
+  <div class="app-frame" :class="{ 'with-helper': helper.open, 'is-arriving': arriving }" :style="{ '--ask-width': `${helper.width}px` }" :inert="introOpen || raceWaiting">
     <!-- On a module page the bar keeps to what the module needs: where you are, Next, your
          level, the sandbox and Ask Temporal. The tour, feedback and the theme are in your menu. -->
     <header class="topbar" :class="{ 'is-module': exercise }">
@@ -257,6 +260,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
       <nav class="topbar-controls" aria-label="Course">
         <ModuleNav v-if="exercise && store.authenticated" :exercise="exercise" />
         <a v-else-if="store.route.page !== 'home'" class="button button-secondary" href="#/">Map</a>
+        <RacePill v-if="store.race" />
         <XpPill />
         <!-- Not on the map or in the admin panel: there, the tree (or the panel) is the only thing to do. -->
         <template v-if="!['home', 'admin', 'badges'].includes(store.route.page) && !gated">
@@ -298,13 +302,15 @@ watch(() => store.user, (user) => !user && closeFeedback());
         </button>
         <button v-if="store.runtime.checked && !store.user" class="button button-primary" type="button" @click="store.gateOpen = true">Sign in</button>
         <div v-else-if="store.user" class="sandbox-menu account-menu">
-          <button class="button button-secondary account-button" type="button" :aria-expanded="accountOpen" :title="store.user.email" @click="accountOpen = !accountOpen">
+          <button class="button button-secondary account-button" type="button" :aria-expanded="accountOpen" :title="store.race ? store.user.name : store.user.email" @click="accountOpen = !accountOpen">
             <span class="account-initial" aria-hidden="true">{{ (store.user.name || store.user.email)[0].toUpperCase() }}</span><span class="account-name">{{ store.user.name || store.user.email }}</span>
           </button>
           <div v-if="accountOpen" class="menu" role="menu" @keydown.escape="accountOpen = false">
-            <p class="menu-note">Signed in as <strong>{{ store.user.email }}</strong>{{ store.user.cohort ? ` · ${store.user.cohort.name}` : "" }}</p>
+            <p v-if="store.race" class="menu-note">Racing as <strong>{{ store.race.name }}</strong> on <strong>{{ store.race.horse }}</strong> in {{ store.race.raceName }}. Your pit-pass: <strong>{{ store.race.pitPass }}</strong></p>
+            <p v-else class="menu-note">Signed in as <strong>{{ store.user.email }}</strong>{{ store.user.cohort ? ` · ${store.user.cohort.name}` : "" }}</p>
+            <a v-if="store.race" class="menu-item" role="menuitem" :href="`/race/${store.race.slug}`" target="_blank" rel="noopener" @click="accountOpen = false">Watch the race 🏇</a>
             <button v-if="exercise" class="menu-item" type="button" role="menuitem" @click="startTour(); accountOpen = false">Take the tour</button>
-            <button class="menu-item" type="button" role="menuitem" @click="store.personaPicker = true; accountOpen = false">Learning as: <strong>{{ personaLabel }}</strong> · switch</button>
+            <button v-if="!store.race" class="menu-item" type="button" role="menuitem" @click="store.personaPicker = true; accountOpen = false">Learning as: <strong>{{ personaLabel }}</strong> · switch</button>
             <button class="menu-item" type="button" role="menuitem" @click="openFeedback(); accountOpen = false">Send feedback</button>
             <button class="menu-item" type="button" role="menuitem" @click="store.theme = store.theme === 'dark' ? 'light' : 'dark'; accountOpen = false">{{ store.theme === "dark" ? "Light mode" : "Dark mode" }}</button>
             <a v-if="store.user.admin" class="menu-item" role="menuitem" href="#/admin" @click="accountOpen = false">Admin panel</a>
@@ -344,6 +350,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
   </div>
 
   <EarnMoment />
+  <RaceLobby v-if="raceWaiting" />
 
   <PersonaChoice v-if="personaFirst || store.personaPicker" :switching="!personaFirst" @close="store.personaPicker = false" />
 

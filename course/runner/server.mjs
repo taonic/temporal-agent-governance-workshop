@@ -22,6 +22,8 @@ import { createHelper } from "./helper.mjs";
 import { createLlmPassthrough } from "./llm.mjs";
 import { relayLsp } from "./lsp.mjs";
 import { createMailer } from "./mailer.mjs";
+import { Races } from "./race.mjs";
+import { RateLimiter } from "./ratelimit.mjs";
 import { harnessConsole, proxyRequest, temporalUi } from "./proxy.mjs";
 import { CONSOLE_PORT, SandboxManager, TEMPORAL_UI_PORT } from "./sandboxes.mjs";
 import { createSweep } from "./sweep.mjs";
@@ -43,6 +45,9 @@ const accounts = new Accounts(db, {
 const feedback = new Feedback(db, { record: (...args) => activity.record(...args) });
 const mailer = createMailer(config, { log });
 const manager = new SandboxManager(config);
+const races = new Races(db, { accounts, activity, manager });
+// Joining a race and pit-passes, per IP: a room shares one, so it's generous.
+const raceTries = new RateLimiter({ perKey: 60, global: 100_000, windowMs: 15 * 60_000 });
 const terminals = new TerminalHub(manager);
 const llm = createLlmPassthrough(config, { onCall: (learner) => activity.countModelCall(learner) });
 const distDir = config.distDir ? path.resolve(config.distDir) : null;
@@ -122,6 +127,18 @@ function requireUser(req) {
   return session;
 }
 
+function requireAdmin(req) {
+  const session = sessionOf(req);
+  if (!session) throw Object.assign(new Error("Sign in first."), { status: 401 });
+  if (!session.admin) throw Object.assign(new Error("This is for the course's admins."), { status: 403 });
+  return session;
+}
+
+function limitRace(req) {
+  const limit = raceTries.take(clientIp(req) || "?");
+  if (!limit.ok) throw Object.assign(new Error(`Too many tries. Wait ${Math.ceil(limit.retryAfterSeconds / 60)} min.`), { status: 429, retryAfter: limit.retryAfterSeconds });
+}
+
 function requireLearner(req) {
   const reason = runtimeUnavailableReason();
   if (reason) throw Object.assign(new Error(reason), { status: 503 });
@@ -185,6 +202,8 @@ const routes = {
       // Signed in and allowed: may read the modules, use the sandboxes and the helper.
       authenticated: Boolean(session?.access.allowed),
       user: accounts.describe(session),
+      // A racer in the Derby (race.mjs): their race and their jockey.
+      race: session ? races.describeRacer(session.id) : null,
       ...uiProxyInfo(),
     };
   },
@@ -254,6 +273,77 @@ const routes = {
       .then(() => config.resendApiKey && config.feedbackEmails.length && feedback.markEmailed(fb.id))
       .catch((err) => log(`feedback ${fb.id} email failed: ${err.message}`));
     return { ok: true, id: fb.id };
+  },
+
+  // --- The Derby (race.mjs) --------------------------------------------------------------------
+
+  // A join code's race, and what's taken in it (the join page).
+  "GET /api/race/join": async (_req, _res, url) => races.joinInfo(url.searchParams.get("code")),
+
+  // Joins a race: a new racer, signed in as them.
+  "POST /api/race/join": async (req, res) => {
+    limitRace(req);
+    const body = await readJson(req, 8 * 1024);
+    const { user, racer } = races.join(body.code, body);
+    res.setHeader("set-cookie", sessionCookie(sessionToken(config.sessionSecret, user.id), { secure: isHttps(req) }));
+    log(`race: ${racer.name} joined race ${racer.race_id} as learner ${user.id}`);
+    return { pitPass: racer.pit_pass, race: races.describeRacer(user.id) };
+  },
+
+  // A racer back in, on another device, with their pit-pass.
+  "POST /api/race/resume": async (req, res) => {
+    limitRace(req);
+    const user = races.resume((await readJson(req, 4 * 1024)).pitPass);
+    res.setHeader("set-cookie", sessionCookie(sessionToken(config.sessionSecret, user.id), { secure: isHttps(req) }));
+    activity.record(user.id, "sign_in", null, { via: "pit-pass" });
+    return { race: races.describeRacer(user.id) };
+  },
+
+  // The race as it stands: public (the race screen needs no sign-in), with `me` for a racer.
+  "GET /api/race/state": async (req, _res, url) => races.state(url.searchParams.get("race"), { viewer: learnerFromRequest(config.sessionSecret, req) }),
+
+  "GET /api/admin/races": async (req) => {
+    requireAdmin(req);
+    return { races: races.list() };
+  },
+
+  "GET /api/admin/race": async (req, _res, url) => {
+    requireAdmin(req);
+    return races.state(races.race(url.searchParams.get("id")), { admin: true });
+  },
+
+  // Makes a race, or saves one's settings (with `id`).
+  "POST /api/admin/races": async (req) => {
+    const session = requireAdmin(req);
+    const body = await readJson(req, 8 * 1024);
+    return body.id ? races.update(body.id, body) : races.create(body, session.email);
+  },
+
+  // start | extend | end | podium | mute | unmute | reset | duplicate | ghosts | delete
+  "POST /api/admin/races/action": async (req) => {
+    const session = requireAdmin(req);
+    const { id, action } = await readJson(req, 4 * 1024);
+    if (action === "reset") return races.reset(id, session.email);
+    if (action === "duplicate") return races.duplicate(id, session.email);
+    if (action === "ghosts") return { racers: races.fillGhosts(id) };
+    if (action === "delete") {
+      races.remove(id, session.email);
+      return { deleted: true };
+    }
+    return races.act(id, action, session.email);
+  },
+
+  "POST /api/admin/racers": async (req) => {
+    requireAdmin(req);
+    const { id, name } = await readJson(req, 4 * 1024);
+    races.renameRacer(id, name);
+    return { ok: true };
+  },
+
+  "DELETE /api/admin/racers": async (req, _res, url) => {
+    const session = requireAdmin(req);
+    races.removeRacer(url.searchParams.get("id"), session.email);
+    return { ok: true };
   },
 
   // --- Progress and activity -----------------------------------------------------------------

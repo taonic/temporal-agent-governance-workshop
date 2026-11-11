@@ -40,7 +40,7 @@ const personaLabel = computed(() => course.personas.find((p) => p.id === store.p
 
 <template>
   <section v-if="branch.welcome" :class="['first-run', 'first-run-lean', `branch-${branch.color}`]" aria-labelledby="first-run-title">
-    <p class="map-persona first-run-persona">
+    <p v-if="!store.race" class="map-persona first-run-persona">
       Learning as <strong>{{ personaLabel }}</strong>
       <button type="button" class="focus-link" @click="store.personaPicker = true">Switch</button>
     </p>
@@ -71,7 +71,7 @@ const personaLabel = computed(() => course.personas.find((p) => p.id === store.p
         <span aria-hidden="true">{{ branch.icon }}</span> {{ branch.name }} · Tier {{ roman(first.tier) }} · {{ branch.tiers[first.tier - 1].name }}:
         {{ tier.length }} short steps, about {{ minutes }} minutes.
       </p>
-      <p class="map-persona first-run-persona">
+      <p v-if="!store.race" class="map-persona first-run-persona">
         Learning as <strong>{{ personaLabel }}</strong>
         <button type="button" class="focus-link" @click="store.personaPicker = true">Switch</button>
       </p>

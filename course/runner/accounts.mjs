@@ -167,8 +167,9 @@ export class Accounts {
   cohorts() {
     return this.db
       .prepare(
+        // A race's cohort is the race's (race.mjs): the Events tab has it, not this list.
         `SELECT c.*, (SELECT COUNT(*) FROM allowlist a WHERE a.cohort_id = c.id) AS entry_count
-         FROM cohorts c ORDER BY c.builtin DESC, c.created_at DESC`,
+         FROM cohorts c WHERE c.id NOT IN (SELECT cohort_id FROM races) ORDER BY c.builtin DESC, c.created_at DESC`,
       )
       .all()
       .map((c) => ({

@@ -196,6 +196,16 @@ export class SandboxManager {
     return { state: sandbox.state === "started" ? "waking" : sandbox.state, sandboxId: sandbox.id };
   }
 
+  // What this runner knows of a learner's sandbox, without asking Daytona: for a race's lobby,
+  // where the host waits for every racer's to be ready.
+  quickState(learner) {
+    const known = this.progress.get(learner)?.state;
+    if (this.inflight.has(learner)) return known ?? "finding";
+    const cached = this.cache.get(learner)?.sandbox;
+    if (cached && !this.deleted.has(cached.id)) return cached.state === "started" && this.ready.has(cached.id) ? "ready" : (known ?? cached.state ?? "unknown");
+    return known ?? "none";
+  }
+
   // Gets the learner's sandbox to "ready", creating or starting it as needed. Concurrent
   // calls share one run; reset() cancels it, so a run that's stuck can be left behind.
   ensure(learner, origins) {

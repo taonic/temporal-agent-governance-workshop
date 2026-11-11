@@ -37,7 +37,15 @@ async function purge() {
 }
 
 const params = new URLSearchParams(window.location.search);
-if (params.has("reset")) {
+// The Derby (race/): its screen for the projector (/race/<slug>) and its join page (/join, or
+// /join/<code>), each a page of its own, without the course around it.
+const racePage = window.location.pathname.match(/^\/race\/([a-z0-9-]+)\/?$/);
+const joinPage = window.location.pathname.match(/^\/join(?:\/([A-Za-z0-9-]+))?\/?$/);
+if (racePage) {
+  import("./race/RaceScreen.vue").then(({ default: RaceScreen }) => createApp(RaceScreen, { slug: racePage[1] }).mount("#app"));
+} else if (joinPage) {
+  import("./race/JoinPage.vue").then(({ default: JoinPage }) => createApp(JoinPage, { code: joinPage[1] ?? "" }).mount("#app"));
+} else if (params.has("reset")) {
   reset();
 } else if (params.has("purge")) {
   purge();

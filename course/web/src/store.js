@@ -76,6 +76,8 @@ export const store = reactive({
   // The signed-in user, allowed or not: { email, name, role, company, admin, needsProfile,
   // allowed, ended, cohort, request }, or null.
   user: null,
+  // A racer in the Derby (race/): their race and jockey, from the session; else null.
+  race: null,
   // Sandbox time in the last 24 hours: { usedMinutes, limitMinutes, remainingMinutes, freesAt }.
   allowance: null,
   uiProxy: { base: null, port: null },
@@ -513,8 +515,10 @@ export async function api(path, { method = "GET", body } = {}) {
 }
 
 // Signed in, for the page, once they've also said who they are (name and role).
-function applySession({ authenticated, user }) {
+function applySession({ authenticated, user, race }) {
   store.user = user ?? null;
+  // A racer in the Derby: { raceName, slug, name, horse, creature, silks, pattern, pitPass }.
+  store.race = race ?? null;
   store.authenticated = Boolean(authenticated) && !user?.needsProfile;
 }
 

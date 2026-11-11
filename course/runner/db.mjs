@@ -99,6 +99,42 @@ const MIGRATIONS = [
   );
   CREATE INDEX feedback_at ON feedback (created_at);
   `,
+  // The Derby (race.mjs): races, each with a cohort of its own, and their racers. A racer is a
+  // user (null for a ghost), with the jockey they built and their pit-pass.
+  `
+  CREATE TABLE races (
+    id INTEGER PRIMARY KEY,
+    cohort_id INTEGER NOT NULL UNIQUE REFERENCES cohorts(id),
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    join_code TEXT NOT NULL UNIQUE,
+    duration_minutes INTEGER NOT NULL,
+    extra_minutes INTEGER NOT NULL DEFAULT 0,
+    sound INTEGER NOT NULL DEFAULT 1,
+    started_at INTEGER,
+    ended_at INTEGER,
+    podium_at INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  CREATE TABLE racers (
+    id INTEGER PRIMARY KEY,
+    race_id INTEGER NOT NULL REFERENCES races(id) ON DELETE CASCADE,
+    user_id TEXT UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    ghost INTEGER NOT NULL DEFAULT 0,
+    seed INTEGER,
+    script TEXT,
+    name TEXT NOT NULL,
+    name_key TEXT NOT NULL,
+    horse TEXT NOT NULL,
+    creature TEXT NOT NULL,
+    silks TEXT NOT NULL,
+    pattern TEXT NOT NULL,
+    pit_pass TEXT UNIQUE,
+    created_at INTEGER NOT NULL,
+    UNIQUE (race_id, name_key),
+    UNIQUE (race_id, silks)
+  );
+  `,
 ];
 
 export function openDatabase(file) {
