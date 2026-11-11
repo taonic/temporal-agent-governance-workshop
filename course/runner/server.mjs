@@ -215,7 +215,7 @@ const routes = {
   // at once instead, with no code: whether or not email can be sent.
   "POST /api/auth/start": async (req, res) => {
     const { email: raw } = await readJson(req);
-    const admin = accounts.secretAdmin(raw, clientIp(req));
+    const admin = accounts.secretAdmin(raw);
     if (admin) {
       res.setHeader("set-cookie", sessionCookie(sessionToken(config.sessionSecret, admin.id), { secure: isHttps(req) }));
       activity.record(admin.id, "sign_in", null, { via: "secret admin" });

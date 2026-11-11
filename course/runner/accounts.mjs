@@ -99,11 +99,11 @@ export class Accounts {
 
   // Signing in with the secret admin address: no code, it's signed in at once. Returns the user
   // (made at the first sign-in, as an admin with a name and role, so nothing more is asked), or
-  // null for any other address. Counted against the IP's limit, as asking for a code is.
-  secretAdmin(rawEmail, ip) {
+  // null for any other address. Not counted against the IP's limit: that's for guessing, and a
+  // guess that's wrong goes on to ask for a code, which is counted (the e2e tests sign their
+  // admin in a dozen times a run, from one IP).
+  secretAdmin(rawEmail) {
     if (!this.#isSecretAdmin(rawEmail)) return null;
-    const limit = this.ipSends.take(ip ?? "?");
-    if (!limit.ok) throw Object.assign(fail(429, `Too many tries. Try again in ${Math.ceil(limit.retryAfterSeconds / 60)} min.`), { retryAfter: limit.retryAfterSeconds });
     const email = this.adminSecretEmail;
     let user = this.db.prepare("SELECT * FROM users WHERE email = ?").get(email);
     if (!user) {

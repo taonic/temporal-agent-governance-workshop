@@ -514,4 +514,6 @@ test("the secret admin address signs in at once, as an admin, with no code; no o
   assert.equal(accounts.secretAdmin("admin-k3x9q2v8@temporalquest.dev", "1.2.3.4"), null);
   assert.equal(accounts.secretAdmin("boss@temporal.io", "1.2.3.4"), null, "an ordinary admin still gets a code");
   assert.equal(setup().accounts.secretAdmin("", "1.2.3.4"), null, "unset, nobody is the secret admin");
+  for (let i = 0; i < 30; i++) accounts.secretAdmin(secretEmail, "1.2.3.4");
+  assert.equal(accounts.secretAdmin(secretEmail, "1.2.3.4").id, user.id, "signing in with it often isn't limited (the e2e tests do)");
 });

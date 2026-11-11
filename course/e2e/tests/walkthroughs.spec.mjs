@@ -33,7 +33,15 @@ test.describe("every exercise, as its instructions say", { tag: "@sandbox" }, ()
       await context.addInitScript((key) => localStorage.setItem(key, "true"), storageKey("onboarded"));
       const page = await context.newPage();
       const problems = [];
+      // What an uncaught error was, when its message says little ("Object": a promise rejected
+      // with a plain object): the console's report, with its value and the script it came from.
+      const details = [];
       page.on("pageerror", (err) => problems.push(`uncaught: ${err.message}`));
+      page.on("console", async (msg) => {
+        if (msg.type() !== "error" || !msg.text().startsWith("Uncaught")) return;
+        const values = await Promise.all(msg.args().map((arg) => arg.jsonValue().catch(() => "?")));
+        details.push(`${msg.text()} ${JSON.stringify(values).slice(0, 400)} (${msg.location().url}:${msg.location().lineNumber})`);
+      });
       page.on("dialog", (dialog) => dialog.accept()); // the page's confirm()s, as a learner says yes
       const terminal = (name) => page.locator(`.terminal-pane[aria-label="The ${name} terminal"]`);
       try {
@@ -45,7 +53,7 @@ test.describe("every exercise, as its instructions say", { tag: "@sandbox" }, ()
         const learner = new Learner(page, testInfo);
         await learner.openExercise(id);
         await walk(learner);
-        expect(problems, "the page threw").toEqual([]);
+        expect(problems, `the page threw${details.length ? `: ${details.join(" | ")}` : ""}`).toEqual([]);
       } catch (err) {
         await testInfo.attach("screenshot", { body: await page.screenshot().catch(() => Buffer.from("")), contentType: "image/png" });
         for (const name of ["worker", "commands"]) {

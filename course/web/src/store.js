@@ -314,13 +314,16 @@ export function openTrip(key) {
 // itinerary's legs (itinerary-sfo-jfk-lhr-1a2b-leg-1), which start the same way.
 const findWorkflow = (prefix) => store.trips.list?.find((t) => t.id.startsWith(prefix) && !t.id.slice(prefix.length).includes("-"));
 
-// Opens the latest workflow whose id starts with `prefix`. One started a moment ago may not be in
-// the page's list yet (it's polled every few seconds, and Temporal's list can lag a second
-// behind): ask for the list again, for a few seconds, before saying it isn't there.
+// Opens the latest workflow whose id starts with `prefix`. The page's list is polled every few
+// seconds, so it's asked for afresh first: one started a moment ago may not be in it yet, and
+// when an older one has the same prefix (a second hold on the same seat), that one would open
+// instead. Temporal's list can lag a second behind too: ask again, for a few seconds, before
+// saying it isn't there.
 export async function openWorkflow(prefix, tab = null) {
+  if (hooks.poll) await hooks.poll();
   let workflow = findWorkflow(prefix);
   for (let i = 0; !workflow && hooks.poll && i < 4; i++) {
-    if (i) await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     await hooks.poll();
     workflow = findWorkflow(prefix);
   }
