@@ -12,6 +12,7 @@ One [Fly.io](https://fly.io) app, `temporal-quest`, runs the site and its runner
 | `FEEDBACK_EMAILS` | who gets the feedback learners send (comma-separated; default `tao.guo@temporal.io`, empty for nobody). It's kept either way, under `/admin` → Feedback. Needs `RESEND_API_KEY` |
 | `ADMIN_EMAILS` | the admins, comma-separated (`ana@temporal.io,bo@temporal.io`): `/admin`, and the emails about access requests. Always allowed in. Put the e2e tests' admin here too (`e2e+admin@temporalquest.dev`) |
 | `SESSION_SECRET` | signs session cookies (14 days from sign-in) and the sandboxes' model keys. Changing it signs everyone out and breaks running sandboxes' model keys until they restart |
+| `ADMIN_SECRET_EMAIL` | optional: an admin address kept secret, which signs in at once with no code (even when email can't be sent). Whoever knows it is an admin, so make it long and random (`admin-$(openssl rand -hex 12)@temporalquest.dev`). The e2e tests' admin can use it: the same value as the repository secret `E2E_ADMIN_EMAIL` |
 | `E2E_SIGNIN_KEY` | the e2e tests' sign-in: their addresses (`e2e+…@temporalquest.dev`) get no email, and sign in with a code derived from this key. The same value as the repository secret of that name |
 | `KAPA_API_KEY` | optional. An API key for Temporal's Kapa project: Ask Temporal searches the docs with it for everyone, and nobody has to verify with GitHub or Google. Without it, each learner connects their own (free) Kapa sign-in once |
 

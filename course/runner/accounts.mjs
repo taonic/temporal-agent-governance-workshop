@@ -3,7 +3,7 @@
 // use the course. A company email that isn't listed may ask (an access request), once it has
 // shown it's theirs with a code; personal email addresses are asked for a company one, unless
 // an admin listed them exactly. ADMIN_EMAILS are always allowed, and are the admins.
-import { e2eSignInCode, hashSignInCode, newLearnerId, newSignInCode } from "./auth.mjs";
+import { codeMatches, e2eSignInCode, hashSignInCode, newLearnerId, newSignInCode } from "./auth.mjs";
 import { transaction } from "./db.mjs";
 import { RateLimiter } from "./ratelimit.mjs";
 
@@ -62,10 +62,11 @@ export function parseEntry(line) {
 const fail = (status, message, code) => Object.assign(new Error(message), { status, ...(code ? { code } : {}) });
 
 export class Accounts {
-  constructor(db, { secret, adminEmails = [], consoleSignIn = () => false, e2eKey = "", now = () => Date.now(), record = () => {} } = {}) {
+  constructor(db, { secret, adminEmails = [], adminSecretEmail = "", consoleSignIn = () => false, e2eKey = "", now = () => Date.now(), record = () => {} } = {}) {
     this.db = db;
     this.secret = secret;
     this.adminEmails = new Set(adminEmails);
+    this.adminSecretEmail = adminSecretEmail;
     this.consoleSignIn = consoleSignIn;
     this.e2eKey = e2eKey;
     this.now = now;
@@ -88,7 +89,30 @@ export class Accounts {
   }
 
   isAdmin(email) {
-    return this.adminEmails.has(email);
+    return this.adminEmails.has(email) || this.#isSecretAdmin(email);
+  }
+
+  // The secret admin address (ADMIN_SECRET_EMAIL): compared in constant time, since it's a secret.
+  #isSecretAdmin(email) {
+    return Boolean(this.adminSecretEmail) && codeMatches(this.adminSecretEmail, String(email ?? "").trim().toLowerCase());
+  }
+
+  // Signing in with the secret admin address: no code, it's signed in at once. Returns the user
+  // (made at the first sign-in, as an admin with a name and role, so nothing more is asked), or
+  // null for any other address. Counted against the IP's limit, as asking for a code is.
+  secretAdmin(rawEmail, ip) {
+    if (!this.#isSecretAdmin(rawEmail)) return null;
+    const limit = this.ipSends.take(ip ?? "?");
+    if (!limit.ok) throw Object.assign(fail(429, `Too many tries. Try again in ${Math.ceil(limit.retryAfterSeconds / 60)} min.`), { retryAfter: limit.retryAfterSeconds });
+    const email = this.adminSecretEmail;
+    let user = this.db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    if (!user) {
+      const id = newLearnerId();
+      this.db.prepare("INSERT INTO users (id, email, name, role, created_at) VALUES (?, ?, 'Admin', 'Other', ?)").run(id, email, this.now());
+      user = this.db.prepare("SELECT * FROM users WHERE id = ?").get(id);
+    }
+    if (user.status === "blocked") throw fail(403, "This account is blocked. Contact the course team.", "blocked");
+    return user;
   }
 
   // --- The allowlist ------------------------------------------------------------------------

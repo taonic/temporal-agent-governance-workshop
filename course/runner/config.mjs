@@ -63,6 +63,9 @@ export const config = {
   resendApiKey: env.RESEND_API_KEY || "",
   mailFrom: env.MAIL_FROM || "Temporal Quest <signin@temporalquest.dev>",
   adminEmails: parseEmails(env.ADMIN_EMAILS),
+  // An admin address kept secret (a Fly secret, not in the repo): signing in with it needs no
+  // code, so whoever knows it is an admin. Make it long and random. accounts.mjs secretAdmin.
+  adminSecretEmail: (env.ADMIN_SECRET_EMAIL || "").trim().toLowerCase(),
   // Who gets each piece of feedback the learners send (feedback.mjs).
   feedbackEmails: parseEmails(env.FEEDBACK_EMAILS ?? "tao.guo@temporal.io"),
   // The e2e tests' addresses (e2e+…@temporalquest.dev) get no email: their code is derived

@@ -57,7 +57,11 @@ async function run(fn) {
 
 const sendCode = () =>
   run(async () => {
-    const { email: normalized, console: printed } = await requestCode(email.value);
+    const { email: normalized, console: printed, signedIn } = await requestCode(email.value);
+    if (signedIn) {
+      if (step.value === "done") finish();
+      return;
+    }
     sentTo.value = normalized;
     toConsole.value = printed;
     code.value = "";

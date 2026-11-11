@@ -9,8 +9,9 @@
 #   - when the tests themselves change on main, and by hand (Actions → E2E → Run workflow).
 #
 # Repository secrets: E2E_SIGNIN_KEY (the app's; without it the @auth and @sandbox tiers skip),
-# and for the email RESEND_API_KEY. Repository variables: E2E_ADMIN_EMAIL (one of the app's
-# ADMIN_EMAILS; e2e+admin@temporalquest.dev by default), E2E_MAIL_TO (comma-separated),
+# for the email RESEND_API_KEY, and optionally E2E_ADMIN_EMAIL (the app's ADMIN_SECRET_EMAIL: the
+# tests' admin then signs in with no code). Repository variables: E2E_ADMIN_EMAIL (one of the app's
+# ADMIN_EMAILS; e2e+admin@temporalquest.dev by default; the secret wins), E2E_MAIL_TO (comma-separated),
 # E2E_MAIL_FROM, and E2E_SKIP_SANDBOX=1 to keep the sandbox tier off (during an event).
 # course/e2e/README.md has the details.
 
@@ -99,7 +100,9 @@ jobs:
       # A schedule has no inputs: always emailed. Anything else but a run by hand: a failure only.
       EMAIL: ${{ inputs.email || (github.event_name == 'schedule' && 'always') || 'failure' }}
       E2E_SIGNIN_KEY: ${{ secrets.E2E_SIGNIN_KEY }}
-      E2E_ADMIN_EMAIL: ${{ vars.E2E_ADMIN_EMAIL }}
+      # The secret, when set: the app's secret admin address (ADMIN_SECRET_EMAIL), which signs in
+      # with no code. Else the variable: one of the app's ADMIN_EMAILS.
+      E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL || vars.E2E_ADMIN_EMAIL }}
       E2E_SKIP_SANDBOX: ${{ vars.E2E_SKIP_SANDBOX }}
     steps:
       # After a deploy, the tests as they were in what was deployed.

@@ -28,7 +28,7 @@ npm run summary                              # reports/summary.md (and reports/e
 |---|---|
 | `E2E_BASE_URL` | the site to test (default: the live Fly app) |
 | `E2E_SIGNIN_KEY` | the app's `E2E_SIGNIN_KEY` ([DEPLOY.md](../DEPLOY.md)) |
-| `E2E_ADMIN_EMAIL` | the tests' admin, one of the app's `ADMIN_EMAILS` (default `e2e+admin@temporalquest.dev`) |
+| `E2E_ADMIN_EMAIL` | the tests' admin: one of the app's `ADMIN_EMAILS` (default `e2e+admin@temporalquest.dev`), or its `ADMIN_SECRET_EMAIL`, which signs in with no code |
 | `E2E_SKIP_SANDBOX` | `1` keeps the sandbox tier off |
 
 Failures keep a trace, a screenshot and a video (`test-results/`); the sandbox tier also attaches both terminals' text and the Agent UI's chat. A step whose instructions the page can't follow as written is noted in the report (an `instructions` annotation) without failing the run. `npx playwright show-trace test-results/<test>/trace.zip` replays one.
@@ -43,6 +43,7 @@ To turn it on, in the repository's Settings → Secrets and variables → Action
 |---|---|---|
 | secret | `E2E_SIGNIN_KEY` | the app's `E2E_SIGNIN_KEY` |
 | variable | `E2E_ADMIN_EMAIL` | optional: one of the app's `ADMIN_EMAILS` (default `e2e+admin@temporalquest.dev`) |
+| secret | `E2E_ADMIN_EMAIL` | optional: the app's `ADMIN_SECRET_EMAIL`, so the tests' admin signs in with no code; it wins over the variable |
 | secret | `RESEND_API_KEY` | a [Resend](https://resend.com/api-keys) API key with sending access |
 | variable | `E2E_MAIL_TO` | where the email goes, comma-separated |
 | variable | `E2E_MAIL_FROM` | `onboarding@resend.dev`, or an address on a domain you've verified in Resend |

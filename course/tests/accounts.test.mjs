@@ -27,7 +27,7 @@ const CATALOG = catalogOf({
   personas: [{ id: "developer" }, { id: "essentials" }],
 });
 
-function setup({ admins = ["boss@temporal.io"], consoleMode = false, e2eKey = "" } = {}) {
+function setup({ admins = ["boss@temporal.io"], consoleMode = false, e2eKey = "", adminSecretEmail = "" } = {}) {
   const clock = { now: Date.parse("2026-11-10T09:00:00Z") };
   const now = () => clock.now;
   const db = openDatabase(":memory:");
@@ -35,6 +35,7 @@ function setup({ admins = ["boss@temporal.io"], consoleMode = false, e2eKey = ""
   const accounts = new Accounts(db, {
     secret: "test-secret",
     adminEmails: admins,
+    adminSecretEmail,
     consoleSignIn: () => consoleMode,
     e2eKey,
     now,
@@ -498,4 +499,19 @@ test("the sign-in form offers the roles the runner accepts, product owners among
   const form = fs.readFileSync(new URL("../web/src/components/AccessForm.vue", import.meta.url), "utf8").match(/^const ROLES = (\[.*\]);$/m)[1];
   assert.deepEqual(JSON.parse(form), ROLES);
   assert.ok(ROLES.includes("Product owner"));
+});
+
+test("the secret admin address signs in at once, as an admin, with no code; no other address does", () => {
+  const secretEmail = "admin-k3x9q2v7@temporalquest.dev";
+  const { accounts } = setup({ adminSecretEmail: secretEmail });
+  const user = accounts.secretAdmin(" Admin-K3X9Q2V7@temporalquest.dev ", "1.2.3.4");
+  assert.equal(user.email, secretEmail);
+  const session = accounts.sessionUser(user.id);
+  assert.equal(session.admin, true);
+  assert.equal(session.access.allowed, true);
+  assert.equal(accounts.describe(session).needsProfile, false, "nothing more is asked");
+  assert.equal(accounts.secretAdmin(secretEmail, "1.2.3.4").id, user.id, "the same user the next time");
+  assert.equal(accounts.secretAdmin("admin-k3x9q2v8@temporalquest.dev", "1.2.3.4"), null);
+  assert.equal(accounts.secretAdmin("boss@temporal.io", "1.2.3.4"), null, "an ordinary admin still gets a code");
+  assert.equal(setup().accounts.secretAdmin("", "1.2.3.4"), null, "unset, nobody is the secret admin");
 });

@@ -45,7 +45,8 @@ Two terminals:
 ```bash
 # A: the runner. Without DAYTONA_API_KEY the site works, but only in Local mode.
 # Without RESEND_API_KEY, sign-in codes are printed here and any email may sign in, from this
-# machine only. ADMIN_EMAILS=you@… opens /admin to you.
+# machine only. ADMIN_EMAILS=you@… opens /admin to you. ADMIN_SECRET_EMAIL=… (as on Fly) signs
+# in at once as an admin, with no code.
 DAYTONA_API_KEY=... GEMINI_API_KEY=... ADMIN_EMAILS=you@temporal.io npm run runner
 # B: the site, on http://127.0.0.1:4173 (proxies /api, /sbx and /llm to the runner)
 npm run dev

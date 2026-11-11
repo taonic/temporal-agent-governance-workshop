@@ -16,6 +16,11 @@ export async function signInApi(email, { profile = { name: "E2E Learner", role: 
   for (let attempt = 1; attempt <= 4; attempt++) {
     const start = await api.post("/api/auth/start", { data: { email } });
     if (start.status() !== 200) throw new Error(`asking for a code for ${email}: ${start.status()} ${await start.text()}`);
+    // The app's secret admin address (its ADMIN_SECRET_EMAIL) is signed in at once, with no code.
+    if ((await start.json()).signedIn) {
+      verify = start;
+      break;
+    }
     verify = await api.post("/api/auth/verify", { data: { email, code: e2eCode(email) } });
     if (verify.status() === 200 || (await verify.json().catch(() => ({}))).code !== "expired") break;
     await new Promise((r) => setTimeout(r, 200 * attempt));

@@ -38,6 +38,7 @@ const activity = new Activity(db);
 const accounts = new Accounts(db, {
   secret: config.sessionSecret,
   adminEmails: config.adminEmails,
+  adminSecretEmail: config.adminSecretEmail,
   consoleSignIn,
   e2eKey: config.e2eSignInKey,
   record: (...args) => activity.record(...args),
@@ -210,11 +211,20 @@ const routes = {
     };
   },
 
-  // Sends a sign-in code to an email.
-  "POST /api/auth/start": async (req) => {
+  // Sends a sign-in code to an email. The secret admin address (ADMIN_SECRET_EMAIL) is signed in
+  // at once instead, with no code: whether or not email can be sent.
+  "POST /api/auth/start": async (req, res) => {
+    const { email: raw } = await readJson(req);
+    const admin = accounts.secretAdmin(raw, clientIp(req));
+    if (admin) {
+      res.setHeader("set-cookie", sessionCookie(sessionToken(config.sessionSecret, admin.id), { secure: isHttps(req) }));
+      activity.record(admin.id, "sign_in", null, { via: "secret admin" });
+      log(`sign-in for learner ${admin.id}, with the secret admin address`);
+      const session = accounts.sessionUser(admin.id);
+      return { sent: false, signedIn: true, authenticated: session.access.allowed, user: accounts.describe(session) };
+    }
     const reason = signInUnavailableReason();
     if (reason) throw Object.assign(new Error(reason), { status: 503 });
-    const { email: raw } = await readJson(req);
     if (consoleSignIn() && !consoleSignInAllows(req.headers["x-forwarded-host"] ?? req.headers.host)) {
       throw Object.assign(new Error("This runner has no RESEND_API_KEY, so it only signs in this machine (localhost)."), { status: 403 });
     }

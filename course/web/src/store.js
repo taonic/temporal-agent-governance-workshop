@@ -709,7 +709,10 @@ export async function resetSandbox({ restart = false } = {}) {
 
 // Sign-in: a code to the email, then the code back, then (the first time) name and role.
 export async function requestCode(email) {
-  return api("/api/auth/start", { method: "POST", body: { email } });
+  const data = await api("/api/auth/start", { method: "POST", body: { email } });
+  // The secret admin address is signed in at once: there's no code to wait for.
+  if (data.signedIn) applySession(data);
+  return data;
 }
 
 export async function verifyCode(email, code) {

@@ -7,8 +7,9 @@ export const BASE_URL = (process.env.E2E_BASE_URL || "https://temporalquest.dev"
 // The app's E2E_SIGNIN_KEY: the tests' addresses (e2e+…@temporalquest.dev) sign in with a code
 // derived from it, so no mailbox is needed. Without it, the @auth and @sandbox tiers skip.
 export const SIGNIN_KEY = process.env.E2E_SIGNIN_KEY || "";
-// The tests' admin: one of the app's ADMIN_EMAILS. It puts the tests' learners on the allowlist
-// and deletes them after.
+// The tests' admin: one of the app's ADMIN_EMAILS, or its secret admin address (ADMIN_SECRET_EMAIL,
+// signed in with no code: the repository secret E2E_ADMIN_EMAIL). It puts the tests' learners on
+// the allowlist and deletes them after.
 export const ADMIN_EMAIL = (process.env.E2E_ADMIN_EMAIL || "e2e+admin@temporalquest.dev").toLowerCase();
 // The sandbox tier's learner, the same every run (the teardown deletes it).
 export const SANDBOX_EMAIL = "e2e+sandbox@temporalquest.dev";
