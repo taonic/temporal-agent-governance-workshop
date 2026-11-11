@@ -7,7 +7,7 @@ import { test } from "node:test";
 import { Accounts } from "../runner/accounts.mjs";
 import { Activity, catalogOf } from "../runner/activity.mjs";
 import { openDatabase } from "../runner/db.mjs";
-import { COUNTDOWN_MS, GRAZE_MS, PODIUM_DELAY_MS, Races, ghostEvents, raceCourse } from "../runner/race.mjs";
+import { COUNTDOWN_MS, GRAZE_MS, PODIUM_DELAY_MS, Races, ghostEvents, quizXp, raceCourse } from "../runner/race.mjs";
 
 const MIN = 60_000;
 
@@ -20,7 +20,13 @@ const DATA = {
     { id: "E2", kind: "module", xp: 10, title: "A mistake pauses", emoji: "🐞", status: "ready", branch: "essentials" },
     { id: "E-boss", kind: "boss", xp: 50, title: "The Night Shift", status: "ready", branch: "essentials" },
   ],
-  exercises: [{ challenges: { EC1: { choices: [{ id: "A" }, { id: "B", right: true }, { id: "C" }] } } }],
+  exercises: [
+    {
+      challenges: { EC1: { choices: [{ id: "A" }, { id: "B", right: true }, { id: "C" }] } },
+      // E2's question: a module's XP in the race depends on it.
+      checks: { E2: { quiz: { choices: [{ id: "A" }, { id: "B" }, { id: "C", right: true }] } } },
+    },
+  ],
   paths: [{ id: "essentials", modules: ["E1", "EC1", "E2"], personas: ["essentials"] }],
   personas: [{ id: "developer" }, { id: "essentials" }],
   badges: [],
@@ -135,7 +141,64 @@ test("scoring: XP from the gun to the finish, ties go to whoever got there first
   assert.equal(state.racers[0].pitPass, undefined, "nor pit-passes");
 });
 
-test("everyone home ends the race; the host can end it and reveal the podium", () => {
+test("a module's question scores the module: all of it first time, half the second, a fifth after", () => {
+  assert.equal(quizXp(10, ["C"], "C"), 10);
+  assert.equal(quizXp(10, ["A", "C"], "C"), 5);
+  assert.equal(quizXp(10, ["A", "B", "C"], "C"), 2);
+  assert.equal(quizXp(10, [], "C"), 10, "a pass with no answer recorded keeps its XP");
+});
+
+test("scoring: careful beats quick; at the same XP, fewer slips win, then the clock", () => {
+  const { races, clock, activity } = setup();
+  const { id } = races.create({ name: "Derby", joinCode: "DERBY42" });
+  const quick = races.join("DERBY42", jockey("Quick", "scarlet")).user.id;
+  const careful = races.join("DERBY42", jockey("Careful", "sky")).user.id;
+  const sloppy = races.join("DERBY42", jockey("Sloppy", "lime")).user.id;
+  races.act(id, "start");
+  clock.now += COUNTDOWN_MS + 1000;
+  // Quick guesses E2's question twice, first.
+  activity.record(quick, "quiz_pick", "E2", { choice: "A" });
+  activity.record(quick, "quiz_pick", "E2", { choice: "C" });
+  activity.record(quick, "module_passed", "E2");
+  clock.now += 60_000;
+  // Careful reads, and answers right first time.
+  activity.record(careful, "quiz_pick", "E2", { choice: "C" });
+  activity.record(careful, "module_passed", "E2");
+  clock.now += 1000;
+  // Sloppy slips on the challenge, but ties Careful on XP with E1 and the challenge.
+  activity.record(sloppy, "module_passed", "E1");
+  activity.record(sloppy, "challenge_pick", "EC1", { choice: "A" });
+  activity.record(sloppy, "challenge_pick", "EC1", { choice: "B" });
+  activity.record(sloppy, "module_passed", "EC1");
+  clock.now += 1000;
+  const by = Object.fromEntries(races.state("derby").racers.map((r) => [r.name, r]));
+  assert.equal(by.Quick.xp, 5, "half of E2's 10: right on the second try");
+  assert.equal(by.Quick.stumbles, 1);
+  assert.equal(by.Careful.xp, 10);
+  assert.equal(by.Sloppy.xp, 20, "E1, then EC1 on the second pick: 10 + 10");
+  assert.equal(by.Sloppy.rank, 1);
+  assert.equal(by.Careful.rank, 2);
+  assert.equal(by.Quick.rank, 3, "first there, but with fewer XP");
+});
+
+test("ties at the same XP go to fewer slips before the clock", () => {
+  const { races, clock, activity } = setup();
+  const { id } = races.create({ name: "Derby", joinCode: "DERBY42" });
+  const early = races.join("DERBY42", jockey("Early", "scarlet")).user.id;
+  const clean = races.join("DERBY42", jockey("Clean", "sky")).user.id;
+  races.act(id, "start");
+  clock.now += COUNTDOWN_MS + 1000;
+  activity.record(early, "boss_result", "E-boss", { won: false, hearts: 0 });
+  activity.record(early, "module_passed", "E1");
+  clock.now += 60_000;
+  activity.record(clean, "module_passed", "E1");
+  clock.now += 1000;
+  const by = Object.fromEntries(races.state("derby").racers.map((r) => [r.name, r]));
+  assert.equal(by.Early.xp, by.Clean.xp);
+  assert.equal(by.Clean.rank, 1, "no slips beats getting there first");
+});
+
+test("the race ends when everyone has done every stop; the host can end it and reveal the podium", () => {
   const { races, clock, activity } = setup();
   const { id } = races.create({ name: "Derby", joinCode: "DERBY42" });
   const a = races.join("DERBY42", jockey("Ana", "scarlet")).user.id;
@@ -146,6 +209,12 @@ test("everyone home ends the race; the host can end it and reveal the podium", (
   activity.record(a, "boss_result", "E-boss", { won: true, hearts: 3 });
   activity.record(a, "module_passed", "E-boss");
   clock.now += 1000;
+  assert.equal(races.state("derby").race.phase, "racing", "beating the boss isn't the finish: stops are left");
+  activity.record(a, "module_passed", "E1");
+  activity.record(a, "challenge_pick", "EC1", { choice: "B" });
+  activity.record(a, "module_passed", "EC1");
+  activity.record(a, "module_passed", "E2");
+  clock.now += 1000;
   const state = races.state("derby");
   assert.equal(state.race.phase, "finished");
   assert.equal(state.racers[0].finishedAt, clock.now - 1000);
@@ -155,15 +224,18 @@ test("everyone home ends the race; the host can end it and reveal the podium", (
   assert.ok(races.state("derby").race.podiumAt < clock.now);
 });
 
-test("a racer with no progress for eight minutes grazes", () => {
-  const { races, clock } = setup();
+test("a racer with no progress for fifteen minutes grazes, unless they're on a module page", () => {
+  const { races, clock, activity } = setup();
   const { id } = races.create({ name: "Derby", joinCode: "DERBY42" });
-  races.join("DERBY42", jockey("Ana", "scarlet"));
+  const a = races.join("DERBY42", jockey("Ana", "scarlet")).user.id;
   races.act(id, "start");
   clock.now += COUNTDOWN_MS + GRAZE_MS - 1000;
   assert.equal(races.state("derby").racers[0].grazing, false);
   clock.now += 2000;
   assert.equal(races.state("derby").racers[0].grazing, true);
+  activity.heartbeat(a, "E1");
+  clock.now += 1000;
+  assert.equal(races.state("derby").racers[0].grazing, false, "reading a module isn't grazing");
 });
 
 test("ghosts fill the field before the start and run the whole course, a twin a second behind", () => {

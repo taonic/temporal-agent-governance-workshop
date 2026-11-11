@@ -260,8 +260,9 @@ watch(() => store.user, (user) => !user && closeFeedback());
       <nav class="topbar-controls" aria-label="Course">
         <ModuleNav v-if="exercise && store.authenticated" :exercise="exercise" />
         <a v-else-if="store.route.page !== 'home'" class="button button-secondary" href="#/">Map</a>
+        <!-- A racer's XP is the race's (its questions' first tries): their race pill has it, not the course's. -->
         <RacePill v-if="store.race" />
-        <XpPill />
+        <XpPill v-else />
         <!-- Not on the map or in the admin panel: there, the tree (or the panel) is the only thing to do. -->
         <template v-if="!['home', 'admin', 'badges'].includes(store.route.page) && !gated">
           <div v-if="store.runtime.enabled" class="sandbox-menu" data-tour="sandbox-menu">

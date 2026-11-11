@@ -152,3 +152,11 @@ These run from the host's phone or laptop, never on the projector.
 - The durian is drawn, since there's no emoji for it. The hornbill and the gibbon became a parrot and a monkey. There are 16 creatures and 20 silks colours, so a race takes up to 20 racers.
 - Ghosts finish in about 4 to 6.5 minutes, and the grazer pauses for 2. A ghost grazes after 1 minute without progress, not 8, so a rehearsal shows it.
 - Sound is made with Web Audio (no files). The race screen needs one click before it can play.
+
+**2026-11-11: race by understanding, by XP.** People should focus on learning, not rush. Changes:
+
+- A module's race XP depends on how its question went: all 10 if the first answer is right, 5 on the second, 2 after that, as a challenge's already did. The page now records each answer as a `quiz_pick` event. The normal course XP is unchanged.
+- Ranking: XP, then fewer slips (wrong answers, bosses lost), then whoever got there first.
+- The track is marked in XP (every 25), and the finish line is a perfect score (190). Beating the boss isn't a finish, so there are no rosettes and no enclosure. The race ends when the clock runs out, or once everyone has done every stop.
+- Grazing starts after 15 minutes without progress, and never for someone on a module page (reading, or asking Temporal).
+- The commentary cheers first-time answers and every 50 XP. Overtakes are announced for the podium places only.

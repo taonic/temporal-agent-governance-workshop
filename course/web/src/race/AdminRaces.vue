@@ -151,7 +151,7 @@ async function copy(text, what) {
 
 const qr = computed(() => (race.value ? qrSvg(joinUrl(race.value.joinCode)) : ""));
 const status = (r) => {
-  if (r.finishedAt) return `🏁 ${clock(r.finishedAt - race.value.startedAt)}`;
+  if (r.finishedAt) return `✅ every stop, in ${clock(r.finishedAt - race.value.startedAt)}`;
   if (phase.value === "lobby" || phase.value === "countdown") return r.ghost ? "👻 ghost" : (SANDBOX[r.sandbox] ?? `${r.sandbox ?? "…"}`);
   if (r.grazing) return "🌿 grazing";
   return r.stop ? `at ${stopTitle(r.stop)}` : "at the gate";
@@ -254,7 +254,7 @@ onBeforeUnmount(() => {
               <td class="race-mini"><Horse :creature="r.creature" :silks="r.silks" :pattern="r.pattern" :coat="r.coat" :number="r.lane + 1" :gait="r.grazing ? 'graze' : 'idle'" /></td>
               <td><strong>{{ r.horse }}</strong><br><span class="admin-muted">{{ r.ghost ? "👻 " : "" }}{{ r.name }}</span></td>
               <td>{{ phase === "lobby" ? "" : ordinal(r.rank) }}</td>
-              <td>{{ r.xp }}<span v-if="r.stumbles" class="admin-muted"> · {{ r.stumbles }} 😬</span></td>
+              <td>{{ r.xp }}<span v-if="r.stumbles" class="admin-muted"> · {{ r.stumbles }} {{ r.stumbles === 1 ? "slip" : "slips" }}</span></td>
               <td>{{ status(r) }}</td>
               <td><code v-if="r.pitPass">{{ r.pitPass }}</code></td>
               <td class="race-row-actions">

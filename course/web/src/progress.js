@@ -338,7 +338,11 @@ export const quizAnswered = (id) => isDone(id) || quizPicks(id).includes(quizRig
 export function quizPick(id, choiceId) {
   const before = quizPicks(id);
   const after = addPick(before, choiceId, quizRight(id));
-  if (after !== before) essentials.quizzes = { ...essentials.quizzes, [id]: after };
+  if (after !== before) {
+    essentials.quizzes = { ...essentials.quizzes, [id]: after };
+    // Recorded too: the Derby scores a module by how its question went (runner/race.mjs).
+    track("quiz_pick", id, { choice: choiceId, right: choiceId === quizRight(id) });
+  }
   passIfChecked(id);
 }
 

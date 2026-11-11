@@ -35,7 +35,7 @@ const sandbox = computed(() => SANDBOX[store.sandbox.state] ?? ["…", "Warming 
       <p class="race-lobby-names"><strong>{{ store.race.horse }}</strong>, ridden by {{ store.race.name }}<template v-if="me">, in stall {{ me.lane + 1 }}</template></p>
       <p class="race-lobby-wait">{{ count ? "Get ready…" : `Waiting for the host to start the race. ${field} ${field === 1 ? "rider" : "riders"} in so far.` }}</p>
       <p class="race-lobby-sandbox" :class="`is-${store.sandbox.state}`"><span aria-hidden="true">{{ sandbox[0] }}</span> {{ sandbox[1] }}</p>
-      <p class="race-lobby-tip">The race: Essentials, from the first stop to the boss. XP decides the winner; at the same XP, whoever got there first. Your pit-pass, to switch device: <code>{{ store.race.pitPass }}</code></p>
+      <p class="race-lobby-tip">This race is won by understanding, not speed: each question right the first time scores the most, and a wrong guess costs XP. At the same XP, fewer slips win. Take your time and read. Your pit-pass, to switch device: <code>{{ store.race.pitPass }}</code></p>
     </div>
   </div>
 </template>

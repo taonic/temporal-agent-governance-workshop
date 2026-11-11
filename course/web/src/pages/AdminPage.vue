@@ -57,6 +57,7 @@ const EVENT_LABELS = {
   module_passed: "passed",
   check_failed: "failed the check of",
   challenge_pick: "picked in",
+  quiz_pick: "answered the question in",
   boss_result: "fought",
   path_set: "chose a path",
   persona_set: "chose who they learn as",
@@ -89,6 +90,7 @@ const EVENT_LABELS = {
 function eventText(e) {
   const d = e.data ?? {};
   const label = EVENT_LABELS[e.type] ?? e.type;
+  if (e.type === "quiz_pick") return `${label} ${e.moduleId}: ${d.choice}${d.right ? " ✓" : ""}`;
   if (e.type === "challenge_pick") return `${label} ${e.moduleId}: ${d.choice}${d.right ? " ✓" : ""}`;
   if (e.type === "model_calls") return `${label} (${d.count})`;
   if (e.type === "path_set") return `${label}: ${d.path ?? "none"}`;

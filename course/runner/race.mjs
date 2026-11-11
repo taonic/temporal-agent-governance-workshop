@@ -2,6 +2,11 @@
 // its own); people join it with its code, a name and a jockey, and no email; the race screen
 // shows them as horses, each as far down the track as their XP.
 //
+// It's a race for understanding, not speed: a module's XP depends on how its question went (all
+// of it on the first try, less after), as a challenge's does; at the same XP, fewer slips (wrong
+// answers, bosses lost) win, and only then the clock. The finish line is a perfect score; the
+// race ends when the clock runs out (or everyone has done every stop).
+//
 // A racer is a user like any other (their events, progress and sandbox are the course's own),
 // with a made-up address nobody can sign in with (racer-…@derby.invalid), on the allowlist of the
 // race's cohort, whose path is Essentials'. They get back in on another device with their
@@ -35,9 +40,14 @@ import { transaction } from "./db.mjs";
 export const RACE_PATH = "essentials";
 export const COUNTDOWN_MS = 4000;
 export const PODIUM_DELAY_MS = 8000;
-export const GRAZE_MS = 8 * 60_000;
-// Ghosts graze sooner: a rehearsal shouldn't wait eight minutes to see it.
+// A racer grazes after this long with no progress, unless they're on a module page (reading, or
+// asking Temporal): taking time over it is the point.
+export const GRAZE_MS = 15 * 60_000;
+const PRESENT_MS = 3 * 60_000;
+// Ghosts graze sooner: a rehearsal shouldn't wait to see it.
 export const GHOST_GRAZE_MS = 60_000;
+// A module's XP by the try its question was right on: all of it, half, then a fifth.
+export const QUIZ_SHARE = [1, 0.5, 0.2];
 export const DEFAULT_DURATION = 75;
 export const MAX_RACERS = SILKS.length;
 export const GHOST_FIELD = 15;
@@ -76,10 +86,18 @@ export function raceCourse(data) {
   const ids = branch ? [...branch.modules, ...(branch.boss ? [branch.boss] : [])].filter((id) => modules.has(id)) : [];
   const right = new Map();
   const wrong = new Map();
+  // A module's question (its world check's quiz): the right answer, and the others.
+  const quizRight = new Map();
+  const quizWrong = new Map();
   for (const exercise of data?.exercises ?? []) {
     for (const [id, challenge] of Object.entries(exercise.challenges ?? {})) {
       right.set(id, challenge.choices.find((c) => c.right)?.id ?? null);
       wrong.set(id, challenge.choices.filter((c) => !c.right).map((c) => c.id));
+    }
+    for (const [id, check] of Object.entries(exercise.checks ?? {})) {
+      if (!check.quiz?.choices) continue;
+      quizRight.set(id, check.quiz.choices.find((c) => c.right)?.id ?? null);
+      quizWrong.set(id, check.quiz.choices.filter((c) => !c.right).map((c) => c.id));
     }
   }
   let at = 0;
@@ -90,7 +108,7 @@ export function raceCourse(data) {
     return { id, kind: m.kind, title: m.title, short: SHORT[id] ?? m.title, emoji, xp: m.xp ?? 0, at };
   });
   const badges = Object.fromEntries((data?.badges ?? []).map((b) => [b.id, b]));
-  return { stops, ids: new Set(ids), maxXp: at, bossId: branch?.boss ?? null, right, wrong, badges };
+  return { stops, ids: new Set(ids), modules, maxXp: at, bossId: branch?.boss ?? null, right, wrong, quizRight, quizWrong, badges };
 }
 
 export function loadRaceCourse(file = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "web", "src", "generated", "course-data.json")) {
@@ -103,38 +121,60 @@ export function loadRaceCourse(file = path.join(path.dirname(fileURLToPath(impor
 
 // --- Scoring -----------------------------------------------------------------------------------
 
+// A module's XP for the race, by its question's picks: all of it if the first was right, then less
+// (QUIZ_SHARE). One passed with no answer recorded (a page from before answers were) gets all of it.
+export function quizXp(xp, picks, right) {
+  if (!picks?.length) return xp;
+  const at = picks.indexOf(right);
+  const tries = at < 0 ? picks.length + 1 : at + 1;
+  return Math.round(xp * QUIZ_SHARE[Math.min(tries, QUIZ_SHARE.length) - 1]);
+}
+
 // A racer's race from their events (in order, already cut to the race's window): XP, and when
-// they got it (the tiebreak), how far they are, the stumbles (wrong picks, bosses lost), badges,
-// when they finished (beat the boss), and when they last did anything that moves a horse.
+// they got it; slips (wrong answers to a module's question or a challenge, bosses lost), the
+// first tiebreak; the stop they passed last; badges; when they'd done every stop; and when they
+// last did anything that moves a horse.
 export function scoreRacer(events, catalog, course) {
   const completed = [];
-  const attempts = {};
+  const attempts = {}; // challenge picks
+  const answers = {}; // module question picks
   let xp = 0;
   let xpAt = null;
   let stumbles = 0;
   let stop = null;
   let finishedAt = null;
   let lastMoveAt = null;
+  const xpOf = (id) => {
+    if (course.quizRight.has(id)) return quizXp(course.modules?.get(id)?.xp ?? catalog.xpOf(id, attempts), answers[id], course.quizRight.get(id));
+    return catalog.xpOf(id, attempts);
+  };
+  // A pick for a question or a challenge: kept as the page keeps it (no repeats, nothing after
+  // the right one); a wrong one is a slip.
+  const addPick = (picks, id, choice, right, at) => {
+    const list = picks[id] ?? [];
+    if (list.includes(choice) || (right && list.includes(right))) return;
+    picks[id] = [...list, choice];
+    if (choice !== right) stumbles++;
+    lastMoveAt = at;
+  };
   for (const e of events) {
     const data = typeof e.data === "string" ? JSON.parse(e.data || "{}") : (e.data ?? {});
     const id = e.module_id;
-    if (e.type === "module_passed" && course.ids.has(id) && !completed.includes(id)) {
+    if (!course.ids.has(id)) continue;
+    if (e.type === "module_passed" && !completed.includes(id)) {
       completed.push(id);
-      const now = completed.reduce((sum, m) => sum + catalog.xpOf(m, attempts), 0);
+      const now = completed.reduce((sum, m) => sum + xpOf(m), 0);
       if (now > xp) {
         xp = now;
         xpAt = e.at;
       }
       stop = id;
       lastMoveAt = e.at;
-      if (id === course.bossId) finishedAt = e.at;
-    } else if (e.type === "challenge_pick" && course.ids.has(id) && data.choice) {
-      const picks = attempts[id] ?? [];
-      const right = course.right.get(id) ?? catalog.rightChoice?.(id) ?? null;
-      if (picks.includes(data.choice) || (right && picks.includes(right))) continue;
-      attempts[id] = [...picks, data.choice];
-      if (data.choice !== right) stumbles++;
-      lastMoveAt = e.at;
+      if (completed.length === course.ids.size) finishedAt = e.at;
+    } else if (e.type === "challenge_pick" && data.choice) {
+      addPick(attempts, id, data.choice, course.right.get(id) ?? catalog.rightChoice?.(id) ?? null, e.at);
+    } else if (e.type === "quiz_pick" && data.choice && !completed.includes(id)) {
+      addPick(answers, id, data.choice, course.quizRight.get(id) ?? null, e.at);
     } else if (e.type === "boss_result" && id === course.bossId && !data.won) {
       stumbles++;
       lastMoveAt = e.at;
@@ -144,9 +184,10 @@ export function scoreRacer(events, catalog, course) {
   return { xp, xpAt, completed: completed.length, stop, stumbles, badges, finishedAt, lastMoveAt };
 }
 
-// Highest XP first; at the same XP, whoever got there first; then whoever joined first.
+// Highest XP first; at the same XP, fewer slips; then whoever got there first; then whoever
+// joined first.
 export function rank(racers) {
-  return [...racers].sort((a, b) => b.xp - a.xp || (a.xpAt ?? Infinity) - (b.xpAt ?? Infinity) || a.lane - b.lane);
+  return [...racers].sort((a, b) => b.xp - a.xp || a.stumbles - b.stumbles || (a.xpAt ?? Infinity) - (b.xpAt ?? Infinity) || a.lane - b.lane);
 }
 
 // --- Ghosts ------------------------------------------------------------------------------------
@@ -162,8 +203,8 @@ function rng(seed) {
 }
 
 // A ghost's events from the gun: through every stop in four to six and a half minutes, with
-// the odd wrong pick and lost boss. The grazer stops for two minutes on the way; the twin runs
-// its partner's race a second behind, for a photo finish.
+// the odd wrong answer and lost boss. The grazer stops for two minutes on the way; the twin runs
+// its partner's race a second behind.
 export function ghostEvents({ seed, script }, startedAt, course) {
   const random = rng(script === "twin" ? seed - 1 : seed);
   const out = [];
@@ -191,7 +232,15 @@ export function ghostEvents({ seed, script }, startedAt, course) {
       }
       push("boss_result", stop.id, { won: true, hearts: lost ? 1 + Math.floor(random() * 2) : 3 });
       push("module_passed", stop.id);
-    } else push("module_passed", stop.id);
+    } else {
+      const wrong = course.quizWrong.get(stop.id) ?? [];
+      if (wrong.length && random() < mistakes) {
+        push("quiz_pick", stop.id, { choice: wrong[Math.floor(random() * wrong.length)], right: false });
+        t += 6000;
+      }
+      if (course.quizRight.has(stop.id)) push("quiz_pick", stop.id, { choice: course.quizRight.get(stop.id), right: true });
+      push("module_passed", stop.id);
+    }
   });
   return out;
 }
@@ -595,6 +644,9 @@ export class Races {
       }
       const score = scoreRacer(events, catalog, this.course);
       const sinceMove = now - (score.lastMoveAt ?? timing.startedAt ?? now);
+      // On a module page (its heartbeat, once a minute while it's showing): reading, not grazing.
+      const here = row.user_id ? this.activity.presence(row.user_id) : null;
+      const present = Boolean(here && now - here.last_at < PRESENT_MS);
       return {
         id: row.id,
         userId: row.user_id,
@@ -609,10 +661,10 @@ export class Races {
         coat: coatOf(row.id),
         joinedAt: row.created_at,
         ...score,
-        grazing: timing.phase === "racing" && !score.finishedAt && sinceMove >= (row.ghost ? GHOST_GRAZE_MS : GRAZE_MS),
+        grazing: timing.phase === "racing" && !score.finishedAt && !present && sinceMove >= (row.ghost ? GHOST_GRAZE_MS : GRAZE_MS),
       };
     });
-    // Everyone home ends the race then.
+    // Every stop done by everyone: nothing left to earn, so the race ends then.
     let finishAt = timing.finishAt;
     if (finishAt && racers.length && racers.every((r) => r.finishedAt)) finishAt = Math.min(finishAt, Math.max(...racers.map((r) => r.finishedAt)));
     const phase = !timing.startedAt ? "lobby" : now < timing.startedAt ? "countdown" : now < finishAt ? "racing" : "finished";

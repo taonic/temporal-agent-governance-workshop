@@ -19,7 +19,7 @@ const text = computed(() => {
   if (!m) return "The Derby";
   const place = `${ordinal(m.rank)} of ${field.value}`;
   if (phase.value === "finished") return `🏁 Final: ${place}`;
-  if (m.finishedAt) return `🏁 Home, ${place}`;
+  if (m.finishedAt) return `✅ Every stop done · ${place}`;
   if (!m.xp && phase.value === "racing") return `🏇 ${place} · at the gate: go!`;
   if (m.rank === 1) {
     const gap = behind.value ? m.xp - behind.value.xp : 0;
@@ -33,7 +33,8 @@ const short = computed(() => {
   const m = me.value;
   if (!m) return "🏇";
   const place = `${ordinal(m.rank)}/${field.value}`;
-  if (phase.value === "finished" || m.finishedAt) return `🏁 ${place}`;
+  if (phase.value === "finished") return `🏁 ${place}`;
+  if (m.finishedAt) return `✅ ${place}`;
   const gap = ahead.value ? ahead.value.xp - m.xp : 0;
   return `🏇 ${place}${gap > 0 ? ` · −${gap}` : ""}`;
 });

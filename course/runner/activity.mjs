@@ -16,7 +16,7 @@ import { badgeContext, earnedNow } from "../web/src/badges.js";
 import { xpFor } from "../web/src/challenge.js";
 import { transaction } from "./db.mjs";
 
-export const BROWSER_EVENTS = new Set(["module_opened", "module_passed", "check_failed", "challenge_pick", "boss_result", "path_set", "persona_set", "solution_used"]);
+export const BROWSER_EVENTS = new Set(["module_opened", "module_passed", "check_failed", "challenge_pick", "quiz_pick", "boss_result", "path_set", "persona_set", "solution_used"]);
 // The events that can change which badges are earned.
 const BADGE_INPUTS = new Set(["module_passed", "challenge_pick", "boss_result", "solution_used"]);
 // A heartbeat counts for at most this much time on its module (one every 60s, with slack).

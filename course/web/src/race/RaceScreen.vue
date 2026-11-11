@@ -1,11 +1,13 @@
 <script setup>
-// The race screen (/race/<slug>), for the projector: no sign-in, no controls. A straight track, a
-// lane per racer, each horse as far down it as its XP (the boss is the finish post); standings and
-// a commentary ticker beside it; the clock across the top. Before the start, the join QR and the
-// horses in their stalls; at the end, the podium.
+// The race screen (/race/<slug>), for the projector: no sign-in, no controls. A straight track
+// marked in XP, a lane per racer, each horse as far down it as its XP: the finish line is a
+// perfect score, every question right the first time. Standings and a commentary ticker beside
+// it; the clock across the top. Before the start, the join QR and the horses in their stalls; when
+// the clock runs out, the podium.
 //
 // What moves, moves because the race changed between two polls (onState): a gain gallops, a wrong
-// pick stumbles, a badge pops over the jockey, an overtake goes in the ticker, a finish flashes.
+// answer stumbles, a badge pops over the jockey, the commentary cheers answers right first time,
+// a perfect score flashes.
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 
 import { medalSvg } from "../badgeArt.js";
@@ -25,6 +27,10 @@ const race = computed(() => state.value?.race ?? null);
 const phase = computed(() => race.value?.phase ?? "lobby");
 const stops = computed(() => state.value?.course.stops ?? []);
 const maxXp = computed(() => state.value?.course.maxXp || 1);
+// The track's marks: every 25 XP (none crowding the finish's label), and the finish line at a
+// perfect score.
+const MARK_EVERY = 25;
+const marks = computed(() => Array.from({ length: Math.ceil(maxXp.value / MARK_EVERY) - 1 }, (_, i) => (i + 1) * MARK_EVERY).filter((x) => x <= maxXp.value - 20));
 const lanes = computed(() => [...(state.value?.racers ?? [])].sort((a, b) => a.lane - b.lane));
 const standings = computed(() => [...(state.value?.racers ?? [])].sort((a, b) => a.rank - b.rank));
 const stopById = computed(() => new Map(stops.value.map((s) => [s.id, s])));
@@ -92,7 +98,6 @@ function showBanner(text, ms = 2200) {
 
 // A stop's name mid-sentence: "the seat hold", but "The Night Shift".
 const phrase = (stop) => (stop?.short ?? "").replace(/^The (?=[a-z])/, "the ");
-const where = (r) => (stopById.value.get(r.stop) ? phrase(stopById.value.get(r.stop)) : "the gate");
 
 // What changed since the last poll, and what to show for it.
 let prev = null; // { phase, final, racers: Map(id -> snapshot) }
@@ -129,16 +134,21 @@ function onState(next) {
     if (r.xp > p.xp) {
       const amount = r.xp - p.xp;
       const stop = stopById.value.get(r.stop);
+      // All of a stop's XP: its question (or challenge, or boss) right the first time.
+      const firstTime = stop && amount >= stop.xp;
       setGait(r.id, "gallop", 2900);
-      float(r.id, `+${amount}`, amount >= 20);
+      float(r.id, `+${amount}`, firstTime);
       if (stop?.kind === "boss") say(`🌙 ${r.horse} beats ${phrase(stop)}! +${amount}`, "big");
-      else if (stop?.kind === "challenge" && amount >= 20) say(`⚡ ${r.horse} nails ${phrase(stop)} first time! +${amount}`, "big");
-      else say(`${stop?.emoji ?? "🐎"} ${r.horse} clears ${stop ? phrase(stop) : "a stop"}. +${amount}`);
-      sound.hooves(amount >= 20 ? 5 : 3);
+      else if (firstTime) say(`⚡ ${r.horse} gets ${stop ? phrase(stop) : "it"} right first time! +${amount}`, stop.kind === "challenge" ? "big" : "");
+      else say(`${stop?.emoji ?? "🐎"} ${r.horse} works out ${stop ? phrase(stop) : "a stop"}. +${amount}`);
+      // Each 50 XP, a milestone.
+      const mark = Math.floor(r.xp / 50) * 50;
+      if (mark > p.xp && mark >= 50 && r.xp < maxXp.value) say(`📈 ${r.horse} passes ${mark} XP`);
+      sound.hooves(firstTime ? 5 : 3);
     }
     if (r.stumbles > p.stumbles) {
       setGait(r.id, "stumble", 1150);
-      say(`😬 ${r.horse} stumbles at ${stopAhead(r)}!`, "oops");
+      say(`😬 ${r.horse} slips at ${stopAhead(r)}: think it through!`, "oops");
       sound.thud();
     }
     for (const id of r.badges) {
@@ -149,27 +159,30 @@ function onState(next) {
       if (badge.kind !== "skill" || ["clean-run", "flawless"].includes(badge.id)) say(`🏅 ${r.horse} earns ${badge.name}`, "badge");
       sound.chime();
     }
-    if (r.finishedAt && !p.finishedAt) {
-      const close = next.racers.some((o) => o.id !== r.id && o.finishedAt && Math.abs(o.finishedAt - r.finishedAt) < 3000);
-      flash.value = { key: ++seq, text: close ? "📸 PHOTO FINISH!" : `🏁 ${r.horse}` };
-      setTimeout(() => (flash.value = null), 1400);
-      say(`🏁 ${r.horse} crosses the line, ${ordinal(r.rank)}!`, "big");
+    // The finish line is a perfect score.
+    if (r.xp >= maxXp.value && p.xp < maxXp.value) {
+      flash.value = { key: ++seq, text: `💯 PERFECT RUN! ${r.horse}` };
+      setTimeout(() => (flash.value = null), 1600);
+      say(`💯 ${r.horse} crosses the line: every answer right the first time!`, "big");
       sound.fanfare();
+    } else if (r.finishedAt && !p.finishedAt) {
+      say(`✅ ${r.horse} has done every stop, with ${r.xp} XP`, "big");
+      sound.chime();
     }
     if (r.grazing && !p.grazing) say(`🌿 ${r.horse} has stopped for a snack…`, "oops");
   }
 
-  // Overtakes: a racer who went from behind another to ahead of them.
+  // Overtakes, for the podium places only: the race is about XP, not who's quicker.
   let passes = 0;
   for (const a of next.racers) {
     const pa = prev.racers.get(a.id);
-    if (!pa || a.rank >= pa.rank) continue;
+    if (!pa || a.rank >= pa.rank || a.rank > 3) continue;
     for (const b of next.racers) {
       const pb = prev.racers.get(b.id);
       if (!pb || b.id === a.id || passes >= 2) continue;
       // Passing a horse still in the gate isn't news.
       if (pb.rank < pa.rank && b.rank > a.rank && b.xp > 0) {
-        say(`🔥 ${a.horse} passes ${b.horse} at ${where(a)}!`, "pass");
+        say(`🔥 ${a.horse} moves up to ${ordinal(a.rank)}, past ${b.horse}!`, "pass");
         passes++;
       }
     }
@@ -187,7 +200,7 @@ function onState(next) {
     sound.bell();
   }
   if (prev.phase !== "finished" && r0.phase === "finished") {
-    say("🏁 The race is over! The podium in a moment…", "big");
+    say("🏁 Time! The podium in a moment…", "big");
     showBanner("🏁 RACE OVER", 3500);
     sound.roar(4, 0.22);
   }
@@ -270,7 +283,7 @@ watch(race, (r) => r && (document.title = `${r.name} · The Derby`));
 
 const medal = (rank) => ["🥇", "🥈", "🥉"][rank - 1] ?? "";
 const silks = (r) => silksOf(r.silks);
-const finishedTime = (r) => (r.finishedAt && race.value?.startedAt ? clock(r.finishedAt - race.value.startedAt) : "");
+const slips = (n) => (n ? `${n} ${n === 1 ? "slip" : "slips"}` : "no slips");
 </script>
 
 <template>
@@ -295,10 +308,12 @@ const finishedTime = (r) => (r.finishedAt && race.value?.startedAt ? clock(r.fin
       <section class="derby-track" aria-label="The track">
         <div class="derby-posts" aria-hidden="true">
           <div class="derby-gate-line" />
-          <div v-for="s in stops" :key="s.id" class="derby-post" :class="[`is-${s.kind}`]" :style="{ '--p': s.at / maxXp }">
-            <span class="derby-post-label"><span class="derby-post-emoji">{{ s.emoji }}</span>{{ s.short }}</span>
+          <div v-for="x in marks" :key="x" class="derby-post" :style="{ '--p': x / maxXp }">
+            <span class="derby-post-label">{{ x }}</span>
           </div>
-          <div class="derby-enclosure"><span>Winner's enclosure</span></div>
+          <div class="derby-post is-finish" :style="{ '--p': 1 }">
+            <span class="derby-post-label">💯 {{ maxXp }} XP</span>
+          </div>
         </div>
 
         <p v-if="!lanes.length" class="derby-waiting">Waiting for riders… scan the code to join →</p>
@@ -307,7 +322,7 @@ const finishedTime = (r) => (r.finishedAt && race.value?.startedAt ? clock(r.fin
           v-for="r in lanes"
           :key="r.id"
           class="derby-lane"
-          :class="{ 'is-finished': r.finishedAt, 'is-ghost': r.ghost }"
+          :class="{ 'is-ghost': r.ghost }"
         >
           <div class="derby-lane-label">
             <span class="derby-stall" :style="{ background: silks(r).color, color: silks(r).ink }">{{ r.lane + 1 }}</span>
@@ -320,13 +335,12 @@ const finishedTime = (r) => (r.finishedAt && race.value?.startedAt ? clock(r.fin
             <div class="derby-gate" :class="{ 'is-open': ['racing', 'finished'].includes(phase) }" aria-hidden="true" />
             <div
               class="derby-runner"
-              :class="{ 'is-entering': fx[r.id]?.entering, 'is-home': r.finishedAt }"
+              :class="{ 'is-entering': fx[r.id]?.entering }"
               :style="{ '--p': progressOf(r) }"
             >
               <Horse :creature="r.creature" :silks="r.silks" :pattern="r.pattern" :coat="r.coat" :number="r.lane + 1" :gait="gaitFor(r)" :label="`${r.horse}, ridden by ${r.name}`" />
               <span v-for="f in fx[r.id]?.floats ?? []" :key="f.key" class="derby-float" :class="{ 'is-big': f.big }">{{ f.text }}</span>
               <span v-for="b in fx[r.id]?.pops ?? []" :key="b.key" class="derby-pop" v-html="b.svg" />
-              <span v-if="r.finishedAt" class="derby-rosette" :title="`${ordinal(r.rank)}`">{{ r.rank }}</span>
             </div>
           </div>
         </div>
@@ -346,11 +360,11 @@ const finishedTime = (r) => (r.finishedAt && race.value?.startedAt ? clock(r.fin
           <div class="derby-standings">
             <p class="derby-kicker">Standings</p>
             <TransitionGroup tag="ol" name="standing" class="derby-standings-list">
-              <li v-for="r in standings" :key="r.id" :class="{ 'is-top': r.xp && r.rank <= 3, 'is-home': r.finishedAt }">
+              <li v-for="r in standings" :key="r.id" :class="{ 'is-top': r.xp && r.rank <= 3 }">
                 <span class="derby-rank">{{ (r.xp && medal(r.rank)) || r.rank }}</span>
                 <span class="derby-swatch" :style="{ background: silks(r).color }" />
-                <span class="derby-standing-names"><strong>{{ r.horse }}</strong><small>{{ r.name }}</small></span>
-                <span class="derby-xp">{{ r.finishedAt ? "🏁 " : "" }}{{ r.xp }}<small>XP</small></span>
+                <span class="derby-standing-names"><strong>{{ r.horse }}</strong><small>{{ r.name }}<template v-if="r.stumbles"> · {{ slips(r.stumbles) }}</template></small></span>
+                <span class="derby-xp">{{ r.xp >= maxXp ? "💯 " : r.finishedAt ? "✅ " : "" }}{{ r.xp }}<small>XP</small></span>
               </li>
             </TransitionGroup>
           </div>
@@ -383,12 +397,12 @@ const finishedTime = (r) => (r.finishedAt && race.value?.startedAt ? clock(r.fin
         >
           <div class="derby-step-horse"><Horse :creature="r.creature" :silks="r.silks" :pattern="r.pattern" :coat="r.coat" :number="r.lane + 1" :gait="i === 0 && revealed(1) ? 'gallop' : 'idle'" /></div>
           <p class="derby-step-name"><strong>{{ r.horse }}</strong><span>{{ r.name }}</span></p>
-          <p class="derby-step-score">{{ r.xp }} XP<span v-if="finishedTime(r)"> · {{ finishedTime(r) }}</span></p>
+          <p class="derby-step-score">{{ r.xp }} XP · {{ slips(r.stumbles) }}</p>
           <div class="derby-step-block"><span>{{ medal(i + 1) }}</span>{{ ordinal(i + 1) }}</div>
         </div>
       </div>
       <ol v-if="alsoRan.length && podiumStep >= 3" class="derby-also" :start="4">
-        <li v-for="r in alsoRan" :key="r.id"><span>{{ ordinal(r.rank) }}</span> {{ r.horse }} <small>{{ r.name }} · {{ r.xp }} XP</small></li>
+        <li v-for="r in alsoRan" :key="r.id"><span>{{ ordinal(r.rank) }}</span> {{ r.horse }} <small>{{ r.name }} · {{ r.xp }} XP · {{ slips(r.stumbles) }}</small></li>
       </ol>
     </div>
 
@@ -406,10 +420,10 @@ body:has(.derby) {
   --head-h: 9vh;
   --label-w: 15vw;
   --side-w: 23vw;
-  --top: 10.5vh;
+  --top: 6vh;
   --lane-h: calc((100vh - var(--head-h) - var(--top)) / var(--n));
   --hw: calc(var(--lane-h) * 1.32);
-  --encl: calc(var(--hw) + 1.2vw);
+  --encl: 1.4vw;
   --turf-a: #3f8f3a;
   --turf-b: #378533;
   --cream: #fbf5e6;
@@ -531,7 +545,7 @@ body:has(.derby) {
 .derby-gate-line {
   border-left: 0.35vw solid rgba(255, 255, 255, 0.8);
 }
-.derby-post.is-boss {
+.derby-post.is-finish {
   width: 1.1vw;
   margin-left: -0.55vw;
   border: 0;
@@ -541,47 +555,22 @@ body:has(.derby) {
 .derby-post-label {
   position: absolute;
   bottom: 100%;
-  left: -0.9vh;
-  transform-origin: 0.9vh 100%;
-  transform: rotate(-38deg);
-  display: flex;
-  align-items: center;
-  gap: 0.4vh;
-  font-size: 1.45vh;
-  font-weight: 700;
+  left: 0;
+  transform: translate(-50%, -0.4vh);
+  font-size: 1.9vh;
+  font-weight: 800;
   line-height: 1;
   color: #eaf7ee;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
-.derby-post-emoji {
-  font-size: 1.8vh;
-}
-.derby-post.is-boss .derby-post-label {
-  font-size: 1.6vh;
+.derby-post.is-finish .derby-post-label {
+  left: auto;
+  right: -0.4vw;
+  transform: translateY(-0.4vh);
+  font-size: 2.2vh;
   color: var(--gold-hi);
-}
-
-.derby-enclosure {
-  position: absolute;
-  top: calc(var(--top) - 1vh);
-  bottom: 0;
-  right: 0;
-  width: calc(var(--encl) - 0.6vw);
-  background: repeating-linear-gradient(135deg, rgba(233, 185, 73, 0.18) 0 1vw, rgba(233, 185, 73, 0.08) 1vw 2vw);
-  border-left: 0.2vw solid rgba(233, 185, 73, 0.6);
-}
-.derby-enclosure span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(-90deg);
-  white-space: nowrap;
-  font-size: 1.4vh;
-  font-weight: 800;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: rgba(252, 211, 77, 0.55);
 }
 
 .derby-waiting {
@@ -692,9 +681,6 @@ body:has(.derby) {
   transform: translateX(-260%);
   transition: none;
 }
-.derby-runner.is-home {
-  left: calc(100% - 0.4vw);
-}
 
 .derby-float {
   position: absolute;
@@ -728,24 +714,6 @@ body:has(.derby) {
   width: 100%;
   height: auto;
   filter: drop-shadow(0 0.4vh 0.6vh rgba(0, 0, 0, 0.45));
-}
-
-.derby-rosette {
-  position: absolute;
-  right: -12%;
-  top: 0;
-  display: grid;
-  place-items: center;
-  width: calc(var(--lane-h) * 0.62);
-  height: calc(var(--lane-h) * 0.62);
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--gold-hi) 0 55%, #b45309 56% 64%, var(--gold-hi) 65%);
-  color: #422006;
-  font-weight: 900;
-  font-size: calc(var(--lane-h) * 0.3);
-  box-shadow: 0 0.3vh 0.6vh rgba(0, 0, 0, 0.4);
-  animation: derby-rosette 0.8s cubic-bezier(0.3, 1.6, 0.5, 1);
-  z-index: 6;
 }
 
 .derby-lane.is-ghost .derby-runner .horse {
@@ -1123,10 +1091,6 @@ body:has(.derby) {
   25% { transform: scale(1) rotate(0); }
   85% { opacity: 1; }
   100% { transform: translateY(-50%) scale(0.8); opacity: 0; }
-}
-@keyframes derby-rosette {
-  from { transform: scale(0) rotate(-180deg); }
-  to { transform: scale(1) rotate(0); }
 }
 @keyframes derby-count {
   0% { transform: scale(1.8); opacity: 0; }
