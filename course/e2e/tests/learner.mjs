@@ -67,10 +67,15 @@ export class Learner {
     await this.page.keyboard.press("Enter");
   }
 
-  // A terminal's text, scrollback included, a line a row: xterm only draws the rows on screen,
-  // so this scrolls back through it, as a learner would to read output that went by, and comes
-  // back down. At most `pages` screens back.
+  // A terminal's text, scrollback included: from the terminal's own buffer, a line a line (one
+  // wrapped across rows, whole), where the page offers it (TerminalDock's terminalText). Else, a
+  // line a row: xterm only draws the rows on screen, so this scrolls back through it, as a learner
+  // would to read output that went by, and comes back down, at most `pages` screens back.
   async terminalLines(name, { pages = 30 } = {}) {
+    const fromBuffer = await this.terminal(name)
+      .locator(".terminal-host")
+      .evaluate((host) => (typeof host.terminalText === "function" ? host.terminalText() : null));
+    if (fromBuffer !== null) return fromBuffer;
     return this.terminal(name)
       .locator(".xterm-viewport")
       .evaluate(async (viewport, pages) => {
@@ -182,8 +187,14 @@ export class Learner {
       const now = await this.heading();
       if (now === title) return;
       if (now === "Check your work") {
-        // Its aria-label: "Go to step N: <title>".
+        // Its aria-label: "Go to step N: <title>". A long guide shows its steps a lap at a time
+        // (the others as one short bar each): open each lap until the step's there.
         const segment = this.guide.locator(`.step-progress-seg[aria-label$=${JSON.stringify(`: ${title}`)}]`);
+        const laps = this.guide.locator(".step-lap-mini");
+        for (let lap = 0; !(await segment.count()) && lap < (await laps.count()); lap++) {
+          await laps.nth(lap).click();
+          await this.read();
+        }
         if (await segment.count()) {
           await segment.first().click();
           continue;

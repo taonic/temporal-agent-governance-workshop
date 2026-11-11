@@ -61,6 +61,21 @@ function create(name) {
   term.loadAddon(fit);
   term.loadAddon(new WebLinksAddon(openLink));
   term.open(hosts[name].value);
+  // Its text, scrollback included, a line a line (a line wrapped across rows, whole): for the
+  // end-to-end tests (e2e/tests/learner.mjs terminalLines), since only the rows on screen are in
+  // the page, and scrolling back to read the rest races the drawing.
+  hosts[name].value.terminalText = () => {
+    const buffer = term.buffer.active;
+    const lines = [];
+    for (let i = 0; i < buffer.length; i++) {
+      const line = buffer.getLine(i);
+      if (!line) continue;
+      const text = line.translateToString(true);
+      if (line.isWrapped && lines.length) lines[lines.length - 1] += text;
+      else lines.push(text);
+    }
+    return lines.join("\n").replace(/\n+$/, "");
+  };
   const state = { term, fit, ws: null, retry: 0, timer: 0, closed: false, queue: [] };
   term.onData((data) => send(name, data));
   term.onResize(({ cols, rows }) => {
