@@ -63,10 +63,8 @@ const personaLabel = computed(() => course.personas.find((p) => p.id === store.p
 const menuOpen = ref(false);
 const accountOpen = ref(false);
 // Module pages need a sign-in (the map and the setup page don't): until the session is known,
-// nothing; then the page, or the sign-in in its place. Essentials' (the Trip board's) are open to
-// visitors: each board plays its recorded walkthrough, and the sandbox still needs a sign-in.
-const openToVisitors = computed(() => course.exercises.find((e) => e.id === store.route.id)?.layout === "board");
-const gated = computed(() => store.route.page === "exercise" && store.runtime.checked && !store.authenticated && !openToVisitors.value);
+// nothing; then the page, or the sign-in in its place.
+const gated = computed(() => store.route.page === "exercise" && store.runtime.checked && !store.authenticated);
 // Ten minutes or less of sandbox time left, with the sandbox running: say so, and when it stops.
 const allowanceNote = computed(() => {
   const a = store.allowance;
@@ -340,7 +338,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
         <AccessForm label="Sign in" :start="false" />
       </div>
     </section>
-    <ExercisePage v-else-if="exercise && (store.authenticated || openToVisitors)" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
+    <ExercisePage v-else-if="exercise && store.authenticated" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
   </div>
 
   <EarnMoment />

@@ -7,7 +7,7 @@
 // It reads the state essentials/board.py reports, through the sandbox poll (ExercisePage), and
 // sets the module's board up on arrival (anew for another module; as it is for the same one).
 //
-// Without a sandbox, it plays the module's recorded walkthrough instead (scripts/
+// Without a sandbox (not started, or not ready yet), it plays the module's recorded walkthrough instead (scripts/
 // record_walkthroughs.py): the board's states as the guide's steps left them, second by second,
 // with a note at each action. A recording is only watched: it never passes a module's check.
 import { computed, onBeforeUnmount, ref, watch } from "vue";

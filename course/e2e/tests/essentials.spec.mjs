@@ -1,10 +1,11 @@
 // Essentials: Temporal Quest for people who want to understand why Temporal, not write the code (quests/essentials).
 //
-// @public: a visitor's choice of persona and the map it shows; an Essentials module, open to
-// visitors, whose Trip board plays its recorded walkthrough; and a question challenge, solved
-// without a sandbox.
+// @public: a visitor's choice of persona and the map it shows, and an Essentials module asking
+// for a sign-in, as every module does.
 //
-// @auth: a signed-in learner's persona, kept on the server, and switched without losing progress.
+// @auth, signed in with no sandbox: the Trip board plays its recorded walkthrough, a question
+// challenge is solved, a module's check isn't passed by moving on, and the persona is kept on the
+// server and switched without losing progress.
 //
 // E2 in a real sandbox (Ship the fix finishes the stuck trip; the plain twin's is lost) is in
 // sandbox.spec.mjs, with the rest of the sandbox tier.
@@ -44,7 +45,17 @@ test.describe("Essentials, signed out", { tag: "@public" }, () => {
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
-  test("an Essentials module is open to a visitor, and its board plays its recording", async ({ page }) => {
+  test("an Essentials module asks for a sign-in, as every module does", async ({ page }) => {
+    await page.goto(essentials("#/module/E1"));
+    await expect(page.locator(".sign-in-page h2")).toHaveText("Sign in to start this module");
+    await expect(page.locator(".trip-board")).toHaveCount(0);
+  });
+});
+
+test.describe("Essentials, signed in", { tag: "@auth" }, () => {
+  test.use({ signedIn: true });
+
+  test("without a sandbox, an Essentials module's board plays its recording", async ({ page }) => {
     await page.goto(essentials("#/module/E5"));
     await expect(page.locator(".sign-in-page")).toHaveCount(0);
     const recording = page.getByRole("group", { name: "A recording of this module" });
@@ -95,10 +106,6 @@ test.describe("Essentials, signed out", { tag: "@public" }, () => {
     await expect(check.locator(".mc-done")).toHaveCount(0);
     expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "[]"), storageKey("modules"))).not.toContain("E1");
   });
-});
-
-test.describe("Essentials, signed in", { tag: "@auth" }, () => {
-  test.use({ signedIn: true });
 
   test("the persona is kept on the server, and switching keeps the learner's progress", async ({ page, learner }) => {
     const progress = async () => (await learner.api.get("/api/progress")).json();

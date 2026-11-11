@@ -133,10 +133,10 @@ The closing beat after E8 has no XP and no check.
 
 For the Non-developer persona, Ask Temporal answers in plain language and uses the coordinator-and-logbook story. It shows no code unless asked, and still cites the docs. Each module's suggested questions are written for non-developers. Kapa's GitHub/Google connect step is too much friction for this audience, so this persona uses the runner's `KAPA_API_KEY` and is never asked to connect.
 
-## Sign-in, sandbox, visitors
+## Sign-in, sandbox, recordings
 
 - **Sign-in and sandbox** follow the same rules as today: an allowlisted work email, and the daily allowance.
-- **Signed-out visitors** can read Essentials modules. The Trip board plays a **recorded walkthrough** of each module, plain twin included. Recordings are made once against a real sandbox, like the challenge recordings, and `scripts/verify_modules.py` fails on a stale one. Question challenges work fully without a sandbox anyway.
+- **Signed out**, an Essentials module asks for a sign-in, as every module does (decided 2026-11-11, replacing an open-to-visitors rule). **Signed in without a running sandbox**, the Trip board plays a **recorded walkthrough** of each module, plain twin included. Recordings are made once against a real sandbox, like the challenge recordings, and `scripts/verify_modules.py` fails on a stale one. Question challenges work fully without a sandbox anyway.
 
 ## Admin
 
@@ -156,6 +156,6 @@ The first four are the **vertical slice**: persona, map, trip, board and E1–E2
 | 06 | [Question challenges](issues/06-question-challenges.md) | 01 |
 | 07 | [E3–E8 and the closing beat](issues/07-e3-e8-and-ending.md) | 04 review, 05, 06 |
 | 08 | [Ask Temporal for non-developers](issues/08-ask-temporal-persona.md) | 01 |
-| 09 | [Recorded walkthroughs for visitors](issues/09-recorded-walkthroughs.md) | 07 |
+| 09 | [Recorded walkthroughs](issues/09-recorded-walkthroughs.md) | 07 |
 | 10 | [Persona in the admin journey](issues/10-admin-persona.md) | 01 |
 | 11 | [End-to-end tests](issues/11-e2e.md) | 07 |

@@ -50,4 +50,4 @@
 
 **World check**: an Essentials module's check. The Trip board reports whether what the module names has happened, from the trips' histories in Temporal and what the learner did to them ("a trip finished though the plug was pulled"). It passes the module together with the module's one-question quiz. Seeing it in a recorded walkthrough doesn't count.
 
-**Walkthrough** (recorded): an Essentials module's Trip board, recorded once against a real Temporal as the guide's steps go, for a visitor without a sandbox to watch. Not to be confused with the e2e suite's walkthroughs, which drive the Developer exercises in a real sandbox.
+**Walkthrough** (recorded): an Essentials module's Trip board, recorded once against a real Temporal as the guide's steps go, for a learner whose sandbox isn't running to watch. Not to be confused with the e2e suite's walkthroughs, which drive the Developer exercises in a real sandbox.
