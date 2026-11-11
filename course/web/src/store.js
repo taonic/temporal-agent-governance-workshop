@@ -68,7 +68,7 @@ export const store = reactive({
   toast: "",
 
   // The browser runtime, as the runner reports it.
-  runtime: { checked: false, enabled: false, reason: "" },
+  runtime: { checked: false, enabled: false, reason: "", idleMinutes: 30 },
   // Whether anyone can sign in here, and whether codes go to the runner's console (local).
   signInInfo: { enabled: true, reason: "", console: false },
   // Signed in, and allowed to use the course (read the modules, the sandbox, the helper).
@@ -78,6 +78,8 @@ export const store = reactive({
   user: null,
   // A racer in the Derby (race/): their race and jockey, from the session; else null.
   race: null,
+  // A racer waiting in the Derby's stalls (race/racing.js): their sandbox warms up for the gun.
+  raceWarm: false,
   // Sandbox time in the last 24 hours: { usedMinutes, limitMinutes, remainingMinutes, freesAt }.
   allowance: null,
   uiProxy: { base: null, port: null },
@@ -387,6 +389,9 @@ export async function boardAction(action, module, { quiet = false } = {}) {
 
 // What the page says about a lost sandbox (the popup, and the card under the terminals).
 export function sandboxLostView() {
+  if (store.sandbox.idle) {
+    return { title: "Your sandbox stopped while you were away", pill: "Sandbox stopped", body: `Nothing happened here for ${store.runtime.idleMinutes === 1 ? "a minute" : `${store.runtime.idleMinutes} minutes`}, so it was let go. It keeps your work: start it again to carry on where you left off (about a minute).` };
+  }
   if (store.sandbox.state === "error") {
     return { title: "Lost the connection to your sandbox", pill: "Sandbox disconnected", body: `${store.sandbox.message} Your sandbox keeps your work: start it again to reconnect.` };
   }
@@ -525,7 +530,7 @@ function applySession({ authenticated, user, race }) {
 export async function refreshSession() {
   try {
     const data = await api("/api/session");
-    store.runtime = { checked: true, enabled: data.runtime.enabled, reason: data.runtime.reason ?? "" };
+    store.runtime = { checked: true, enabled: data.runtime.enabled, reason: data.runtime.reason ?? "", idleMinutes: data.runtime.idleMinutes ?? 30 };
     store.signInInfo = { enabled: data.signIn?.enabled ?? false, reason: data.signIn?.reason ?? "", console: Boolean(data.signIn?.console) };
     applySession(data);
     store.uiProxy = { base: data.uiProxyBase, port: data.uiProxyPort };
@@ -613,20 +618,70 @@ export async function resumeSandbox() {
   } else if (!["error", "full", "allowance"].includes(store.sandbox.state) && (store.allowance?.remainingMinutes ?? 1) > 0) startSandbox();
 }
 
-// Keeps an eye on it while the page is in front of the learner: checks again when the tab comes
-// back, and every couple of minutes, so a sandbox that stopped while idle is noticed before the
-// learner needs it. A hidden tab checks nothing.
+// Whether this page uses the sandbox: a module page, or a racer waiting in the Derby's stalls (it
+// warms up for the gun). Elsewhere (the map, the badges, the admin panel) the page leaves it alone:
+// neither starts it nor checks on it, since a check counts as activity to Daytona, and an open
+// tab would keep it from ever stopping when idle.
+export const sandboxWanted = () => store.route.page === "exercise" || store.raceWarm;
+
+// Keeps an eye on it while a page that uses it is in front of the learner: checks again when the
+// tab comes back, and every couple of minutes, so a sandbox that stopped while idle is noticed
+// before the learner needs it. A hidden tab checks nothing.
 const WATCH_MS = 2 * 60_000;
 let sandboxWatch = 0;
 
 export function watchSandbox() {
   const check = () => {
-    if (document.visibilityState === "visible" && store.authenticated && store.runtime.enabled && !store.sandboxLost) resumeSandbox();
+    if (document.visibilityState === "visible" && store.authenticated && store.runtime.enabled && !store.sandboxLost && sandboxWanted()) resumeSandbox();
   };
   document.addEventListener("visibilitychange", check);
   clearInterval(sandboxWatch);
   sandboxWatch = setInterval(check, WATCH_MS);
+  // Onto a page that uses it (from the map, say): get it ready now.
+  if (!routeWatched) watch(() => store.route.page, check);
+  routeWatched = true;
 }
+let routeWatched = false;
+
+// --- Letting go when nobody's there -----------------------------------------------------------
+// A module page left open polls its sandbox every few seconds, which Daytona counts as activity:
+// it would never stop. So the page watches for a person: no key, click, touch, scroll or mouse
+// move on any of the site's tabs (they share the time through local storage) for the runtime's
+// idle time (Daytona's own, 30 minutes), and it stops polling, asks the runner to stop the
+// sandbox (keeping the work), and shows the "start it again" prompt for when they're back. A
+// racer waiting in the Derby's stalls is left alone: waiting is what they're there for.
+const ACTIVE_KEY = storageKey("active-at");
+let activeAt = Date.now();
+function markActive() {
+  const now = Date.now();
+  if (now - activeAt < 10_000) return;
+  activeAt = now;
+  try {
+    localStorage.setItem(ACTIVE_KEY, String(now));
+  } catch {
+    /* this tab still counts */
+  }
+}
+for (const type of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "scroll"]) window.addEventListener(type, markActive, { capture: true, passive: true });
+window.addEventListener("storage", (event) => {
+  if (event.key === ACTIVE_KEY) activeAt = Math.max(activeAt, Number(event.newValue) || 0);
+});
+
+export const idleFor = () => Date.now() - activeAt;
+
+export async function releaseIfIdle() {
+  if (!store.authenticated || !store.runtime.enabled || store.sandboxLost || store.raceWarm) return;
+  if (["none", "unknown", "error", "full", "allowance"].includes(store.sandbox.state)) return;
+  if (idleFor() < store.runtime.idleMinutes * 60_000) return;
+  clearTimeout(sandboxPoll);
+  // On a page that uses it, they're told when they're back; elsewhere (the map), it goes quietly,
+  // and a module page asks to start it again when they open one.
+  const here = sandboxWanted();
+  store.sandbox = { state: here ? "stopped" : "unknown", message: "", sandboxId: null, idle: true };
+  store.sandboxLost = here;
+  await api("/api/sandbox/stop", { method: "POST" }).catch(() => {});
+}
+setInterval(releaseIfIdle, 60_000);
 
 // Deletes the sandbox (the runner also gives up on a start that's in progress or stuck), and
 // forgets the work this browser kept from it (forget.js). With restart, starts a new one, then

@@ -4,7 +4,7 @@
 // Personal addresses are asked for a company one.
 import { computed, nextTick, ref } from "vue";
 
-import { requestCode, resumeSandbox, saveProfile, signOut, startSandbox, store, verifyCode } from "../store.js";
+import { requestCode, resumeSandbox, sandboxWanted, saveProfile, signOut, startSandbox, store, verifyCode } from "../store.js";
 
 const props = defineProps({
   // The button's words, and whether signing in also starts the sandbox (not from the helper).
@@ -39,8 +39,8 @@ const step = computed(() => {
 function finish() {
   emit("done");
   // Without starting one, still find the sandbox they have (as loading the page does), or the
-  // panes would wait for it forever.
-  if (store.runtime.enabled) (props.start ? startSandbox : resumeSandbox)();
+  // panes would wait for it forever: where the page uses it (sandboxWanted), or when asked to.
+  if (store.runtime.enabled && (props.start || sandboxWanted())) (props.start ? startSandbox : resumeSandbox)();
 }
 
 async function run(fn) {

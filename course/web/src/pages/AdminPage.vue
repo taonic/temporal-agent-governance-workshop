@@ -70,6 +70,7 @@ const EVENT_LABELS = {
   sandbox_stopped: "sandbox stopped",
   sandbox_gone: "sandbox deleted",
   sandbox_reset: "started over with a new sandbox",
+  sandbox_idle_stop: "sandbox stopped: nobody at the page",
   allowance_reached: "ran out of sandbox time",
   allowlist_added: "allowlist: added",
   allowlist_removed: "allowlist: removed",

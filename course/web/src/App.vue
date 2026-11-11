@@ -29,6 +29,7 @@ import {
   refreshSession,
   resetSandbox,
   resumeSandbox,
+  sandboxWanted,
   runInTerminal,
   sandboxLostView,
   save,
@@ -230,7 +231,9 @@ watch(() => store.pageTourRequest, startTour);
 onMounted(async () => {
   window.addEventListener("keydown", onShortcut);
   await refreshSession();
-  if (store.authenticated && store.runtime.enabled) resumeSandbox();
+  // Only where the page uses it (store.js sandboxWanted): opening the map or the admin panel
+  // doesn't start it.
+  if (store.authenticated && store.runtime.enabled && sandboxWanted()) resumeSandbox();
   watchSandbox();
   refreshHelper().then(resumeAfterConnect);
 });

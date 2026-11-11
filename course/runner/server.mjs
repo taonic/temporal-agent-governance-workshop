@@ -196,7 +196,9 @@ const routes = {
     const signInReason = signInUnavailableReason();
     const session = sessionOf(req);
     return {
-      runtime: { enabled: !reason, reason },
+      // idleMinutes: Daytona stops a sandbox idle this long; a page with nobody at it lets go of
+      // its sandbox after as long (store.js releaseIfIdle).
+      runtime: { enabled: !reason, reason, idleMinutes: config.autoStopMinutes },
       helper: { enabled: !helperReason, reason: helperReason },
       signIn: { enabled: !signInReason, reason: signInReason, console: consoleSignIn() },
       // Signed in and allowed: may read the modules, use the sandboxes and the helper.
@@ -392,6 +394,16 @@ const routes = {
     const result = manager.ensure(learner, origins(req));
     if (wasCreating) activity.record(learner, "sandbox_create", null, null);
     return result;
+  },
+
+  // Nobody at the page for the idle time (store.js releaseIfIdle): it stops, keeping the work. A
+  // page left open would otherwise keep it running, its polls counting as activity to Daytona.
+  "POST /api/sandbox/stop": async (req) => {
+    const learner = requireLearner(req);
+    await manager.stop(learner);
+    activity.record(learner, "sandbox_idle_stop", null, null);
+    log(`stopped the idle sandbox of learner ${learner}`);
+    return { state: "stopped" };
   },
 
   "POST /api/sandbox/reset": async (req) => {
