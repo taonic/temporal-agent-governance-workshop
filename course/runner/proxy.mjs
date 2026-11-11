@@ -76,7 +76,8 @@ function sendBuffered(req, res, status, headers, entry) {
 // presses Compact. A lookup that comes back after a newer request is dropped, and the Filter or
 // Compact it was setting up stops (its open menu swallowed the next link's click). A navigation
 // the page doesn't make (still where it was a moment later) answers navfail, and the course
-// loads the path instead.
+// loads the path instead. A link to where the page already is reloads it: the UI's lists don't
+// refresh on their own, and a learner following a link expects what's there now.
 //
 // It also sets the UI's own preferences before the UI reads them: dark mode, to match the
 // course, and the side nav collapsed, since the pane is narrower than a browser window. They're
@@ -106,7 +107,7 @@ try{obs.observe(document.documentElement,{childList:true,subtree:true});}catch(e
 setTimeout(function(){if(ready()){obs.disconnect();done();announce();}},400);
 setTimeout(function(){try{obs.disconnect();}catch(e){}done();announce();},15000);}else{announce();}
 var navs=0;function here(){return location.pathname+location.search;}
-function go(path){try{var from=here();var root=document.getElementById('svelte')||document.body;var a=document.createElement('a');a.href=path;root.appendChild(a);
+function go(path){try{var from=here();if(from===path){reply({__course:'navok',path:path});location.reload();return;}var root=document.getElementById('svelte')||document.body;var a=document.createElement('a');a.href=path;root.appendChild(a);
 var prevented=!a.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window,button:0}));
 setTimeout(function(){if(a.parentNode)a.remove();},0);
 if(!prevented){reply({__course:'navfail',path:path});return;}
