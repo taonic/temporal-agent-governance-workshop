@@ -73,7 +73,8 @@ function sendBuffered(req, res, status, headers, entry) {
 // UI writes its history filter to ?category= but doesn't read it back on load (2.50), so for
 // history?category=… the loader sets the Filter menu itself. The compact view isn't in the URL
 // either (it's the UI's eventView preference): for the tab "compact", it opens the history and
-// presses Compact.
+// presses Compact. A lookup that comes back after a newer request is dropped: otherwise opening a
+// workflow, then a namespace's list before its run was found, lands on the workflow.
 //
 // It also sets the UI's own preferences before the UI reads them: dark mode, to match the
 // course, and the side nav collapsed, since the pane is narrower than a browser window. They're
@@ -116,10 +117,11 @@ function box(n){return document.querySelector('input[type=checkbox][data-track-t
 function pick(left){cats.forEach(function(c){var b=box(LABELS[c]||c);if(b&&!b.checked)b.click();});
 setTimeout(function(){var ok=cats.every(function(c){var b=box(LABELS[c]||c);return b&&b.checked;});if(!ok&&left>0)pick(left-1);else btn.click();},250);}
 btn.click();setTimeout(function(){var none=box('None');if(none)none.click();setTimeout(function(){pick(4);},250);},300);}
-window.addEventListener('message',function(e){var d=e.data;if(!d||d.__course!=='nav')return;
+var navs=0;
+window.addEventListener('message',function(e){var d=e.data;if(!d||d.__course!=='nav')return;var mine=++navs;
 if(d.workflow){var wf='/namespaces/default/workflows/'+encodeURIComponent(d.workflow);var tab=d.tab||'history';var view=tab==='compact';if(view)tab='history';
-fetch('/api/v1'+wf).then(function(r){return r.json();}).then(function(j){go(wf+'/'+j.workflowExecutionInfo.execution.runId+'/'+tab);
-var m=tab.match(/^history\\?category=([\\w,-]+)/);if(m)setTimeout(function(){filterTo(m[1].split(','),0);},300);if(view)setTimeout(function(){compact(0);},300);})
+fetch('/api/v1'+wf).then(function(r){return r.json();}).then(function(j){if(mine!==navs)return;go(wf+'/'+j.workflowExecutionInfo.execution.runId+'/'+tab);
+var m=tab.match(/^history\\?category=([\\w,-]+)/);if(m)setTimeout(function(){if(mine===navs)filterTo(m[1].split(','),0);},300);if(view)setTimeout(function(){if(mine===navs)compact(0);},300);})
 .catch(function(){reply({__course:'navfail',path:wf});});return;}
 if(d.path)go(d.path);});})();</script>`;
 

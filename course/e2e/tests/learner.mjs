@@ -51,11 +51,13 @@ export class Learner {
   // Types a line into a terminal and presses Enter. Keys typed while something else on the page
   // takes the focus are lost, so the line is checked on screen first (its end, as the shell echoes
   // it), and typed again on a cleared line if it isn't there.
+  // It focuses the terminal's input rather than clicking it: a click lands on whatever the
+  // terminal shows there, and a link (a workflow's URL, say) opens the Temporal UI over it.
   async type(name, line) {
-    await this.view("Code");
     const tail = line.replace(/\s+/g, "").slice(-16);
     for (let attempt = 0; ; attempt++) {
-      await this.terminal(name).locator(".terminal-host").click();
+      await this.view("Code");
+      await this.terminal(name).locator("textarea.xterm-helper-textarea").focus();
       await this.page.keyboard.press("Control+U");
       await this.page.keyboard.type(line);
       const shown = await expect
