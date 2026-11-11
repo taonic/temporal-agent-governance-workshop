@@ -14,6 +14,7 @@ import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, r
 import { closeCodeTour, startCodeTour } from "../codeTour.js";
 import { ask, helper, refreshHelper, sharedFile, stepPrompts, stepThread, stop } from "../helper.js";
 import {
+  boardAction,
   effectiveMode,
   insertIntoEditor,
   revertFromEditor,
@@ -23,6 +24,7 @@ import {
   openTodo,
   openPane,
   openSessionTab,
+  openBoardTrip,
   openTrip,
   openWorkflow,
   resetSandbox,
@@ -44,11 +46,13 @@ import {
   workerRunView,
   workerToggleView,
 } from "../store.js";
-import { complete, isDone, moduleHref, moduleOfBeat, modulesById, nextModule } from "../progress.js";
+import { choosePersona, complete, isDone, moduleHref, moduleOfBeat, modulesById, nextModule, pick, progress, worldCheckOf, xpOf } from "../progress.js";
 import { findSnippet } from "../snippets.js";
 import { streamIn } from "../streaming.js";
 import AskSetupCard from "./AskSetupCard.vue";
 import ChallengeCard from "./ChallengeCard.vue";
+import ModuleCheck from "./ModuleCheck.vue";
+import QuestionCard from "./QuestionCard.vue";
 
 // Answers bring Markdown and highlighting with them: loaded with the first question.
 const AskMessage = defineAsyncComponent(() => import("./AskMessage.vue"));
@@ -74,7 +78,10 @@ const GETTING_STARTED = [
       "<p>Want a quick look around first?</p>",
   },
 ];
-const gettingStarted = ref(!load("onboarded", false));
+// Getting started is about the editor, the terminals and Ask Temporal's sign-in: not the Trip
+// board's (Essentials), whose briefing says what's on the page.
+const isBoard = computed(() => props.exercise.layout === "board");
+const gettingStarted = ref(!isBoard.value && !load("onboarded", false));
 const beats = computed(() => [
   ...(gettingStarted.value ? GETTING_STARTED : []),
   { id: "intro", kind: "intro", title: "Introduction", html: page.value.intro },
@@ -87,7 +94,7 @@ const passed = computed(() => store.passed.includes(props.exercise.id));
 const scroller = ref(null);
 const input = ref(null);
 const draft = ref("");
-const label = (e) => `Exercise ${e.number}`;
+const label = (e) => (e.layout === "board" ? e.title : `Exercise ${e.number}`);
 
 // --- Where the conversation is ------------------------------------------------------------
 
@@ -111,7 +118,7 @@ watch(
   () => props.exercise.id,
   () => {
     ticked.value = load(`steps:${props.exercise.id}`, {});
-    gettingStarted.value = !load("onboarded", false);
+    gettingStarted.value = !isBoard.value && !load("onboarded", false);
     at.value = restore();
     draft.value = "";
   },
@@ -161,12 +168,25 @@ watch(
 
 // Moving on past a module's last beat completes it (its XP); so does the exercise's check, for
 // its last module.
-// A challenge is done only by its right pick, never by moving past it.
+// A challenge is done only by its right pick, never by moving past it; a Trip board module with a
+// world check only by its check (ModuleCheck): what it names seen on the board, and its question.
 const isChallenge = (id) => modulesById.get(id)?.kind === "challenge";
+const passesByMoving = (id) => !isChallenge(id) && !worldCheckOf(id);
 function leaving(from) {
   const order = props.exercise.modules;
-  if (!isChallenge(from) && order.indexOf(currentModule.value) > order.indexOf(from)) complete(from);
+  if (passesByMoving(from) && order.indexOf(currentModule.value) > order.indexOf(from)) complete(from);
 }
+// The way on from the last beat: it completes the module the beat is in, if moving on does.
+function finish() {
+  if (passesByMoving(currentModule.value)) complete(currentModule.value);
+}
+// The module whose world check sits on this beat (its last, or its check.beat), if one does.
+const checkHere = computed(() => {
+  const found = Object.entries(props.exercise.checks ?? {}).find(([, c]) => c.beat === beat.value?.id);
+  return found ? { module: found[0], check: found[1] } : null;
+});
+const challengeHere = computed(() => (beat.value?.kind === "challenge" ? props.exercise.challenges?.[beat.value.challenge] ?? null : null));
+const questionMeta = (c) => `Challenge · ${c.choices.length} answers · ${isDone(c.id) ? `solved, +${xpOf(c.id)} XP` : `up to ${c.xp[0]} XP`}`;
 watch(passed, (now) => now && complete(props.exercise.modules.filter((id) => !isChallenge(id)).at(-1)), { immediate: true });
 
 function tick(id, value = true) {
@@ -309,12 +329,12 @@ watch(
 
 // The step's first button that does something in the workspace, and the tab it shows.
 const ACTION_VIEWS = [
-  [/^data-(?:worker-toggle|trip|run)\b/, "code"], // the terminals, under Code
+  [/^data-(?:worker-toggle|trip|run|board-action)\b/, "code"], // the terminals (or the Trip board), under Code
   [/^data-pane="(console|temporal|briefing)"/, null],
   [/^data-(?:send|new-session|agent-tour)\b/, "console"],
-  [/^data-(?:session-tab|workflow-open)\b/, "temporal"],
+  [/^data-(?:session-tab|workflow-open|board-trip)\b/, "temporal"],
 ];
-const ACTION = /data-(?:worker-toggle|trip|run|send|new-session|agent-tour|session-tab|workflow-open)\b|data-pane="(?:console|temporal|briefing)"/;
+const ACTION = /data-(?:worker-toggle|trip|run|board-action|board-trip|send|new-session|agent-tour|session-tab|workflow-open)\b|data-pane="(?:console|temporal|briefing)"/;
 function firstAction(html) {
   const found = html.match(ACTION)?.[0];
   if (!found) return null;
@@ -403,6 +423,7 @@ const lead = computed(() => {
   if (b.kind === "plain") return before.some((x) => x.kind === "step") ? "Before you move on:" : "A little background first.";
   if (b.kind === "stretch") return "That's every step. Got time left? Try this; it isn't graded.";
   if (b.kind === "check") return passed.value ? "Your check passed. 🎉 Run it again any time." : "Last thing: let's check your work.";
+  if (b.kind === "challenge" && challengeHere.value?.question) return isDone(b.challenge) ? "Challenge solved. Every answer is below, with why." : "Time for a challenge. No running anything: just pick the answer.";
   if (b.kind === "challenge") return isDone(b.challenge) ? "Challenge solved. Every choice is below, side by side." : "Time to test what you just built.";
   const n = stepNumber(b);
   return n === 1 ? "Let's get going." : NEXT_UP[(n - 2) % NEXT_UP.length];
@@ -418,6 +439,7 @@ const nextLabel = computed(() => {
   if (b.kind === "step") return following?.kind === "step" ? "Done, next step →" : "Done →";
   if (b.kind === "stretch") return "Continue →";
   if (b.kind === "challenge") return isDone(b.challenge) ? "Continue →" : "Skip it for now →";
+  if (checkHere.value && !isDone(checkHere.value.module)) return "Skip the check for now →";
   return "Got it →";
 });
 
@@ -441,6 +463,32 @@ const thread = computed(() => stepThread(props.exercise.id, beat.value.id));
 const quickQuestions = computed(() => (beat.value.kind === "intro" && props.exercise.questions?.length ? props.exercise.questions.slice(0, 3) : stepPrompts(beat.value.kind)));
 const file = computed(() => (store.editorPath, store.fileTexts, sharedFile()));
 const placeholder = computed(() => (beat.value.kind === "intro" ? "Ask me about this exercise…" : `Ask about “${heading.value}”…`));
+
+// The closing beat's "a process of your own": Ask Temporal, in plain words, about it.
+function askOwnProcess(box) {
+  const text = box?.querySelector("textarea")?.value.trim();
+  if (!text) return toast("Describe a process first: a sentence or two is plenty.");
+  if (!askable.value) return toast("Ask Temporal isn't available right now.");
+  send(`Here's a process from my own work: ${text}\n\nIn plain words, with no code: what could go wrong in it, and what would Temporal do about each thing?`);
+}
+
+// The closing beat's "Share this with your team": a link to the course, as this persona sees it.
+async function shareCourse() {
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = `?persona=${store.persona.id}`;
+  const link = url.toString();
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "Temporal Quest", text: "Why a process on Temporal never loses its place. No code needed.", url: link });
+      return;
+    }
+    await navigator.clipboard.writeText(link);
+    toast("Link copied. Send it to your team.");
+  } catch (error) {
+    if (error?.name !== "AbortError") toast(`Couldn't copy it. Here's the link: ${link}`, 6000);
+  }
+}
 
 function send(text = draft.value) {
   const question = text.trim();
@@ -557,6 +605,23 @@ function paintSandboxButtons() {
 }
 watch([() => ({ ...store.sandbox }), () => store.authenticated, page, beat], () => nextTick(paintSandboxButtons), { immediate: true });
 
+// The Trip board's buttons in the text (#board/… links): off without a sandbox, or while an action
+// runs; Ship the fix says when it's shipped.
+function paintBoardActions() {
+  const state = store.board.state;
+  for (const button of scroller.value?.querySelectorAll("button[data-board-action]") ?? []) {
+    const action = button.dataset.boardAction;
+    button.disabled = !props.live || Boolean(store.board.pending);
+    button.classList.toggle("is-pending", store.board.pending === action);
+    const shipped = action === "ship-fix" && state && state.module === currentModule.value && !state.mistake;
+    if (!button.dataset.label) button.dataset.label = button.textContent;
+    button.textContent = shipped ? "✓ Fix shipped" : store.board.pending === action ? `${button.dataset.label}…` : button.dataset.label;
+    if (shipped) button.disabled = true;
+    button.title = props.live ? "" : "Start your sandbox first";
+  }
+}
+watch([() => store.board, () => props.live, page, beat], () => nextTick(paintBoardActions), { immediate: true, deep: true });
+
 // The trip buttons the build put in place of `uv run hello-start …`: each trip's workflow.
 function paintTrips() {
   for (const group of scroller.value?.querySelectorAll("[data-trip]") ?? []) {
@@ -638,11 +703,24 @@ function onClick(event) {
     store.workspaceView = "diagram";
     return;
   }
-  if (target.matches("button[data-worker-toggle]")) {
+  if (target.matches("button[data-persona-switch]")) {
+    choosePersona(target.dataset.personaSwitch);
+  } else if (target.matches("button[data-share]")) {
+    shareCourse();
+  } else if (target.matches("button[data-ask-own]")) {
+    askOwnProcess(target.closest("[data-own-process]"));
+  } else if (target.matches("button[data-board-action]")) {
+    if (!props.live) return toast("Start your sandbox first.");
+    store.workspaceView = "code";
+    boardAction(target.dataset.boardAction, currentModule.value);
+  } else if (target.matches("button[data-worker-toggle]")) {
     if ("workerRestart" in target.dataset) restartWorker(props.exercise);
     else toggleWorker(props.exercise);
   } else if (target.matches("button[data-sandbox-start]")) {
     startSandbox();
+  } else if (target.matches("button[data-board-trip]")) {
+    if (!props.live) return toast("Start your sandbox to open it.");
+    openBoardTrip(target.dataset.workflowTab);
   } else if (target.matches("button[data-workflow-open]")) {
     if (!props.live) return toast("Start your sandbox to open it.");
     openWorkflow(target.dataset.workflowOpen, target.dataset.workflowTab);
@@ -696,7 +774,7 @@ function onClick(event) {
     <header class="instruction-heading">
       <div class="instruction-heading-top">
         <p class="guide-heading-title" :title="exercise.teaser">
-          {{ label(exercise) }} · {{ exercise.title }}
+          {{ isBoard ? exercise.title : `${label(exercise)} · ${exercise.title}` }}
           <span v-if="exercise.bonus" class="bonus-badge" title="A bonus exercise: do it if you have the time">bonus</span>
           <span v-if="passed" class="passed-badge" title="Your check passed">✓ passed</span>
         </p>
@@ -742,8 +820,8 @@ function onClick(event) {
           <div v-if="showPassed" class="guide-passed">
             <span class="guide-tada" aria-hidden="true">🎉</span>
             <span class="visually-hidden">{{ label(exercise) }} passed.</span>
-            <a v-if="next" class="button button-primary guide-next" :href="moduleHref(next.id)" @click="complete(currentModule)">On to {{ next.id }} · {{ next.title }} →</a>
-            <a v-else class="button button-primary guide-next" href="#/" @click="complete(currentModule)">Back to the map →</a>
+            <a v-if="next" class="button button-primary guide-next" :href="moduleHref(next.id)" @click="finish()">On to {{ next.id }} · {{ next.title }} →</a>
+            <a v-else class="button button-primary guide-next" href="#/" @click="finish()">Back to the map →</a>
             <button v-if="mode === 'browser'" class="button" type="button" :disabled="!live" @click="emit('check')">✓ Run the check again</button>
           </div>
           <template v-else>
@@ -753,8 +831,20 @@ function onClick(event) {
           <p v-if="beat.kind === 'intro' && exercise.teaser" class="exercise-meta">{{ exercise.teaser }}</p>
           <div class="guide-body markdown" :class="{ 'diagram-on-left': diagramOnLeft }" v-html="beat.html" />
           <AskSetupCard v-if="beat.id === 'start-ask'" class="guide-body" />
+          <ModuleCheck v-if="checkHere" :key="`check-${checkHere.module}`" class="guide-body" :module="checkHere.module" :check="checkHere.check" :live="live" />
+          <QuestionCard
+            v-if="challengeHere?.question"
+            :key="challengeHere.id"
+            :label="challengeHere.title"
+            :meta="questionMeta(challengeHere)"
+            :choices="challengeHere.choices"
+            :hint="challengeHere.hint"
+            :attempts="progress.attempts[challengeHere.id] ?? []"
+            :done="isDone(challengeHere.id)"
+            @pick="(choice) => pick(challengeHere.id, choice)"
+          />
           <ChallengeCard
-            v-if="beat.kind === 'challenge' && exercise.challenges?.[beat.challenge]"
+            v-else-if="beat.kind === 'challenge' && exercise.challenges?.[beat.challenge]"
             :key="beat.challenge"
             :challenge="exercise.challenges[beat.challenge]"
             :live="live && mode === 'browser'"
@@ -783,8 +873,8 @@ function onClick(event) {
         </template>
         <template v-else-if="!showPassed">
           <button v-if="beat.kind === 'step' && !ticked[beat.id]" class="guide-reply" type="button" @click="tick(beat.id)">Mark this step done</button>
-          <a v-if="next" class="guide-reply is-primary" :href="moduleHref(next.id)" @click="complete(currentModule)">On to {{ next.id }} · {{ next.title }} →</a>
-          <a v-else class="guide-reply is-primary" href="#/" @click="complete(currentModule)">Back to the map →</a>
+          <a v-if="next" class="guide-reply is-primary" :href="moduleHref(next.id)" @click="finish()">On to {{ next.id }} · {{ next.title }} →</a>
+          <a v-else class="guide-reply is-primary" href="#/" @click="finish()">Back to the map →</a>
         </template>
       </div>
 

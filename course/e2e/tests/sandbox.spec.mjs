@@ -196,4 +196,34 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     await expect(ui.locator("button.session-drawer-trigger")).toBeVisible({ timeout: 2 * MINUTE });
     await page.getByRole("tab", { name: "Code" }).click();
   });
+
+  // Last, as the persona it switches to: Essentials' E2 on its Trip board, in the same sandbox. A
+  // mistake pauses the Temporal trip while the plain twin's is lost; Ship the fix finishes the same
+  // trip, booking nothing twice; and the module's check sees it.
+  test("Essentials E2: Ship the fix finishes the stuck trip, and the plain twin's stays lost", async () => {
+    test.setTimeout(8 * MINUTE);
+    await page.goto("/?persona=essentials#/module/E2");
+    await expect(page.locator(".sandbox-pill")).toHaveText(/Sandbox ready/, { timeout: 3 * MINUTE });
+    const board = page.locator(".trip-board");
+    await expect(board.locator(".tb-flag", { hasText: "A mistake in the hotel step" }), "the board never set E2 up").toBeVisible({ timeout: 2 * MINUTE });
+    await board.getByRole("button", { name: "▶ Start a trip" }).click();
+    const temporal = board.locator(".tb-run.is-temporal");
+    const plain = board.locator(".tb-run.is-plain");
+    await expect(plain.locator(".tb-status"), "the plain twin should crash at the hotel").toContainText("the trip is lost", { timeout: 2 * MINUTE });
+    await expect(temporal.locator(".tb-step.is-retrying"), "the Temporal trip should wait at the hotel").toContainText("Booking the hotel", { timeout: MINUTE });
+    await board.getByRole("button", { name: "🛠 Ship the fix" }).click();
+    await expect(temporal.locator(".tb-status"), "the same trip should finish after the fix").toContainText("each one once", { timeout: 2 * MINUTE });
+    await expect(plain.locator(".tb-status")).toContainText("the trip is lost");
+    await expect(board.locator(".tb-double")).toHaveCount(0);
+    // Its check: seen on the board; then its question, and the module is done.
+    for (let i = 0; i < 8 && !(await page.locator(".module-check").count()); i++) {
+      await page.locator(".guide-bubble").click({ position: { x: 4, y: 4 } });
+      await page.locator(".guide-replies .guide-reply:not(.is-back)").last().click();
+    }
+    const check = page.locator(".module-check");
+    await expect(check.locator(".mc-part").first()).toHaveClass(/is-done/, { timeout: 30_000 });
+    await check.locator(".challenge-choice", { hasText: "carried on from the hotel step" }).click();
+    await expect(check.locator(".mc-done")).toContainText("done, +10 XP");
+    await expect.poll(async () => (await (await page.request.get("/api/progress")).json()).completed).toContain("E2");
+  });
 });

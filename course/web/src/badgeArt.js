@@ -53,6 +53,9 @@ const ICONS = {
   gear: (ink, tint) => `
     <path d="${GEAR}" fill="${tint}" stroke="${ink}" stroke-width="2.2" stroke-linejoin="round"/>
     <circle cx="20" cy="20" r="4.8" fill="none" stroke="${ink}" stroke-width="2.4"/>`,
+  shield: (ink, tint) => `
+    <path d="M20 4 L34 9 V19 C34 27.5 28 33.5 20 36.5 C12 33.5 6 27.5 6 19 V9 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M13.5 19.5 L18 24 L27 14.5" fill="none" stroke="${ink}" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>`,
   bolt: (ink, tint) => `
     <path d="M24 3 L9 22 H19 L15 37 L31 16 H21 Z" fill="${tint}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/>`,
   "closed-eye": (ink, tint) => `

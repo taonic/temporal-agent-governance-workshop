@@ -36,7 +36,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["travel_agent", "hello", "codemode", "concierge"]
+packages = ["travel_agent", "hello", "codemode", "concierge", "essentials"]
 
 [tool.ruff]
 line-length = 120
@@ -46,7 +46,7 @@ extend-exclude = [".dogwood"]
 select = ["E", "F", "I", "UP"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["travel_agent", "hello", "codemode", "concierge", "temporal_agent_harness"]
+known-first-party = ["travel_agent", "hello", "codemode", "concierge", "essentials", "temporal_agent_harness"]
 
 [tool.ruff.lint.per-file-ignores]
 # The starter imports what learners will need for their TODOs.
@@ -66,3 +66,6 @@ travel-stack = "travel_agent.stack:run"
 trip-briefing = "travel_agent.briefing:run"
 concierge-worker = "concierge.worker:run"
 code-mode = "codemode.sandbox:main"
+essentials-worker = "essentials.worker:run"
+essentials-plain = "essentials.plain:run"
+essentials-board = "essentials.board:run"

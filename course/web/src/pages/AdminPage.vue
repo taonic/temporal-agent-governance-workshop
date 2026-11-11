@@ -4,7 +4,7 @@
 // (Activity), what they tell us (Feedback), and the sandboxes. Refreshes every 10 seconds while the tab is visible.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
-import { api, course, navigate, store, toast } from "../store.js";
+import { api, fullCourse as course, navigate, store, toast } from "../store.js";
 
 const TABS = [
   { id: "learners", label: "Learners" },
@@ -18,6 +18,9 @@ const tab = computed(() => (TABS.some((t) => t.id === store.route.id) ? store.ro
 
 const overview = ref({ cohorts: [], pendingRequests: 0, paths: [], roles: [] });
 const cohortFilter = ref("");
+// Learners as one persona only ("developer", "essentials"), or everyone.
+const personaFilter = ref("");
+const personaName = (id) => course.personas?.find((p) => p.id === id)?.label ?? id ?? "—";
 const error = ref("");
 
 // --- Formatting -------------------------------------------------------------------------------
@@ -54,6 +57,7 @@ const EVENT_LABELS = {
   challenge_pick: "picked in",
   boss_result: "fought",
   path_set: "chose a path",
+  persona_set: "chose who they learn as",
   solution_used: "used the solution in",
   badge_earned: "earned a badge:",
   helper_question: "asked Temporal a question",
@@ -79,6 +83,7 @@ function eventText(e) {
   if (e.type === "challenge_pick") return `${label} ${e.moduleId}: ${d.choice}${d.right ? " ✓" : ""}`;
   if (e.type === "model_calls") return `${label} (${d.count})`;
   if (e.type === "path_set") return `${label}: ${d.path ?? "none"}`;
+  if (e.type === "persona_set") return `${label}: ${personaName(d.persona)}`;
   if (e.type === "allowlist_added") return `${label} ${(d.entries ?? []).join(", ")} to ${d.cohort}`;
   if (e.type === "allowlist_removed") return `${label} ${d.entry}`;
   if (["cohort_created", "cohort_saved"].includes(e.type)) return `${label}: ${d.cohort}`;
@@ -122,7 +127,7 @@ async function load() {
     await loadOverview();
     if (tab.value === "learners") {
       if (selectedLearner.value) journey.value = await api(`/api/admin/learner${q({ id: selectedLearner.value })}`);
-      const data = await api(`/api/admin/learners${q({ cohort: cohortFilter.value })}`);
+      const data = await api(`/api/admin/learners${q({ cohort: cohortFilter.value, persona: personaFilter.value })}`);
       learners.value = data.learners;
       summary.value = data.summary;
     } else if (tab.value === "cohorts") {
@@ -150,7 +155,7 @@ onMounted(() => {
   timer = setInterval(() => document.visibilityState === "visible" && !editing.value && load(), 10_000);
 });
 onBeforeUnmount(() => clearInterval(timer));
-watch([tab, cohortFilter, feedType, feedUser, selectedLearner, cohortId], load);
+watch([tab, cohortFilter, personaFilter, feedType, feedUser, selectedLearner, cohortId], load);
 
 async function loadMoreFeed() {
   const last = feed.value.at(-1);
@@ -325,6 +330,10 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
         </div>
 
         <div class="journey-stats">
+          <div>
+            <span>Learning as</span><strong>{{ personaName(journey.persona) }}</strong>
+            <em v-if="journey.personaChanges.length">{{ journey.personaChanges.length > 1 ? `switched ${journey.personaChanges.length - 1}×, last ` : "chose it " }}{{ when(journey.personaChanges.at(-1).at) }}</em>
+          </div>
           <div><span>XP</span><strong>{{ journey.xp }}</strong></div>
           <div><span>Modules passed</span><strong>{{ journey.passed.length }}</strong></div>
           <div :class="{ 'is-stuck': journey.where?.stuck }">
@@ -401,14 +410,18 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
           <option value="">All cohorts</option>
           <option v-for="c in overview.cohorts" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
         </select>
+        <select v-model="personaFilter" aria-label="Persona">
+          <option value="">Every persona</option>
+          <option v-for="p in course.personas" :key="p.id" :value="p.id">{{ p.label }} ({{ summary?.personas?.[p.id] ?? 0 }})</option>
+        </select>
         <span class="admin-muted">{{ learners.length }} learners<template v-if="stuckCount"> · <strong class="is-stuck-text">{{ stuckCount }} stuck</strong></template></span>
-        <a class="button button-secondary" :href="`/api/admin/learners.csv${q({ cohort: cohortFilter })}`" download>Export CSV</a>
+        <a class="button button-secondary" :href="`/api/admin/learners.csv${q({ cohort: cohortFilter, persona: personaFilter })}`" download>Export CSV</a>
       </div>
 
       <div class="admin-card table-scroll">
         <table class="admin-table admin-learners">
           <thead>
-            <tr><th>Learner</th><th>Role</th><th>Cohort</th><th>Now</th><th>Passed</th><th>XP</th><th>Sandbox (24 h)</th><th>Last active</th></tr>
+            <tr><th>Learner</th><th>Role</th><th>Cohort</th><th>Learning as</th><th>Now</th><th>Passed</th><th>XP</th><th>Sandbox (24 h)</th><th>Last active</th></tr>
           </thead>
           <tbody>
             <tr v-for="l in sortedLearners" :key="l.id" :class="{ 'is-stuck': l.where?.stuck, 'is-blocked': l.status === 'blocked' }" tabindex="0" @click="openLearner(l.id)" @keydown.enter="openLearner(l.id)">
@@ -419,6 +432,7 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
               </td>
               <td>{{ l.role }}<br><span class="admin-muted">{{ l.company }}</span></td>
               <td>{{ l.cohort?.name ?? "" }}</td>
+              <td>{{ personaName(l.persona) }}</td>
               <td>
                 <template v-if="l.where?.active">{{ moduleLabel(l.where.moduleId) }}<br><span class="admin-muted">{{ l.where.minutes }} min{{ l.where.stuck ? " · stuck" : "" }}</span></template>
                 <span v-else class="admin-muted">—</span>

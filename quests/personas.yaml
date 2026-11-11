@@ -1,0 +1,12 @@
+# Who the course is shown to. A learner picks one at the start (or a cohort or ?persona= sets
+# it) and can switch any time; it decides which branches, paths and badges the site shows.
+# A branch lists the personas it's for in branch.md (`personas:`; none means developer), and a
+# skill badge in badges.yaml (none means every persona).
+- id: developer
+  label: I build software
+  blurb: Write and run real Temporal code, then go deeper into AI agents, Nexus and more.
+  icon: "⌨️"
+- id: essentials
+  label: Why Temporal?
+  blurb: See why a process built on Temporal never loses its place. No code, no terminals.
+  icon: "🛡️"

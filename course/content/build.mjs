@@ -33,6 +33,7 @@ import { tourRange } from "../web/src/tourRange.js";
 import { ruleBlock, ruleId, todoFor } from "../web/src/snippets.js";
 import { ICON_NAMES } from "../web/src/badgeArt.js";
 import { SKILL_RULES } from "../web/src/badges.js";
+import { BOARD_ACTIONS, WORLD_CHECKS } from "../web/src/board.js";
 
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("bash", bash);
@@ -228,7 +229,8 @@ function createRenderer() {
   // #workflow/board-sfo-jfk ([open it](#workflow/board-sfo-jfk/query)) opens the latest of
   // exercise 1's workflows whose id starts with that, in the Temporal UI pane, on a tab if one
   // follows (history, pending-activities, query…). #trip/SFO-JFK is short for #workflow/hello-sfo-jfk.
-  // Locally, both are just their words.
+  // On the Trip board, #latest-trip opens its latest trip's workflow (#latest-trip/query: on a tab).
+  // Locally, they're all just their words.
   md.core.ruler.push("action_links", (state) => {
     for (const block of state.tokens) {
       if (block.type !== "inline") continue;
@@ -238,7 +240,15 @@ function createRenderer() {
         const href = token.type === "link_open" ? token.attrGet("href") ?? "" : "";
         const trip = href.match(/^#trip\/([A-Za-z]{3})-([A-Za-z]{3})(?:\/([a-z-]+))?$/);
         const flow = trip ? [null, `hello-${trip[1]}-${trip[2]}`.toLowerCase(), trip[3]] : href.match(/^#workflow\/([a-z0-9-]+)(?:\/([a-z-]+))?$/);
-        if (href !== "#sandbox" && !flow) {
+        const boardAction = href.match(/^#board\/([a-z-]+)$/)?.[1];
+        const latest = href.match(/^#latest-trip(?:\/([a-z-]+))?$/);
+        const persona = href.match(/^#persona\/([a-z-]+)$/)?.[1];
+        if (persona && !loadPersonas().some((p) => p.id === persona)) throw new Error(`${state.env.sourceFile}: #persona/${persona} isn't a persona (quests/personas.yaml)`);
+        const share = href === "#share";
+        if (boardAction && !BOARD_ACTIONS.includes(boardAction)) {
+          throw new Error(`${state.env.sourceFile}: #board/${boardAction} isn't one of the board's actions (${BOARD_ACTIONS.join(", ")})`);
+        }
+        if (href !== "#sandbox" && !flow && !boardAction && !latest && !persona && !share) {
           children.push(token);
           continue;
         }
@@ -248,7 +258,15 @@ function createRenderer() {
         button.content =
           state.env.mode !== "browser"
             ? md.utils.escapeHtml(label)
-            : flow
+            : boardAction
+              ? `<button class="board-action" type="button" data-board-action="${boardAction}">${escapeAttr(label)}</button>`
+              : persona
+              ? `<button class="button" type="button" data-persona-switch="${persona}">${escapeAttr(label)}</button>`
+              : share
+              ? `<button class="button button-primary" type="button" data-share>${escapeAttr(label)}</button>`
+              : latest
+              ? `<button class="workflow-link" type="button" data-board-trip${latest[1] ? ` data-workflow-tab="${latest[1]}"` : ""} title="Open the latest trip in the Temporal UI">${escapeAttr(label)}</button>`
+              : flow
               ? `<button class="workflow-link" type="button" data-workflow-open="${flow[1]}-"${flow[2] ? ` data-workflow-tab="${flow[2]}"` : ""} title="Open it in the Temporal UI">${escapeAttr(label)}</button>`
               : `<button class="sandbox-start" type="button" data-sandbox-start>${escapeAttr(label)}</button>`;
         children.push(button);
@@ -650,6 +668,19 @@ function renderPage(md, markdown, mode, sourceFile, files) {
 
 // --- Quests: branches, modules and paths -----------------------------------------------------
 
+// What an exercise's workspace is: the editor and terminals (code), or the Trip board (board).
+export const LAYOUTS = ["code", "board"];
+
+// Who the course is shown to (quests/personas.yaml): the first is the default.
+export function loadPersonas() {
+  const source = "quests/personas.yaml";
+  const list = YAML.parse(read(source)) ?? [];
+  if (!list.length) throw new Error(`${source}: no personas`);
+  for (const p of list) for (const key of ["id", "label", "blurb", "icon"]) if (p[key] == null) throw new Error(`${source}: a persona has no ${key}`);
+  if (new Set(list.map((p) => p.id)).size !== list.length) throw new Error(`${source}: two personas have one id`);
+  return list;
+}
+
 const QUESTS = "quests";
 // A module's file (quests/…/module.md) → the exercise the site shows it in: where links to it go.
 const moduleExercise = new Map();
@@ -665,6 +696,7 @@ function subdirs(rel) {
 // Every branch and module under quests/, and the paths through them, checked: ids unique, every
 // module a module requires exists, and no module requires itself, however indirectly.
 export function loadQuests() {
+  const personas = loadPersonas();
   const branches = [];
   const modules = new Map();
   for (const dir of subdirs(QUESTS)) {
@@ -672,7 +704,11 @@ export function loadQuests() {
     if (!fs.existsSync(path.join(repoRoot, branchFile))) continue;
     const { meta, body } = parseFrontmatter(read(branchFile));
     if (meta.id !== dir) throw new Error(`${branchFile}: its id is ${meta.id}, but its folder is ${dir}`);
-    const branch = { ...meta, description: body.trim(), modules: [] };
+    const branch = { ...meta, personas: meta.personas ?? ["developer"], layout: meta.layout ?? "code", description: body.trim(), modules: [] };
+    for (const id of branch.personas) {
+      if (!personas.some((p) => p.id === id)) throw new Error(`${branchFile}: persona ${id} isn't one of ${personas.map((p) => p.id).join(", ")} (quests/personas.yaml)`);
+    }
+    if (!LAYOUTS.includes(branch.layout)) throw new Error(`${branchFile}: layout ${branch.layout} isn't one of ${LAYOUTS.join(", ")}`);
     for (const moduleDir of subdirs(`${QUESTS}/${dir}`)) {
       const challenge = loadChallenge(`${QUESTS}/${dir}/${moduleDir}`, dir);
       if (challenge) {
@@ -688,6 +724,7 @@ export function loadQuests() {
         if (m[key] == null) throw new Error(`${source}: no ${key} in its frontmatter`);
       }
       if (modules.has(m.id)) throw new Error(`${source}: module id ${m.id} is also ${modules.get(m.id).source}'s`);
+      checkModuleCheck(source, m.check, branch.layout);
       modules.set(m.id, {
         ...m,
         branch: dir,
@@ -727,9 +764,13 @@ export function loadQuests() {
     branches.push(branch);
   }
   branches.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+  const branchOf = new Map(branches.map((b) => [b.id, b]));
   for (const module of modules.values()) {
     for (const req of module.requires) {
       if (!modules.has(req)) throw new Error(`${module.source}: requires ${req}, which isn't a module`);
+      // A persona that sees the module has to see what it builds on.
+      const missing = branchOf.get(module.branch).personas.filter((p) => !branchOf.get(modules.get(req).branch).personas.includes(p));
+      if (missing.length) throw new Error(`${module.source}: requires ${req}, which the ${missing.join(", ")} persona doesn't see`);
     }
   }
   const done = new Set();
@@ -751,9 +792,12 @@ export function loadQuests() {
       }
     }
     const listed = p.modules ?? (p.exercises ?? []).flatMap((ex) => ex.modules);
-    paths.push({ ...p, source, modules: withChallenges(listed, modules) });
+    // Shown to the personas that see every one of its modules.
+    const seen = personas.map((x) => x.id).filter((id) => listed.every((m) => branchOf.get(modules.get(m).branch).personas.includes(id)));
+    if (!seen.length) throw new Error(`${source}: no persona sees all of its modules`);
+    paths.push({ ...p, source, personas: seen, modules: withChallenges(listed, modules) });
   }
-  return { branches, modules, paths };
+  return { branches, modules, paths, personas };
 }
 
 // --- Badges -----------------------------------------------------------------------------------
@@ -809,6 +853,7 @@ export function loadBadges(quests) {
       if (!modules.length) throw new Error(`${source}: tier ${tier.name}'s badge has no modules`);
       add({
         id: `${branch.id}-${i + 1}`,
+        personas: branch.personas,
         kind: "tier",
         name: tier.badge.name,
         branch: branch.id,
@@ -824,7 +869,7 @@ export function loadBadges(quests) {
     if (branch.boss) {
       if (!branch.classTitle) throw new Error(`${source}: a branch with a boss needs a classTitle, its boss badge`);
       const boss = quests.modules.get(branch.boss);
-      add({ id: `${branch.id}-boss`, kind: "boss", name: branch.classTitle, branch: branch.id, color: branch.color, icon: branch.badgeIcon, module: boss.id, criteria: `Beat ${boss.title}` }, source);
+      add({ id: `${branch.id}-boss`, personas: branch.personas, kind: "boss", name: branch.classTitle, branch: branch.id, color: branch.color, icon: branch.badgeIcon, module: boss.id, criteria: `Beat ${boss.title}` }, source);
     }
   }
   const source = `${QUESTS}/badges.yaml`;
@@ -833,23 +878,33 @@ export function loadBadges(quests) {
     for (const key of ["id", "name", "icon", "rule", "criteria"]) if (b[key] == null) throw new Error(`${source}: a badge has no ${key}`);
     if (!SKILL_RULES.includes(b.rule)) throw new Error(`${source}: ${b.id}'s rule ${b.rule} isn't one of ${SKILL_RULES.join(", ")}`);
     if (b.rule === "pass" && !quests.modules.has(b.module)) throw new Error(`${source}: ${b.id} passes ${b.module}, which isn't a module`);
-    add({ id: b.id, kind: "skill", name: b.name, icon: b.icon, rule: b.rule, ...(b.module ? { module: b.module } : {}), criteria: b.criteria }, source);
+    const everyone = quests.personas.map((p) => p.id);
+    for (const id of b.personas ?? []) if (!everyone.includes(id)) throw new Error(`${source}: ${b.id}'s persona ${id} isn't one of ${everyone.join(", ")}`);
+    add({ id: b.id, personas: b.personas ?? everyone, kind: "skill", name: b.name, icon: b.icon, rule: b.rule, ...(b.module ? { module: b.module } : {}), criteria: b.criteria }, source);
   }
   return badges;
 }
 
 // A challenge folder (challenge.md, scenario.py, recordings/): the question, its choices, and
 // each choice's recorded run. null for a module's folder.
+//
+// A question challenge (Essentials') has no file, no block it replaces and no code in its
+// choices: nothing runs, so it has no scenario and no recordings. Its choices are plain answers.
 function loadChallenge(dir, branch) {
   const source = `${dir}/challenge.md`;
   if (!fs.existsSync(path.join(repoRoot, source))) return null;
   const { meta, body } = parseFrontmatter(read(source));
-  for (const key of ["id", "title", "teaser", "learn", "after", "file", "replace", "hint", "choices"]) {
+  const question = meta.file == null && meta.replace == null;
+  for (const key of ["id", "title", "teaser", "learn", "after", "hint", "choices", ...(question ? [] : ["file", "replace"])]) {
     if (meta[key] == null) throw new Error(`${source}: no ${key} in its frontmatter`);
   }
-  if (meta.choices.filter((c) => c.right).length !== 1) throw new Error(`${source}: exactly one choice is right`);
+  checkChoices(source, meta.choices);
   const choices = meta.choices.map((c, i) => {
     const id = "ABCD"[i];
+    if (question) {
+      if (c.code != null) throw new Error(`${source}: choice ${id} has code, but the challenge has no file (a question challenge's choices are plain answers)`);
+      return { id, label: c.label, code: "", explanation: c.explanation, right: Boolean(c.right), recording: null };
+    }
     const recording = readIfExists(`${dir}/recordings/${id}.json`);
     if (!recording) throw new Error(`${source}: choice ${id} has no recording (uv run python scripts/record_challenges.py ${meta.id})`);
     const { lines, done } = JSON.parse(recording);
@@ -871,11 +926,37 @@ function loadChallenge(dir, branch) {
     check: { kind: "challenge" },
     files: [],
     body,
-    file: meta.file,
-    replace: meta.replace,
+    question,
+    file: meta.file ?? null,
+    replace: meta.replace ?? null,
     hint: meta.hint,
     choices,
   };
+}
+
+// How a module passes. code: its pytest checks; pending: by moving on from it; world (a Trip
+// board module's): when the board has seen what it names happen, and its one question is answered.
+export const CHECK_KINDS = ["code", "pending", "world"];
+
+function checkModuleCheck(source, check, layout) {
+  if (!check) return;
+  if (!CHECK_KINDS.includes(check.kind)) throw new Error(`${source}: check kind ${check.kind} isn't one of ${CHECK_KINDS.join(", ")}`);
+  if (check.kind !== "world") return;
+  if (layout !== "board") throw new Error(`${source}: a world check needs the Trip board (its branch's layout is ${layout})`);
+  if (!WORLD_CHECKS.includes(check.world)) throw new Error(`${source}: world check ${check.world} isn't one of ${WORLD_CHECKS.join(", ")} (essentials/checks.py)`);
+  for (const key of ["waiting", "seen", "quiz"]) if (check[key] == null) throw new Error(`${source}: its world check has no ${key}`);
+  if (!check.quiz.question) throw new Error(`${source}: its quiz has no question`);
+  checkChoices(`${source} (its quiz)`, check.quiz.choices);
+}
+
+// A question's choices (a challenge's, or a module's quiz): two to four, each with a label and an
+// explanation, exactly one of them right.
+function checkChoices(source, choices) {
+  if (!Array.isArray(choices) || choices.length < 2 || choices.length > 4) throw new Error(`${source}: a question has 2 to 4 choices`);
+  if (choices.filter((c) => c.right).length !== 1) throw new Error(`${source}: exactly one choice is right`);
+  for (const [i, c] of choices.entries()) {
+    if (!c.label || !c.explanation) throw new Error(`${source}: choice ${"ABCD"[i]} needs a label and an explanation`);
+  }
 }
 
 // A challenge's XP: right first time, second time, any time after.
@@ -928,12 +1009,26 @@ function buildExercise(md, quests, ex, number) {
     if (!challenge) return m.body.trim();
     const section = `## Challenge: ${challenge.title}\n\n${challenge.body.trim()}`;
     beats.set(challenge.id, [slugify(`Challenge: ${challenge.title}`)]);
-    const check = m.body.search(/^## Check\s*$/m);
-    return check < 0 ? `${m.body.trim()}\n\n${section}` : `${m.body.slice(0, check).trim()}\n\n${section}\n\n${m.body.slice(check).trim()}`;
+    // Before the module's check, or (a world check on a beat of its own: E8's, before the
+    // course's closing beat) right after that beat.
+    let at = m.body.search(/^## Check\s*$/m);
+    if (m.check?.beat) {
+      const heading = m.body.search(new RegExp(`^## ${m.check.beat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m"));
+      const next = heading < 0 ? -1 : m.body.slice(heading + 3).search(/^## /m);
+      at = next < 0 ? -1 : heading + 3 + next;
+    }
+    return at < 0 ? `${m.body.trim()}\n\n${section}` : `${m.body.slice(0, at).trim()}\n\n${section}\n\n${m.body.slice(at).trim()}`;
   });
   const body = `${texts.join("\n\n")}\n`;
+  // The guide finds a beat's module, and where the learner was, by its id: no two the same.
+  const ids = [...beats.values()].flat();
+  const twice = ids.find((id, i) => ids.indexOf(id) !== i);
+  if (twice) throw new Error(`${where}: two sections are both "${twice}" (give one of them another heading)`);
   const workers = new Set(mods.map((m) => m.worker));
   if (workers.size > 1) throw new Error(`${where}: its modules have different workers (${[...workers].join(", ")})`);
+  const layouts = new Set(mods.map((m) => quests.branches.find((b) => b.id === m.branch).layout));
+  if (layouts.size > 1) throw new Error(`${where}: its modules have different layouts (${[...layouts].join(", ")})`);
+  const [layout] = layouts;
 
   const solved = [...closure(quests.modules, ex.modules), ...ex.modules];
   const byPath = new Map();
@@ -982,15 +1077,40 @@ function buildExercise(md, quests, ex, number) {
     moduleBeats: Object.fromEntries(beats),
     worker: mods[0].worker,
     agentUi: mods[0].agentUi,
+    layout,
+    personas: quests.paths.find((p) => p.exercises?.includes(ex)).personas,
+    // A board exercise's modules: how each one's board starts (essentials/board.py reads the same).
+    ...(layout === "board"
+      ? {
+          boards: Object.fromEntries(mods.map((m) => [m.id, boardOf(m)])),
+          // Each module's world check and its question, on the beat it shows on.
+          checks: Object.fromEntries(mods.filter((m) => m.check.kind === "world").map((m) => [m.id, worldCheckData(md, m, beats.get(m.id))])),
+          // Each module's recorded walkthrough (scripts/record_walkthroughs.py), for a visitor
+          // without a sandbox to watch: served beside the site, fetched when it's wanted.
+          walkthroughs: Object.fromEntries(
+            mods.flatMap((m) => {
+              const rel = `${path.dirname(m.source)}/walkthrough.json`;
+              if (!fs.existsSync(path.join(repoRoot, rel))) return [];
+              const dest = path.join(publicContent, "walkthroughs", `${m.id}.json`);
+              fs.mkdirSync(path.dirname(dest), { recursive: true });
+              fs.copyFileSync(path.join(repoRoot, rel), dest);
+              return [[m.id, `content/walkthroughs/${m.id}.json`]];
+            }),
+          ),
+        }
+      : {}),
     questions: [...new Set(mods.flatMap((m) => m.questions ?? []))],
     tour: tm ? buildTour(md, tm, files) : [],
     tourAfter,
-    scripts: {
-      setup: `./quest enter ${ex.id}`,
-      check: `./quest check ${ex.id}`,
-      solve: `./quest solve ${ex.id}`,
-      reset: `./quest reset ${ex.id}`,
-    },
+    scripts:
+      layout === "board"
+        ? {}
+        : {
+            setup: `./quest enter ${ex.id}`,
+            check: `./quest check ${ex.id}`,
+            solve: `./quest solve ${ex.id}`,
+            reset: `./quest reset ${ex.id}`,
+          },
     files,
     // Its challenges, by id: the question's choices, each with its recorded run.
     challenges: Object.fromEntries(challenges.map((c) => [c.id, challengeData(md, c)])),
@@ -1006,12 +1126,39 @@ function buildExercise(md, quests, ex, number) {
   };
 }
 
+// How a module's Trip board starts (essentials/board.py BOARD_DEFAULTS reads the same keys).
+const BOARD_KEYS = { twin: false, mistake: false, onShift: true, hold: false, approval: false, declined: false };
+function boardOf(m) {
+  for (const key of Object.keys(m.board ?? {})) {
+    if (!(key in BOARD_KEYS)) throw new Error(`${m.source}: board.${key} isn't one of ${Object.keys(BOARD_KEYS).join(", ")}`);
+  }
+  return Object.fromEntries(Object.entries(BOARD_KEYS).map(([key, otherwise]) => [key, Boolean(m.board?.[key] ?? otherwise)]));
+}
+
+// What the guide shows for a module's world check: what it waits for, what it saw, and the
+// question, on the module's last beat (or check.beat's).
+function worldCheckData(md, m, beats) {
+  const beat = m.check.beat ? slugify(m.check.beat) : beats.at(-1);
+  if (!beats.includes(beat)) throw new Error(`${m.source}: check.beat ${m.check.beat} isn't one of its sections`);
+  return {
+    world: m.check.world,
+    beat,
+    waiting: m.check.waiting,
+    seen: m.check.seen,
+    quiz: {
+      question: md.renderInline(m.check.quiz.question),
+      choices: m.check.quiz.choices.map((c, i) => ({ id: "ABCD"[i], label: md.renderInline(c.label), explanation: md.renderInline(c.explanation), right: Boolean(c.right) })),
+    },
+  };
+}
+
 // What the guide needs to run a challenge: its choices (the code, highlighted, and the block it
 // replaces, for the diff), the hint, and each choice's recording.
 function challengeData(md, c) {
   return {
     id: c.id,
     title: c.title,
+    question: c.question,
     file: c.file,
     replace: c.replace,
     hint: md.renderInline(c.hint),
@@ -1094,7 +1241,8 @@ export function buildCourse() {
       // A challenge: the module it follows, and the one it gates.
       ...(m.kind === "challenge" ? { after: m.after, before: m.before, choices: m.choices.length } : {}),
     })),
-    paths: quests.paths.map((p) => ({ id: p.id, title: p.title, modules: p.modules })),
+    paths: quests.paths.map((p) => ({ id: p.id, title: p.title, modules: p.modules, personas: p.personas })),
+    personas: quests.personas,
     badges: loadBadges(quests),
   };
 }

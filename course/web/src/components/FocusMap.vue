@@ -151,10 +151,10 @@ const shownBadge = computed(() => badges.find((b) => b.kind === "tier" && b.bran
       <template v-if="shown.branch.id === trunk.id">Recommended, not required before a specialization.</template>
     </p>
 
-    <div class="focus-leads">
+    <div v-if="branches.length" class="focus-leads">
       <h3>Where it leads</h3>
       <p>
-        Five specializations open after <button type="button" class="focus-link" @click="emit('select', tail.id)">{{ tail.id }} · {{ tail.title }}</button>.
+        {{ branches.length === 5 ? "Five" : branches.length }} specializations open after <button type="button" class="focus-link" @click="emit('select', tail.id)">{{ tail.id }} · {{ tail.title }}</button>.
         Finishing Fundamentals first is recommended, not required: you can skip ahead to any of them.
       </p>
       <ul class="focus-branches">

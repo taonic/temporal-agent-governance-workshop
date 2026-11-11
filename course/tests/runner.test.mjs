@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { test } from "node:test";
 
 import {
@@ -14,7 +15,8 @@ import {
   verifySessionToken,
 } from "../runner/auth.mjs";
 import { RateLimiter } from "../runner/ratelimit.mjs";
-import { APP_LABEL, envDiffers, isSafePath, parseLlmMode, parseTrip, SandboxManager, sandboxEnv } from "../runner/sandboxes.mjs";
+import { WORLD_CHECKS } from "../web/src/board.js";
+import { APP_LABEL, BOARD_ACTIONS, boardCommand, envDiffers, isSafePath, parseBoard, parseLlmMode, parseTrip, SandboxManager, sandboxEnv } from "../runner/sandboxes.mjs";
 
 const SECRET = "test-secret";
 
@@ -317,4 +319,78 @@ test("the Temporal UI opens in dark mode with its side nav collapsed, set before
   assert.equal(JSON.parse(stored["dark mode"]), true);
   assert.equal(JSON.parse(stored.navOpen), false);
   assert.ok(html.indexOf(first) < html.indexOf("boot()"));
+});
+
+test("a board action is one of a fixed few, for an Essentials module; anything else is refused", () => {
+  assert.equal(boardCommand("start-trip"), ".venv/bin/python -m essentials.board action start-trip");
+  assert.equal(boardCommand("setup", "E2"), ".venv/bin/python -m essentials.board action setup --module E2");
+  for (const action of ["rm -rf /", "start-trip; ls", "", undefined]) assert.throws(() => boardCommand(action), /No such board action/);
+  for (const module of ["F1", "E2; ls", "E"]) assert.throws(() => boardCommand("setup", module), /No such module/);
+  // The same list as essentials/board.py's ACTIONS.
+  const python = fs.readFileSync(new URL("../../essentials/board.py", import.meta.url), "utf8").match(/^ACTIONS = (\[.*\])$/m)[1];
+  assert.deepEqual(JSON.parse(python), BOARD_ACTIONS);
+  // And the world checks a module can name: essentials/checks.py's.
+  const checks = fs.readFileSync(new URL("../../essentials/checks.py", import.meta.url), "utf8");
+  const names = [...checks.slice(checks.indexOf("CHECKS:")).matchAll(/^    "([a-z-]+)": /gm)].map((m) => m[1]);
+  assert.deepEqual(names, WORLD_CHECKS);
+});
+
+test("the board's state is its line of JSON, whatever else the command printed", () => {
+  assert.deepEqual(parseBoard('Some warning\n{"worker": true, "trips": []}\n'), { worker: true, trips: [] });
+  assert.equal(parseBoard("Traceback (most recent call last):\n  oops"), null);
+  assert.equal(parseBoard('{"broken'), null);
+});
+
+test("a board action returns the state it left, or says why it couldn't", async () => {
+  const manager = new SandboxManager({ maxSandboxes: 5 });
+  manager.sandboxFor = async () => ({ id: "sb" });
+  let ran = "";
+  manager.exec = async (_sandbox, command) => {
+    ran = command;
+    return { exitCode: 0, result: '{"worker": false}' };
+  };
+  assert.deepEqual(await manager.boardAction("learner", "pull-plug", "E5"), { worker: false });
+  assert.match(ran, /action pull-plug --module E5/);
+  manager.exec = async () => ({ exitCode: 1, result: "temporalio.service.RPCError: connection refused" });
+  await assert.rejects(manager.boardAction("learner", "start-trip"), /couldn't start trip: .*connection refused/);
+});
+
+test("a sandbox older than the Trip board gets essentials/ before its first board action", async () => {
+  const { keptCurrent } = await import("../runner/repo-files.mjs");
+  const { rels, stamp } = keptCurrent();
+  assert.ok(rels.includes("essentials/board.py") && rels.every((rel) => rel.startsWith("essentials/")));
+  const manager = new SandboxManager({ maxSandboxes: 5 });
+  const uploaded = [];
+  const sandbox = { id: "old", fs: { uploadFiles: async (files) => uploaded.push(...files.map((f) => f.destination)) } };
+  manager.sandboxFor = async () => sandbox;
+  const ran = [];
+  manager.exec = async (_sandbox, command) => {
+    ran.push(command);
+    if (command.startsWith("test -f")) return { exitCode: 1, result: "" };
+    if (command.includes("find essentials")) return { exitCode: 0, result: "essentials/board.py\nessentials/gone.py\n" };
+    return { exitCode: 0, result: '{"worker": true}' };
+  };
+  assert.deepEqual(await manager.boardAction("learner", "setup", "E1"), { worker: true });
+  assert.ok(uploaded.includes("/workshop/essentials/board.py"));
+  assert.ok(ran.some((c) => c.includes("rm -f --") && c.includes("essentials/gone.py") && !c.includes("essentials/board.py")), "a file it no longer has goes");
+  assert.ok(ran.some((c) => c.includes(`touch .course/current-${stamp}`)));
+  // Once current, it isn't checked again.
+  ran.length = 0;
+  await manager.boardAction("learner", "start-trip", "E1");
+  assert.equal(ran.length, 1);
+  assert.match(ran[0], /action start-trip/);
+});
+
+test("the poll reads the board's state when asked", async () => {
+  const manager = new SandboxManager({ maxSandboxes: 5 });
+  manager.sandboxFor = async () => ({ id: "sb", state: "stopped" });
+  let ran = "";
+  manager.exec = async (_sandbox, command) => {
+    ran = command;
+    return { result: '--passed\n--mode\n--worker\n--workerenv\n--stale\n--caughtup\n--board\n{"worker": true}\n' };
+  };
+  const out = await manager.poll("learner", [], { board: true });
+  assert.match(ran, /essentials\.board state/);
+  assert.deepEqual(out.board, { worker: true });
+  assert.equal((await manager.poll("learner", [])).board, undefined);
 });

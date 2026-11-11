@@ -9,7 +9,7 @@ import { computed, ref } from "vue";
 import NodeDetail from "./NodeDetail.vue";
 import NodeTrail from "./NodeTrail.vue";
 import { branchesById, modulesById, recommended, trunk, trunkTail } from "../progress.js";
-import { course } from "../store.js";
+import { course, store } from "../store.js";
 
 const emit = defineEmits(["everything", "branch"]);
 
@@ -29,6 +29,8 @@ function select(id) {
 
 const specializations = course.branches.filter((b) => b.id !== trunk.id);
 const tail = modulesById.get(trunkTail);
+// Who they're learning as, and the way to switch: there from the first visit, signed in or not.
+const personaLabel = computed(() => course.personas.find((p) => p.id === store.persona.id)?.label ?? "");
 </script>
 
 <template>
@@ -40,6 +42,10 @@ const tail = modulesById.get(trunkTail);
         <span aria-hidden="true">{{ branch.icon }}</span> {{ branch.name }} · Tier {{ roman(first.tier) }} · {{ branch.tiers[first.tier - 1].name }}:
         {{ tier.length }} short steps, about {{ minutes }} minutes.
       </p>
+      <p class="map-persona first-run-persona">
+        Learning as <strong>{{ personaLabel }}</strong>
+        <button type="button" class="focus-link" @click="store.personaPicker = true">Switch</button>
+      </p>
     </header>
 
     <NodeTrail class="first-run-trail" :modules="tier" :selected="selected" @select="select" />
@@ -49,11 +55,15 @@ const tail = modulesById.get(trunkTail);
     </div>
 
     <footer class="first-run-leads">
-      <p>
-        <strong>Where it leads.</strong> After {{ tail.id }}, five specializations open; skip ahead to any of them if you like.
+      <p v-if="specializations.length">
+        <strong>Where it leads.</strong> After {{ tail.id }}, {{ specializations.length }} specializations open; skip ahead to any of them if you like.
         <button type="button" class="first-run-everything" @click="emit('everything')">Show the whole map <span aria-hidden="true">→</span></button>
       </p>
-      <ul>
+      <p v-else>
+        <strong>No code, no terminals.</strong> Each step is a few minutes: you click, and watch what a trip does when things go wrong.
+        <button type="button" class="first-run-everything" @click="emit('everything')">Show the whole map <span aria-hidden="true">→</span></button>
+      </p>
+      <ul v-if="specializations.length">
         <li v-for="b in specializations" :key="b.id">
           <button type="button" :class="['first-run-chip', `branch-${b.color}`]" @click="emit('branch', b.id)">
             <span aria-hidden="true">{{ b.icon }}</span>{{ b.name }}

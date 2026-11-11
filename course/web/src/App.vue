@@ -7,6 +7,7 @@ import AskSelection from "./components/AskSelection.vue";
 import EarnMoment from "./components/EarnMoment.vue";
 import FeedbackForm from "./components/FeedbackForm.vue";
 import ModuleNav from "./components/ModuleNav.vue";
+import PersonaChoice from "./components/PersonaChoice.vue";
 import WelcomeIntro from "./components/WelcomeIntro.vue";
 import XpPill from "./components/XpPill.vue";
 import { closeFeedback, feedback, openFeedback } from "./feedback.js";
@@ -52,11 +53,20 @@ function revealPage() {
   setTimeout(() => (arriving.value = false), 1400);
 }
 
+// How do you want to learn? Asked once, on the map, after the intro: a visitor who hasn't chosen a
+// persona (nor had one set by the URL or their cohort). A browser driven by tests isn't asked
+// unless ?persona-choice says so. Opened from the menus too, to switch.
+const askPersona = new URLSearchParams(window.location.search).has("persona-choice") || !navigator.webdriver;
+const personaFirst = computed(() => askPersona && !store.persona.chosen && !introOpen.value && store.route.page === "home");
+const personaLabel = computed(() => course.personas.find((p) => p.id === store.persona.id)?.label ?? "");
+
 const menuOpen = ref(false);
 const accountOpen = ref(false);
 // Module pages need a sign-in (the map and the setup page don't): until the session is known,
-// nothing; then the page, or the sign-in in its place.
-const gated = computed(() => store.route.page === "exercise" && store.runtime.checked && !store.authenticated);
+// nothing; then the page, or the sign-in in its place. Essentials' (the Trip board's) are open to
+// visitors: each board plays its recorded walkthrough, and the sandbox still needs a sign-in.
+const openToVisitors = computed(() => course.exercises.find((e) => e.id === store.route.id)?.layout === "board");
+const gated = computed(() => store.route.page === "exercise" && store.runtime.checked && !store.authenticated && !openToVisitors.value);
 // Ten minutes or less of sandbox time left, with the sandbox running: say so, and when it stops.
 const allowanceNote = computed(() => {
   const a = store.allowance;
@@ -262,7 +272,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
               <template v-else>
                 <p class="menu-note">{{ store.sandboxLost ? sandboxLostView().title + "." : store.sandbox.message || "Your own cloud sandbox for the workshop." }}</p>
                 <button v-if="store.sandboxLost || store.sandbox.state === 'none' || store.sandbox.state === 'error'" class="menu-item" type="button" role="menuitem" @click="startSandbox(); menuOpen = false">Start my sandbox</button>
-                <button class="menu-item" type="button" role="menuitem" :disabled="store.sandbox.state !== 'ready'" @click="toggleModel">
+                <button v-if="exercise?.layout !== 'board'" class="menu-item" type="button" role="menuitem" :disabled="store.sandbox.state !== 'ready'" @click="toggleModel">
                   Model: <strong>{{ store.llmMode === "scripted" ? "scripted" : "Gemini" }}</strong> · switch to {{ store.llmMode === "scripted" ? "Gemini" : "the scripted agent" }}
                 </button>
                 <button class="menu-item" type="button" role="menuitem" :disabled="store.sandbox.state === 'none'" @click="confirmReset">Start over with a new sandbox</button>
@@ -295,6 +305,7 @@ watch(() => store.user, (user) => !user && closeFeedback());
           <div v-if="accountOpen" class="menu" role="menu" @keydown.escape="accountOpen = false">
             <p class="menu-note">Signed in as <strong>{{ store.user.email }}</strong>{{ store.user.cohort ? ` · ${store.user.cohort.name}` : "" }}</p>
             <button v-if="exercise" class="menu-item" type="button" role="menuitem" @click="startTour(); accountOpen = false">Take the tour</button>
+            <button class="menu-item" type="button" role="menuitem" @click="store.personaPicker = true; accountOpen = false">Learning as: <strong>{{ personaLabel }}</strong> · switch</button>
             <button class="menu-item" type="button" role="menuitem" @click="openFeedback(); accountOpen = false">Send feedback</button>
             <button class="menu-item" type="button" role="menuitem" @click="store.theme = store.theme === 'dark' ? 'light' : 'dark'; accountOpen = false">{{ store.theme === "dark" ? "Light mode" : "Dark mode" }}</button>
             <a v-if="store.user.admin" class="menu-item" role="menuitem" href="#/admin" @click="accountOpen = false">Admin panel</a>
@@ -329,10 +340,12 @@ watch(() => store.user, (user) => !user && closeFeedback());
         <AccessForm label="Sign in" :start="false" />
       </div>
     </section>
-    <ExercisePage v-else-if="exercise && store.authenticated" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
+    <ExercisePage v-else-if="exercise && (store.authenticated || openToVisitors)" :id="exercise.id" :key="browserMode ? 'b' : 'l'" />
   </div>
 
   <EarnMoment />
+
+  <PersonaChoice v-if="personaFirst || store.personaPicker" :switching="!personaFirst" @close="store.personaPicker = false" />
 
   <div v-if="store.gateOpen" class="modal-backdrop" @click.self="store.gateOpen = false">
     <div class="modal" role="dialog" aria-modal="true" aria-label="Sign in">

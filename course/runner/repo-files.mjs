@@ -14,9 +14,12 @@ export const sandboxRepo = "/workshop";
 
 const FILES = ["pyproject.toml", "uv.lock", "agents.toml", "README.md", "DESIGN.md", ".env.example", ".gitignore", "quest"];
 export const WORKSHOP_DIRS = [
-  "hello", "codemode", "travel_agent", "concierge", "policies", "quests", "scripts", "tests",
+  "hello", "codemode", "travel_agent", "concierge", "essentials", "policies", "quests", "scripts", "tests",
   "authoring", "starter", "docs",
 ];
+// The folders kept current in every sandbox, not only a new one: no learner edits them, so a
+// sandbox made before they existed or changed gets them again (SandboxManager #keepCurrent).
+export const KEPT_CURRENT = ["essentials"];
 const SKIP = /(^|\/)(__pycache__|\.DS_Store|\.pytest_cache|\.ruff_cache)(\/|$)|\.pyc$/;
 
 // Repo-relative paths of every file a sandbox gets, sorted.
@@ -38,12 +41,23 @@ export function workshopFiles(root = repoRoot) {
 // The files in a sandbox's workshop folders (`found`, as `find` lists them) that aren't among
 // the ones it was given (`wanted`): left from the snapshot, which has the workshop as it was when
 // it was built. A module folder since renamed would otherwise sit beside its new copy.
-export function staleFiles(found, wanted) {
+export function staleFiles(found, wanted, dirs = WORKSHOP_DIRS) {
   const keep = new Set(wanted);
-  const inWorkshop = (rel) => WORKSHOP_DIRS.some((dir) => rel.startsWith(`${dir}/`));
+  const inWorkshop = (rel) => dirs.some((dir) => rel.startsWith(`${dir}/`));
   return found
     .map((line) => line.trim().replace(/^\.\//, ""))
     .filter((rel) => rel && inWorkshop(rel) && !SKIP.test(rel) && !keep.has(rel));
+}
+
+// The kept-current folders' files, and a stamp of what's in them: a sandbox with this stamp has them as they are.
+export function keptCurrent(root = repoRoot) {
+  const rels = workshopFiles(root).filter((rel) => KEPT_CURRENT.some((dir) => rel.startsWith(`${dir}/`)));
+  const hash = crypto.createHash("sha256");
+  for (const rel of rels) {
+    hash.update(`${rel}\0`);
+    hash.update(fs.readFileSync(path.join(root, rel)));
+  }
+  return { rels, stamp: hash.digest("hex").slice(0, 12) };
 }
 
 // What the snapshot depends on. Its name carries a hash of these, so the runner can tell

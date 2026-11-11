@@ -26,10 +26,10 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
     return session;
   }
 
-  // Each learner's row: who, where they are, how far they've got.
-  function learnerRows({ cohortId } = {}) {
-    return accounts.users({ cohortId }).map(({ user, access }) => {
-      const progress = activity.progress(user.id, access.cohort?.path);
+  // Each learner's row: who, where they are, how far they've got, and as whom (their persona: a
+  // developer, or Essentials'). `persona` keeps only the learners learning as that one.
+  function learnerRows({ cohortId, persona = null } = {}) {
+    return usersAs({ cohortId, persona }).map(({ user, access, progress }) => {
       return {
         id: user.id,
         email: user.email,
@@ -45,6 +45,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         completed: progress.completed.length,
         xp: progress.xp,
         path: progress.path,
+        persona: progress.persona,
         where: activity.whereIs(user.id, progress.completed),
         sandboxMinutes: activity.sandboxMinutesToday(user.id),
         allowanceMinutes: access.cohort?.allowance_minutes ?? DEFAULT_ALLOWANCE_MINUTES,
@@ -52,10 +53,22 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
     });
   }
 
-  // How a cohort is doing: passes per module (along its path, or every playable module), and per
-  // challenge the first-try right rate and the most-picked wrong choice.
-  function summary({ cohortId } = {}) {
-    const users = accounts.users({ cohortId });
+  // A cohort's users (or everyone's), each with their progress; only those on `persona`, if given.
+  function usersAs({ cohortId, persona = null } = {}) {
+    return accounts
+      .users({ cohortId })
+      .map((u) => ({ ...u, progress: activity.progress(u.user.id, u.access.cohort?.path) }))
+      .filter((u) => !persona || u.progress.persona === persona);
+  }
+
+  // How a cohort is doing: how many learn as each persona, passes per module (along its path, or
+  // every playable module), and per challenge the first-try right rate and the most-picked wrong
+  // choice. With `persona`, of only the learners on it.
+  function summary({ cohortId, persona = null } = {}) {
+    const everyone = usersAs({ cohortId });
+    const personas = {};
+    for (const { progress } of everyone) personas[progress.persona] = (personas[progress.persona] ?? 0) + 1;
+    const users = persona ? everyone.filter((u) => u.progress.persona === persona) : everyone;
     const cohort = cohortId ? accounts.cohort(cohortId) : null;
     const pathModules = cohort?.path ? (catalog.paths.get(cohort.path)?.modules ?? []) : null;
     const moduleIds = pathModules ?? [...catalog.modules.values()].filter((m) => m.status === "ready" && m.kind !== "boss").map((m) => m.id);
@@ -75,6 +88,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
     }
     return {
       learners: users.length,
+      personas,
       modules: moduleIds.map((id) => ({ id, title: catalog.modules.get(id)?.title ?? id, kind: catalog.modules.get(id)?.kind ?? "module", passed: passes[id] })),
       challenges: Object.entries(challenges).map(([id, s]) => {
         const [wrong, count] = Object.entries(s.wrong).sort((a, b) => b[1] - a[1])[0] ?? [null, 0];
@@ -98,6 +112,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
     const times = activity.moduleTimes(userId);
     const passedAt = {};
     const failedChecks = {};
+    const personaChanges = [];
     const bosses = [];
     const sessions = [];
     let helperQuestions = 0;
@@ -108,6 +123,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
       if (e.type === "module_passed" && !(e.module_id in passedAt)) passedAt[e.module_id] = e.at;
       else if (e.type === "check_failed") failedChecks[e.module_id] = (failedChecks[e.module_id] ?? 0) + 1;
       else if (e.type === "boss_result") bosses.push({ moduleId: e.module_id, at: e.at, ...data });
+      else if (e.type === "persona_set" && data.persona && data.persona !== personaChanges.at(-1)?.persona) personaChanges.push({ persona: data.persona, at: e.at });
       else if (e.type === "helper_question") helperQuestions++;
       else if (e.type === "model_calls") modelCalls += data.count ?? 0;
       else if (e.type === "sandbox_started") open = open ?? e.at;
@@ -133,6 +149,9 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
       },
       xp: progress.xp,
       path: progress.path,
+      // Who they learn as, and each time they chose (or switched).
+      persona: progress.persona,
+      personaChanges,
       where: activity.whereIs(userId, progress.completed),
       passed: progress.completed.map((id) => ({
         id,
@@ -263,15 +282,16 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
       "GET /api/admin/learners": async (req, _res, url) => {
         requireAdmin(req);
         const cohortId = url.searchParams.get("cohort") || null;
-        return { learners: learnerRows({ cohortId }), summary: summary({ cohortId }) };
+        const persona = url.searchParams.get("persona") || null;
+        return { learners: learnerRows({ cohortId, persona }), summary: summary({ cohortId, persona }) };
       },
 
       "GET /api/admin/learners.csv": async (req, res, url) => {
         requireAdmin(req);
-        const rows = learnerRows({ cohortId: url.searchParams.get("cohort") || null });
+        const rows = learnerRows({ cohortId: url.searchParams.get("cohort") || null, persona: url.searchParams.get("persona") || null });
         csv(res, "learners.csv", [
-          ["name", "email", "role", "company", "cohort", "modules passed", "xp", "last active"],
-          ...rows.map((r) => [r.name, r.email, r.role, r.company, r.cohort?.name, r.completed, r.xp, iso(r.where?.lastAt ?? r.lastSeenAt)]),
+          ["name", "email", "role", "company", "cohort", "persona", "modules passed", "xp", "last active"],
+          ...rows.map((r) => [r.name, r.email, r.role, r.company, r.cohort?.name, r.persona, r.completed, r.xp, iso(r.where?.lastAt ?? r.lastSeenAt)]),
         ]);
       },
 

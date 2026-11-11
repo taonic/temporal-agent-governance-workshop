@@ -9,7 +9,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { Daytona } from "@daytonaio/sdk";
 
 import { llmKey } from "./auth.mjs";
-import { WORKSHOP_DIRS, repoRoot, sandboxRepo, staleFiles, workshopFiles } from "./repo-files.mjs";
+import { BOARD_ACTIONS } from "../web/src/board.js";
+import { KEPT_CURRENT, WORKSHOP_DIRS, keptCurrent, repoRoot, sandboxRepo, staleFiles, workshopFiles } from "./repo-files.mjs";
 
 export const APP_LABEL = "governance-course";
 export const CONSOLE_PORT = 8000;
@@ -56,6 +57,26 @@ export function challengeRun(id, choice) {
   }
   return `${id}-${choice}`;
 }
+
+// The Trip board's actions (web/src/board.js, the same as essentials/board.py's), and the module
+// one is for: both go into a shell command, so only these.
+export { BOARD_ACTIONS };
+export function boardCommand(action, module = null) {
+  if (!BOARD_ACTIONS.includes(action)) throw Object.assign(new Error("No such board action."), { status: 400 });
+  if (module !== null && !/^E\d{1,2}$/.test(module)) throw Object.assign(new Error("No such module."), { status: 400 });
+  return `${BOARD} action ${action}${module ? ` --module ${module}` : ""}`;
+}
+// The board's state is one line of JSON (essentials/board.py state); anything else is no state.
+export function parseBoard(text) {
+  const line = String(text ?? "").split("\n").find((l) => l.startsWith("{"));
+  try {
+    return line ? JSON.parse(line) : null;
+  } catch {
+    return null;
+  }
+}
+// The venv's python straight, not `uv run`: the poll runs it every few seconds.
+const BOARD = ".venv/bin/python -m essentials.board";
 
 function shellQuote(value) {
   return `'${String(value).replace(/'/g, `'\\''`)}'`;
@@ -121,6 +142,7 @@ export class SandboxManager {
     this.inflight = new Map(); // learner -> { run, promise }: the start in progress
     this.ready = new Map(); // sandbox id -> verified at
     this.envChecked = new Set(); // sandbox ids whose .env this runner has written or checked
+    this.current = new Set(); // sandbox ids this runner has seen with the kept-current folders as they are
     this.previews = new Map(); // `${id}:${port}` -> { url, expiresAt }
     // Sandbox ids this runner deleted: Daytona can go on listing one as it was for a while.
     this.deleted = new Set();
@@ -376,10 +398,10 @@ export class SandboxManager {
   // The upload adds and replaces files but deletes none, and the snapshot has the workshop as it
   // was when it was built: a file moved or deleted since (a module folder renamed, whose old
   // copy would give its id twice) goes now, before anything reads the workshop.
-  async #pruneStale(sandbox, rels) {
-    const dirs = WORKSHOP_DIRS.join(" ");
+  async #pruneStale(sandbox, rels, within = WORKSHOP_DIRS) {
+    const dirs = within.join(" ");
     const listed = await this.exec(sandbox, `bash -c ${shellQuote(`find ${dirs} -type f 2>/dev/null; true`)}`, 60);
-    const stale = staleFiles((listed.result ?? "").split("\n"), rels);
+    const stale = staleFiles((listed.result ?? "").split("\n"), rels, within);
     if (!stale.length) return;
     const rm = `rm -f -- ${stale.map(shellQuote).join(" ")} && find ${dirs} -depth -type d -empty -delete 2>/dev/null; true`;
     await this.exec(sandbox, `bash -c ${shellQuote(rm)}`, 60);
@@ -429,7 +451,7 @@ export class SandboxManager {
   // worker, and with trips, the hello worker's workflows (trips, boardings, and exercise 6's
   // holds, itineraries and bookings, the latest first) and
   // whether a hello-start is still waiting for one in the commands terminal.
-  async poll(learner, files, { trips = false, origins = null, exercise = null } = {}) {
+  async poll(learner, files, { trips = false, board = false, origins = null, exercise = null } = {}) {
     const safe = files.filter(isSafePath).slice(0, 20);
     // The exercise on the page, for the console to name new sessions after (ex4-human-approval-…).
     // When it changes, or the sandbox started over from its snapshot with every TODO open, the
@@ -464,11 +486,13 @@ export class SandboxManager {
         (trips
           ? `; echo '--trips'; timeout 5 temporal workflow list --query "WorkflowType IN ('HelloTripWorkflow', 'BoardingWorkflow', 'FareHoldWorkflow', 'ItineraryWorkflow', 'BookTripWorkflow')" --limit 30 -o jsonl 2>/dev/null` +
             `; echo '--starter'; pgrep -af '[h]ello-start' 2>/dev/null | head -3`
-          : ""),
+          : "") +
+        (board ? `; echo '--board'; timeout 10 ${BOARD} state 2>/dev/null` : ""),
       15,
     );
     const out = { files: {}, passed: [], caughtUp: [], llmMode: "openai", worker: { running: false, name: null, env: {} } };
     if (trips) Object.assign(out, { trips: [], starter: false });
+    if (board) out.board = null;
     let section = "files";
     for (const line of (result.result ?? "").split("\n")) {
       if (line === "--passed") section = "passed";
@@ -479,6 +503,7 @@ export class SandboxManager {
       else if (line === "--caughtup") section = "caughtup";
       else if (line === "--trips") section = "trips";
       else if (line === "--starter") section = "starter";
+      else if (line === "--board") section = "board";
       else if (!line.trim()) continue;
       else if (section === "files") {
         const [name, mtime, size] = line.split("|");
@@ -498,6 +523,9 @@ export class SandboxManager {
         const trip = parseTrip(line);
         if (trip) out.trips.push(trip);
       } else if (section === "starter") out.starter = true;
+      else if (section === "board") {
+        if (board) out.board = parseBoard(line) ?? out.board;
+      }
       else out.llmMode = parseLlmMode(line);
     }
     return out;
@@ -540,6 +568,37 @@ export class SandboxManager {
             ? "It stopped without an answer: see the commands terminal."
             : null,
     };
+  }
+
+  // The kept-current folders (KEPT_CURRENT: the Trip board's essentials/), as they are here, in a
+  // sandbox made before they existed or changed: the workshop is copied in only when a sandbox is
+  // new, so the learner's code is never overwritten. A stamp in .course says which copy it has.
+  async #keepCurrent(sandbox) {
+    if (this.current.has(sandbox.id)) return;
+    const { rels, stamp } = keptCurrent();
+    const mark = `.course/current-${stamp}`;
+    const has = await this.exec(sandbox, `test -f ${mark}`, 15);
+    if (has.exitCode !== 0) {
+      const files = rels.map((rel) => ({ source: fs.readFileSync(path.join(repoRoot, rel)), destination: `${sandboxRepo}/${rel}` }));
+      await withTimeout(sandbox.fs.uploadFiles(files, 60), 75_000, "Copying the Trip board in");
+      await this.#pruneStale(sandbox, rels, KEPT_CURRENT);
+      await this.exec(sandbox, `bash -c ${shellQuote(`mkdir -p .course && rm -f .course/current-* && touch ${mark}`)}`, 15);
+    }
+    this.current.add(sandbox.id);
+  }
+
+  // A Trip board action (essentials/board.py), run in the sandbox: the board's state after it.
+  async boardAction(learner, action, module = null) {
+    const command = boardCommand(action, module);
+    const sandbox = await this.sandboxFor(learner);
+    await this.#keepCurrent(sandbox);
+    const result = await this.exec(sandbox, `${command} 2>&1`, 45);
+    const state = parseBoard(result.result);
+    if (result.exitCode !== 0 || !state) {
+      const tail = (result.result ?? "").trim().split("\n").slice(-3).join(" ");
+      throw Object.assign(new Error(`The board couldn't ${action.replace("-", " ")}: ${tail || "no answer"}`), { status: 502 });
+    }
+    return state;
   }
 
   async setLlmMode(learner, mode) {

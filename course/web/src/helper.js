@@ -43,9 +43,15 @@ keep("helper-guide", () => helper.guide, MAX_GUIDE_KEPT);
 
 const newId = () => Math.random().toString(36).slice(2, 10);
 
+// Someone who doesn't write code (Essentials) is never asked to connect GitHub or Google to the
+// docs: Ask Temporal is theirs only with the course's shared docs key (KAPA_API_KEY).
+const plainWords = () => store.persona.id === "essentials";
+
 export async function refreshHelper() {
   try {
-    helper.status = { checked: true, ...(await api("/api/helper")) };
+    const status = { checked: true, ...(await api("/api/helper")) };
+    if (plainWords() && status.enabled && !status.sharedDocsKey) Object.assign(status, { enabled: false, reason: "Ask Temporal isn't set up for Essentials here." });
+    helper.status = status;
   } catch (err) {
     helper.status = { checked: true, enabled: false, reason: err.status ? err.message : "The course runner isn't reachable.", signedIn: false, docs: "connect" };
   }
@@ -102,7 +108,7 @@ export function sharedFile() {
 // selection.
 function pageContext(step = null) {
   const exercise = currentExercise();
-  const context = { mode: effectiveMode(), page: store.route.page };
+  const context = { mode: effectiveMode(), page: store.route.page, persona: store.persona.id };
   if (exercise) context.exercise = exercise.id;
   if (step) {
     context.exercise = step.exercise;
@@ -306,6 +312,11 @@ export function suggestions() {
 
 // The questions a guide's step can be asked about, and what's been asked there.
 export function stepPrompts(kind) {
+  if (plainWords()) {
+    if (kind === "challenge") return ["Explain the choices in plain words", "Where would this happen in a real business?"];
+    if (kind === "intro" || kind === "plain") return ["Explain this in simpler terms", "Where would I see this in a real business?"];
+    return ["What just happened on the board?", "What would go wrong without Temporal?", "Why does this matter?"];
+  }
   if (kind === "check") return ["What does the check test?", "My check failed: what should I look at?"];
   if (kind === "intro" || kind === "plain") return ["Explain this in simpler terms", "Why does this matter for agents?"];
   return ["Explain this step in more detail", "Why does this work?", "I'm stuck: where should I look?"];

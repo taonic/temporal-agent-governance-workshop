@@ -319,6 +319,7 @@ const routes = {
     const files = (url.searchParams.get("files") ?? "").split(",").filter(Boolean);
     const polled = await manager.poll(learner, files, {
       trips: url.searchParams.get("trips") === "1",
+      board: url.searchParams.get("board") === "1",
       origins: origins(req),
       exercise: url.searchParams.get("exercise"),
     });
@@ -329,6 +330,13 @@ const routes = {
   "GET /api/sandbox/challenge": async (req, _res, url) => {
     const learner = requireLearner(req);
     return manager.challengeRun(learner, url.searchParams.get("id"), url.searchParams.get("choice"));
+  },
+
+  // A Trip board action (Essentials): one of a fixed few, for a module.
+  "POST /api/sandbox/action": async (req) => {
+    const learner = requireLearner(req);
+    const { action, module = null } = await readJson(req, 4 * 1024);
+    return { board: await manager.boardAction(learner, action, module) };
   },
 
   "POST /api/sandbox/llm-mode": async (req) => {

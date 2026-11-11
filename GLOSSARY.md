@@ -37,3 +37,17 @@
 **Admin**: someone listed in `ADMIN_EMAILS`. Admins use `/admin`. The word replaces "instructor" for this role, but "instructor" still means the person running a live event.
 
 **Journey**: a learner's record in the admin panel: modules passed and how long each took, failed checks, challenge picks, boss results and sandbox time.
+
+**Persona**: who the course is shown to, chosen at the start and switchable at any time: **Developer** ("I build software") or **Non-developer** ("Why Temporal?"). It decides which branches, paths and badges the site shows. Progress is the learner's whatever the persona.
+
+**Essentials**: the Non-developer persona's branch, and its trunk. Why a process on Temporal doesn't lose its place, told as the story of a trip coordinator and a logbook, with nothing to code or type. Avoid calling it "Fundamentals", which is the Developer trunk.
+
+**Trip board**: what an Essentials module shows in place of the editor and terminals: the booking trip's logbook, the coordinator on or off shift, the outside world's bookings, and the buttons that act on them.
+
+**Plain twin**: the same trip as a plain program without Temporal, run beside the Temporal one in some Essentials modules so the learner sees what would have happened otherwise.
+
+**Question challenge**: a challenge whose choices are plain-language answers, with nothing run. Essentials' challenges are all question challenges.
+
+**World check**: an Essentials module's check. The Trip board reports whether what the module names has happened, from the trips' histories in Temporal and what the learner did to them ("a trip finished though the plug was pulled"). It passes the module together with the module's one-question quiz. Seeing it in a recorded walkthrough doesn't count.
+
+**Walkthrough** (recorded): an Essentials module's Trip board, recorded once against a real Temporal as the guide's steps go, for a visitor without a sandbox to watch. Not to be confused with the e2e suite's walkthroughs, which drive the Developer exercises in a real sandbox.

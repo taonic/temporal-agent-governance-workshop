@@ -1,0 +1,10 @@
+# Essentials, for the Non-developer persona: why a process on Temporal never loses its place,
+# with nothing to code. Until the site shows modules on their own, the path is one exercise:
+# its id is what the site's URLs and saved progress use.
+id: essentials
+title: Temporal Essentials
+exercises:
+  - id: 07-essentials
+    title: Essentials
+    teaser: Run a trip, break it the ways real systems break, and watch it carry on. No code, no terminals.
+    modules: [E1, E2, E3, E4, E5, E6, E7, E8]

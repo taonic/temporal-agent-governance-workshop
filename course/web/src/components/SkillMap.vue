@@ -56,23 +56,26 @@ const layout = computed(() => {
   const zones = [];
   const trunkMods = (t) => trunk.modules.filter((id) => modulesById.get(id).tier === t);
 
-  // The trunk: tier I, then tier II back below it, the boss at its end.
+  // The trunk: tier I, then tier II back below it, the boss at its end. A trunk of one tier
+  // (Essentials) wraps the same way: its first half, then the rest back below it.
   const rowY = [104, 268];
-  const tierOne = trunkMods(1);
+  const oneTier = trunk.tiers.length < 2;
+  const half = Math.ceil((trunkMods(1).length + (trunk.boss ? 1 : 0)) / 2);
+  const tierOne = oneTier ? trunkMods(1).slice(0, half) : trunkMods(1);
   const startX = W / 2 - ((tierOne.length - 1) * STEP) / 2;
   tierOne.forEach((id, i) => {
     const x = startX + i * STEP;
     nodes.set(id, { x, y: rowY[0], label: { x, y: rowY[0] + 36, anchor: "middle", lines: [kicker(id), ...wrap(title(id), 16, 3)] } });
   });
   const rightX = startX + (tierOne.length - 1) * STEP;
-  const tierTwo = [...trunkMods(2), ...(trunk.boss ? [trunk.boss] : [])];
+  const tierTwo = [...(oneTier ? trunkMods(1).slice(half) : trunkMods(2)), ...(trunk.boss ? [trunk.boss] : [])];
   tierTwo.forEach((id, i) => {
     const x = rightX - i * STEP;
     const lines = [kicker(id), ...wrap(title(id), 16, id === trunk.boss ? 2 : 3)];
     nodes.set(id, { x, y: rowY[1], label: { x, y: rowY[1] + (id === trunk.boss ? 40 : 36), anchor: "middle", lines } });
   });
   tierLabels.push({ key: "trunk-1", x: startX - 26, y: rowY[0] - 40, text: `Tier I · ${trunk.tiers[0].name}`, badge: tierBadge(trunk.id, 1) });
-  tierLabels.push({ key: "trunk-2", x: startX - 26, y: rowY[1] - 40, text: `Tier II · ${trunk.tiers[1].name}`, badge: tierBadge(trunk.id, 2) });
+  if (!oneTier) tierLabels.push({ key: "trunk-2", x: startX - 26, y: rowY[1] - 40, text: `Tier II · ${trunk.tiers[1].name}`, badge: tierBadge(trunk.id, 2) });
   // The turn from tier I's end down to tier II's start, outside both rows' labels.
   const turn = { from: tierOne.at(-1), to: tierTwo[0], x: rightX + 60 };
   const trunkZone = { branch: trunk, x: 16, y: 12, w: W - 32, h: rowY[1] + 92 - 12 };
@@ -111,7 +114,8 @@ const layout = computed(() => {
     bottom = Math.max(bottom, y);
   }
 
-  return { W, H: bottom + 24, nodes, zones, trunkZone, tierLabels, turn, junction };
+  // With no specializations (Essentials), the trunk is the whole map.
+  return { W, H: Math.max(bottom, trunkZone.y + trunkZone.h) + 24, nodes, zones, trunkZone, tierLabels, turn, junction: columns.length ? junction : null };
 });
 
 // A node's label: its number (or what kind it is) on a line of its own, set apart from its title.
@@ -136,10 +140,12 @@ const limbs = computed(() =>
     .filter((z) => z.after.some((r) => r.branch === trunk.id))
     .map((z) => {
       const { junction: j } = layout.value;
+      if (!j) return null;
       const end = z.root;
       const midY = (j.y + end.y) / 2;
       return { branch: z.branch, lit: z.after.every((r) => isDone(r.id)), d: `M ${j.x} ${j.y} C ${j.x} ${midY + 8}, ${end.x} ${midY - 8}, ${end.x} ${end.y}` };
-    }),
+    })
+    .filter(Boolean),
 );
 
 // The prerequisite lines, within a branch (the trunk's turn is drawn on its own).
@@ -193,12 +199,14 @@ const nodeLabel = (m) =>
       </text>
 
       <!-- From the trunk to the junction, and the limbs from it. -->
-      <line :class="['map-limb', `branch-${trunk.color}`, { 'is-lit': isDone(trunkTail) }]" :x1="layout.junction.x" :y1="layout.trunkZone.y + layout.trunkZone.h" :x2="layout.junction.x" :y2="layout.junction.y" />
-      <path v-for="limb in limbs" :key="`limb-${limb.branch.id}`" :class="['map-limb', `branch-${limb.branch.color}`, { 'is-lit': limb.lit, 'is-toward': toward && !zoneOff(limb.branch), 'off-route': zoneOff(limb.branch) }]" :d="limb.d" />
-      <g class="map-junction" role="button" tabindex="0" :aria-label="`Branches open after ${tail.id}: ${tail.title}`" @click="emit('select', tail.id)" @keydown.enter.prevent="emit('select', tail.id)">
-        <rect :x="layout.junction.x - 118" :y="layout.junction.y - 14" width="236" height="28" rx="14" />
-        <text :x="layout.junction.x" :y="layout.junction.y + 4.5" text-anchor="middle">Specializations open after {{ tail.id }}</text>
-      </g>
+      <template v-if="layout.junction">
+        <line :class="['map-limb', `branch-${trunk.color}`, { 'is-lit': isDone(trunkTail) }]" :x1="layout.junction.x" :y1="layout.trunkZone.y + layout.trunkZone.h" :x2="layout.junction.x" :y2="layout.junction.y" />
+        <path v-for="limb in limbs" :key="`limb-${limb.branch.id}`" :class="['map-limb', `branch-${limb.branch.color}`, { 'is-lit': limb.lit, 'is-toward': toward && !zoneOff(limb.branch), 'off-route': zoneOff(limb.branch) }]" :d="limb.d" />
+        <g class="map-junction" role="button" tabindex="0" :aria-label="`Branches open after ${tail.id}: ${tail.title}`" @click="emit('select', tail.id)" @keydown.enter.prevent="emit('select', tail.id)">
+          <rect :x="layout.junction.x - 118" :y="layout.junction.y - 14" width="236" height="28" rx="14" />
+          <text :x="layout.junction.x" :y="layout.junction.y + 4.5" text-anchor="middle">Specializations open after {{ tail.id }}</text>
+        </g>
+      </template>
 
       <!-- Branch headers: the name, and what it opens after. -->
       <g v-for="zone in layout.zones" :key="`head-${zone.branch.id}`" :class="[`branch-${zone.branch.color}`, { 'off-route': zoneOff(zone.branch) }]">

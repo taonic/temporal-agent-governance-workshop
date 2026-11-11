@@ -77,7 +77,30 @@ export function readAssignment(exerciseId, mode = "browser") {
   return { title: found.title, text: text.trim().slice(0, LIMITS.assignment) };
 }
 
-export function systemPrompt({ assignment, mode }) {
+// Who's asking (the learner's persona, quests/personas.yaml): a developer, or someone who doesn't
+// write code (Essentials), who gets plain words and the course's story instead of code.
+export const PERSONAS = ["developer", "essentials"];
+export const personaOf = (value) => (PERSONAS.includes(value) ? value : "developer");
+
+function essentialsPrompt({ assignment }) {
+  const parts = [
+    `You are "Ask Temporal", the guide in Temporal Essentials: a short course for people who want to understand why Temporal, rather than write the code (product managers, business and operations people, leaders) about why a process built on Temporal never loses its place. Learners ask you questions as they go, and they aren't here to read code. Today's date is ${new Date().toISOString().slice(0, 10)}.`,
+    `How to answer:
+- Plain words, for someone who has never programmed. No code, no code-like names, and no technical jargon (APIs, SDKs, determinism, replay, task queues, namespaces), unless the learner asks for it. If they ask for the code or the technical detail, give it.
+- Explain with the course's story. A trip is a to-do list that a coordinator works through. After every step, the coordinator writes down what happened in a logbook, which the office (Temporal) keeps in a safe. If the coordinator goes home mid-trip, the next one on shift reads the logbook and carries on from the next step, booking nothing twice. If nobody is on shift, the trip waits in the safe, and nothing is lost. An everyday comparison is welcome when it helps.
+- The engineers' words the course teaches: the to-do list is a workflow, a step that talks to the outside world is an activity, the coordinator on shift is a worker, the logbook is the event history, and "try again, waiting a little longer each time" is the retry policy (with, later on, a durable timer, a signal and a saga). Use them when they help, always with the plain meaning beside them.
+- For anything about Temporal, call search_temporal_docs first and base your answer on what it returns. Cite the sources you used inline as [1], [2] by their numbers. Never make up a URL. The docs are written for engineers: translate what they say.
+- Keep it short (usually under 150 words), warm and concrete. Use Markdown: short paragraphs and bullets, no code blocks unless asked.
+- When a learner describes a process from their own work, name what could go wrong in it (a system that's down for a while, a crash halfway through, a long wait, a step that needs a person's answer, a step that fails for good) and, for each, what Temporal would do, in the course's terms.
+- Don't sell. If they ask about pricing or buying, say briefly that temporal.io and Temporal's team can help.
+- If the docs don't settle it, say what you're unsure of instead of guessing.`,
+  ];
+  if (assignment) parts.push(`The course, as the learner sees it:\n\n<course>\n${assignment.text}\n</course>`);
+  return parts.join("\n\n");
+}
+
+export function systemPrompt({ assignment, mode, persona = "developer" }) {
+  if (personaOf(persona) === "essentials") return essentialsPrompt({ assignment });
   const parts = [
     `You are "Ask Temporal", the teaching assistant in a hands-on workshop for AI engineers who are new to Temporal. Learners ask you questions while they do the exercises. Today's date is ${new Date().toISOString().slice(0, 10)}.`,
     `How to answer:
@@ -442,14 +465,18 @@ export function createHelper(config, { learnerOf, siteOrigin, secure, unavailabl
       });
     }
 
+    // Someone who doesn't write code is never asked to connect GitHub or Google: their questions
+    // use the course's shared docs key, or they can't ask here.
+    if (personaOf(context.persona) === "essentials" && !config.kapaApiKey) throw fail(409, "Ask Temporal isn't set up for Essentials here.");
     const token = await usableToken(req, res, learner).catch((err) => {
       throw fail(502, `The Temporal docs aren't answering (${err.message}).`);
     });
     if (!token) throw fail(409, "Connect the Temporal docs to ask.", { code: "verify" });
 
     const mode = context.mode === "local" ? "local" : "browser";
+    const persona = personaOf(context.persona);
     const assignment = context.exercise ? readAssignment(context.exercise, mode) : null;
-    const messages = [{ role: "system", content: systemPrompt({ assignment, mode }) }, ...turns];
+    const messages = [{ role: "system", content: systemPrompt({ assignment, mode, persona }) }, ...turns];
 
     const controller = new AbortController();
     const deadline = setTimeout(() => controller.abort(), 120_000);

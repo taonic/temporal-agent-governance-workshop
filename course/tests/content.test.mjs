@@ -35,13 +35,15 @@ test("snippet commands drop comments and join continuations", () => {
 
 test("the built course covers every exercise in both modes", () => {
   const course = buildCourse();
-  assert.equal(course.exercises.length, 6);
+  assert.equal(course.exercises.length, 7);
   for (const exercise of course.exercises) {
     for (const mode of ["browser", "local"]) {
       const html = [exercise.modes[mode].intro, ...exercise.modes[mode].sections.map((s) => s.html)].join("\n");
       assert.ok(!/<!--\s*(browser|local|\/local)/.test(html), `${exercise.id} ${mode} still has a mode marker`);
       if (mode === "local") assert.ok(!html.includes("data-pane"), `${exercise.id}: local links must stay links`);
     }
+    // The Trip board's exercises have no code to edit.
+    if (exercise.layout === "board") continue;
     assert.ok(exercise.files.some((f) => f.editable), `${exercise.id} has no editable file`);
     for (const file of exercise.files.filter((f) => f.editable && !f.scratch)) {
       assert.ok(file.solution, `${exercise.id}: ${file.path} has no solution`);
@@ -94,7 +96,7 @@ test("the quests: every module where its branch says, and every module it builds
   const { closure, loadQuests } = await import("../content/build.mjs");
   const quests = loadQuests();
   const course = buildCourse();
-  assert.deepEqual(course.branches.map((b) => b.id), ["fundamentals", "ai-agent", "nexus", "payments", "ai-sdlc", "worker-ops"]);
+  assert.deepEqual(course.branches.map((b) => b.id), ["essentials", "fundamentals", "ai-agent", "nexus", "payments", "ai-sdlc", "worker-ops"]);
   for (const branch of course.branches) {
     assert.ok(branch.name && branch.icon && branch.classTitle && branch.tiers?.length, `${branch.id} needs a name, icon, class title and tiers`);
     for (const id of branch.modules) {
@@ -253,7 +255,7 @@ test("in the browser, \"Temporal UI\" in prose opens the pane; not in headings o
 
 test("every exercise has a code tour, and every stop is found in its file, in a chunk that fits", async () => {
   const { tourRange } = await import("../web/src/tourRange.js");
-  for (const exercise of buildCourse().exercises) {
+  for (const exercise of buildCourse().exercises.filter((e) => e.layout === "code")) {
     assert.ok(exercise.tour.length >= 3, `${exercise.id} has a code tour`);
     for (const stop of exercise.tour) {
       const file = exercise.files.find((f) => f.path === stop.file);
@@ -304,13 +306,20 @@ test("a link to a section names one of its exercise's sections", () => {
 test("a challenge is a beat of its exercise, after its module, with one right choice and a recording of each", () => {
   const course = buildCourse();
   const challenges = course.modules.filter((m) => m.kind === "challenge");
-  assert.deepEqual(challenges.map((c) => c.id), ["FC1", "FC2", "FC3"]);
+  assert.deepEqual(challenges.map((c) => c.id), ["EC1", "EC2", "EC3", "FC1", "FC2", "FC3"]);
   for (const c of challenges) {
     const exercise = course.exercises.find((e) => e.id === c.exercise);
     const data = exercise.challenges[c.id];
     assert.ok(data, `${c.id}: no data in ${exercise.id}`);
     assert.equal(data.choices.filter((x) => x.right).length, 1, `${c.id}: one right choice`);
+    // Essentials' are question challenges: plain answers, nothing to run, nothing recorded.
+    assert.equal(data.question, c.id.startsWith("EC"), `${c.id}: a question challenge only in Essentials`);
     for (const choice of data.choices) {
+      if (data.question) {
+        assert.equal(choice.code, "", `${c.id} ${choice.id}: a plain answer has no code`);
+        assert.equal(choice.recording, null);
+        continue;
+      }
       assert.ok(choice.recording.lines.length, `${c.id} ${choice.id}: an empty recording`);
       assert.equal(choice.recording.done.right, choice.right, `${c.id} ${choice.id}: its recording disagrees with its flag`);
     }
@@ -328,4 +337,47 @@ test("a challenge is a beat of its exercise, after its module, with one right ch
   const hello = course.exercises[0].modes.browser.sections;
   assert.equal(hello.at(-1).kind, "check");
   assert.equal(hello.at(-2).challenge, "FC2");
+});
+
+test("each persona sees its own branches, paths and badges, and what it sees builds only on what it sees", () => {
+  const course = buildCourse();
+  assert.deepEqual(course.personas.map((p) => p.id), ["developer", "essentials"]);
+  const branchesOf = (persona) => course.branches.filter((b) => b.personas.includes(persona)).map((b) => b.id);
+  assert.deepEqual(branchesOf("essentials"), ["essentials"]);
+  assert.ok(!branchesOf("developer").includes("essentials"));
+  assert.deepEqual(course.paths.find((p) => p.id === "essentials").personas, ["essentials"]);
+  assert.deepEqual(course.paths.find((p) => p.id === "agent-governance-4h").personas, ["developer"]);
+  const skills = (persona) => course.badges.filter((b) => b.kind === "skill" && b.personas.includes(persona)).map((b) => b.id);
+  assert.deepEqual(skills("essentials"), ["clean-run", "flawless"]);
+  assert.deepEqual(skills("developer"), ["clean-run", "no-peeking", "flawless", "explorer", "cross-team"]);
+  const essentials = course.exercises.find((e) => e.id === "07-essentials");
+  assert.equal(essentials.layout, "board");
+  assert.deepEqual(essentials.personas, ["essentials"]);
+  assert.deepEqual(essentials.scripts, {});
+  assert.deepEqual(essentials.boards.E2, { twin: true, mistake: true, onShift: true, hold: false, approval: false, declined: false });
+  assert.equal(essentials.boards.E4.onShift, false);
+  // Every Essentials module has a world check and its question, on one of its own beats.
+  assert.deepEqual(essentials.modules.filter((id) => !id.startsWith("EC")), ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8"]);
+  for (const id of ["E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8"]) {
+    const check = essentials.checks[id];
+    assert.ok(check && essentials.moduleBeats[id].includes(check.beat), `${id}: a world check on one of its beats`);
+    assert.equal(check.quiz.choices.filter((c) => c.right).length, 1, `${id}: one right answer`);
+    assert.equal(course.modules.find((m) => m.id === id).check, "world");
+  }
+  // E8's check, and its challenge, come before the closing beat.
+  const ids = essentials.modes.browser.sections.map((s) => s.id);
+  assert.ok(ids.indexOf(essentials.checks.E8.beat) < ids.indexOf("challenge-the-card-says-no"));
+  assert.ok(ids.indexOf("challenge-the-card-says-no") < ids.indexOf("spot-it-in-your-business"));
+  assert.ok(course.exercises.filter((e) => e.id !== "07-essentials").every((e) => e.layout === "code"));
+});
+
+test("in the browser, a #board link is the board's action button; anything else isn't an action", async () => {
+  const essentials = buildCourse().exercises.find((e) => e.id === "07-essentials");
+  const html = essentials.modes.browser.sections.map((s) => s.html).join("\n");
+  assert.match(html, /<button class="board-action" type="button" data-board-action="start-trip">Start a trip<\/button>/);
+  assert.match(html, /data-board-action="ship-fix"/);
+  // #latest-trip opens the board's latest trip, its own workflow, in the Temporal UI.
+  assert.match(html, /<button class="workflow-link" type="button" data-board-trip title="[^"]+">Open the trip's logbook<\/button>/);
+  const local = essentials.modes.local.sections.map((s) => s.html).join("\n");
+  assert.ok(!local.includes("data-board-action") && !local.includes("data-board-trip"));
 });

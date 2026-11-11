@@ -13,6 +13,7 @@ import { computed, reactive, watch } from "vue";
 
 import { badgeContext, earnedNow, isComingSoon, missingFor as badgeMissingFor } from "./badges.js";
 import { addPick, xpFor } from "./challenge.js";
+import { keepPersona } from "./persona.js";
 import { api, course, load, save, store } from "./store.js";
 
 export const LEVEL_XP = 50;
@@ -114,6 +115,10 @@ async function syncFromServer() {
     save("progress-owner", email);
     if (!pathFromUrl) progress.path = course.paths.some((p) => p.id === server.path) ? server.path : null;
     else if (server.path !== progress.path) track("path_set", null, { path: progress.path });
+    // The persona follows the learner: the server's (their choice, or their cohort's) wins, unless
+    // this page's URL set one; one chosen here before signing in goes up.
+    if (server.persona && server.persona !== store.persona.id && !store.persona.fromUrl) choosePersona(server.persona, { record: false });
+    else if (store.persona.chosen && server.persona !== store.persona.id) track("persona_set", null, { persona: store.persona.id });
   } catch {
     /* the page keeps this browser's progress */
   } finally {
@@ -294,7 +299,65 @@ export function pick(id, choiceId) {
   if (choiceId === right) complete(id);
 }
 
+// --- Essentials' world checks ------------------------------------------------------------------
+// A Trip board module passes when the board has seen what its check names happen (the board
+// reports it, store.board.state.check) and its one question is answered right. Both are kept in
+// this browser until then ({ E1: when }, { E1: ["B", "A"] }); the pass itself is what the server
+// keeps, as for any module.
+const worldChecks = new Map(course.exercises.flatMap((ex) => Object.entries(ex.checks ?? {})));
+export const worldCheckOf = (id) => worldChecks.get(id) ?? null;
+export const essentials = reactive({ seen: load("world-seen", {}), quizzes: load("quizzes", {}) });
+watch(() => essentials.seen, (seen) => save("world-seen", seen), { deep: true });
+watch(() => essentials.quizzes, (picks) => save("quizzes", picks), { deep: true });
+
+export const worldSeen = (id) => isDone(id) || Boolean(essentials.seen[id]);
+const quizRight = (id) => worldCheckOf(id)?.quiz.choices.find((c) => c.right)?.id ?? null;
+export const quizPicks = (id) => essentials.quizzes[id] ?? [];
+export const quizAnswered = (id) => isDone(id) || quizPicks(id).includes(quizRight(id));
+
+export function quizPick(id, choiceId) {
+  const before = quizPicks(id);
+  const after = addPick(before, choiceId, quizRight(id));
+  if (after !== before) essentials.quizzes = { ...essentials.quizzes, [id]: after };
+  passIfChecked(id);
+}
+
+function passIfChecked(id) {
+  if (worldCheckOf(id) && !isDone(id) && worldSeen(id) && quizAnswered(id)) complete(id);
+}
+
+// What the board reports: this module's check, passed. Seen once, it stays seen.
+watch(
+  () => store.board.state?.check,
+  (check) => {
+    const id = check?.passed ? store.board.state.module : null;
+    if (!id || !worldCheckOf(id) || essentials.seen[id]) return;
+    essentials.seen = { ...essentials.seen, [id]: Date.now() };
+    passIfChecked(id);
+  },
+);
+
+// The learner's persona: kept (and recorded, while signed in). Another persona's course is another
+// site, so the page loads again, on the map (the module open may not be in it).
+export function choosePersona(id, { record = true } = {}) {
+  if (!course.personas.some((p) => p.id === id)) return;
+  keepPersona(id);
+  if (record) track("persona_set", null, { persona: id });
+  if (id === course.persona) {
+    store.persona = { ...store.persona, chosen: true };
+    return;
+  }
+  // Sent as the page goes (pagehide's beacon), so the server has it when the new page asks.
+  const url = new URL(window.location.href);
+  url.searchParams.delete("persona");
+  url.hash = "#/";
+  window.location.replace(url.toString());
+  if (url.toString() === window.location.href) window.location.reload();
+}
+
 export function forgetProgress() {
+  essentials.seen = {};
+  essentials.quizzes = {};
   progress.completed = [];
   progress.attempts = {};
   progress.solutionUsed = [];

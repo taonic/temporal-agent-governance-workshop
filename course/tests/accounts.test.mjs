@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 import { Accounts, companyOf, isPersonalEmail, normalizeEmail, parseEntry } from "../runner/accounts.mjs";
 import { Activity, catalogOf, deriveProgress } from "../runner/activity.mjs";
-import { toCsv } from "../runner/admin.mjs";
+import { createAdmin, toCsv } from "../runner/admin.mjs";
 import { e2eSignInCode } from "../runner/auth.mjs";
 import { openDatabase } from "../runner/db.mjs";
 
@@ -19,7 +19,11 @@ const CATALOG = catalogOf({
     { id: "FC1", kind: "challenge", xp: 20, title: "Challenge", status: "ready" },
   ],
   exercises: [{ challenges: { FC1: { choices: [{ id: "A" }, { id: "B", right: true }, { id: "C" }] } } }],
-  paths: [{ id: "event-4h", modules: ["F1", "FC1", "F2"] }],
+  paths: [
+    { id: "event-4h", modules: ["F1", "FC1", "F2"], personas: ["developer"] },
+    { id: "essentials", modules: [], personas: ["essentials"] },
+  ],
+  personas: [{ id: "developer" }, { id: "essentials" }],
 });
 
 function setup({ admins = ["boss@temporal.io"], consoleMode = false, e2eKey = "" } = {}) {
@@ -445,4 +449,46 @@ test("the sweep counts running sandboxes' minutes, records their starts and stop
   clock.now += MIN;
   await sweep.tick();
   assert.deepEqual(types().filter((t) => t !== "allowance_reached"), ["sandbox_started", "sandbox_stopped", "sandbox_gone"]);
+});
+
+test("a learner's persona is the one they chose last, else their cohort's path's, else none", () => {
+  const { accounts, activity } = setup();
+  const user = signIn(accounts, "boss@temporal.io");
+  assert.equal(activity.progress(user.id).persona, null);
+  assert.equal(activity.progress(user.id, "essentials").persona, "essentials");
+  const recorded = activity.recordFromBrowser(user.id, [
+    { type: "persona_set", data: { persona: "essentials" } },
+    { type: "persona_set", data: { persona: "nobody" } },
+    { type: "persona_set", data: { persona: "developer" } },
+  ]);
+  assert.equal(recorded, 2, "an unknown persona is dropped");
+  assert.equal(activity.progress(user.id).persona, "developer");
+  assert.equal(activity.progress(user.id, "essentials").persona, "developer", "a choice beats the cohort's");
+});
+
+test("admins see each learner's persona, how many learn as each, and can list one persona's", async () => {
+  const { accounts, activity, clock } = setup({ admins: ["boss@temporal.io", "pm@temporal.io", "dev@temporal.io"] });
+  const pm = signIn(accounts, "pm@temporal.io");
+  const dev = signIn(accounts, "dev@temporal.io");
+  activity.recordFromBrowser(pm.id, [{ type: "persona_set", data: { persona: "developer" } }]);
+  clock.now += 60_000;
+  activity.recordFromBrowser(pm.id, [{ type: "persona_set", data: { persona: "essentials" } }]);
+  activity.recordFromBrowser(dev.id, [{ type: "persona_set", data: { persona: "developer" } }]);
+  const admin = createAdmin({ accounts, activity, sessionOf: () => ({ admin: true, email: "boss@temporal.io" }) });
+  const get = (route, query = "") => admin.routes[route]({}, {}, new URL(`http://x/?${query}`));
+
+  const all = await get("GET /api/admin/learners");
+  assert.equal(all.learners.find((l) => l.id === pm.id).persona, "essentials");
+  assert.equal(all.learners.find((l) => l.id === dev.id).persona, "developer");
+  assert.equal(all.summary.personas.essentials, 1);
+  assert.equal(all.summary.personas.developer, 1);
+  const onlyEssentials = await get("GET /api/admin/learners", "persona=essentials");
+  assert.deepEqual(onlyEssentials.learners.map((l) => l.id), [pm.id]);
+  assert.equal(onlyEssentials.summary.learners, 1);
+  assert.equal(onlyEssentials.summary.personas.developer, 1, "the counts are everyone's, to filter by");
+
+  const journey = await get("GET /api/admin/learner", `id=${pm.id}`);
+  assert.equal(journey.persona, "essentials");
+  assert.deepEqual(journey.personaChanges.map((c) => c.persona), ["developer", "essentials"]);
+  assert.ok(journey.personaChanges[1].at > journey.personaChanges[0].at);
 });

@@ -89,10 +89,14 @@ def frontmatter(path: Path) -> dict:
 
 
 def challenges() -> dict[str, Challenge]:
+    """Every challenge that runs code. A question challenge (Essentials': no `file`, plain answers)
+    has nothing to build, record or run, so it isn't one of them."""
     found: dict[str, Challenge] = {}
     for branch in branches():
         for path in sorted((QUESTS / branch).glob("*/challenge.md")):
             m = frontmatter(path)
+            if m.get("file") is None:
+                continue
             choices = tuple(
                 Choice(id=LETTERS[i], label=c["label"], code=c.get("code", ""), explanation=c["explanation"],
                        right=bool(c.get("right")))

@@ -50,6 +50,12 @@ async function showBranchFromFirstRun(id) {
   showBranch(id);
 }
 
+const personaLabel = computed(() => course.personas.find((p) => p.id === store.persona.id)?.label ?? "");
+// What skipping ahead does: fills in the code a module builds on, where there's code.
+const skipNote = computed(() =>
+  course.exercises.some((e) => e.layout === "code") ? "skip ahead, and we fill in the code it builds on for you." : "skip ahead whenever you like.",
+);
+
 const playable = computed(() => course.modules.filter((m) => m.kind === "module" && isPlayable(m)));
 const challenges = computed(() => course.modules.filter((m) => m.kind === "challenge" && isPlayable(m)));
 const bosses = computed(() => course.modules.filter((m) => m.kind === "boss"));
@@ -130,6 +136,10 @@ const LEGEND = [
                 <p class="map-level-meta">{{ xp }} XP · {{ LEVEL_XP - levelXp }} to level {{ level + 1 }}</p>
               </div>
             </div>
+            <p class="map-persona">
+              Learning as <strong>{{ personaLabel }}</strong>
+              <button type="button" class="focus-link" @click="store.personaPicker = true">Switch</button>
+            </p>
             <p class="map-stats">
               <span><strong>{{ doneCount(playable) }}</strong>/{{ playable.length }} modules</span>
               <span><strong>{{ doneCount(challenges) }}</strong>/{{ challenges.length }} challenges</span>
@@ -173,7 +183,7 @@ const LEGEND = [
           </ul>
           <p class="map-rule">
             <strong>Prerequisites are recommended, not required.</strong> Every node you can play can be entered:
-            skip ahead, and we fill in the code it builds on for you.
+            {{ skipNote }}
           </p>
 
           <FocusMap v-if="mapView === 'focus'" class="map-desktop" :selected="selected" @select="select" @expand="expand" @branch="showBranch" />
@@ -190,7 +200,7 @@ const LEGEND = [
       <!-- On a phone: the tree as a list. -->
       <div class="map-list" aria-label="The skill tree, branch by branch">
         <p class="map-rule">
-          <strong>Prerequisites are recommended, not required.</strong> Skip ahead to any playable node, and we fill in what it builds on.
+          <strong>Prerequisites are recommended, not required.</strong> Every node you can play can be entered: {{ skipNote }}
         </p>
         <details v-for="branch in listBranches" :key="branch.id" :class="['map-list-branch', `branch-${branch.color}`]" :open="branch.hasNext">
           <summary>

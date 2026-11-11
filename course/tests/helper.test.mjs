@@ -458,3 +458,49 @@ test("a model that refuses tool_choice \"required\" is asked again plainly, and 
     other.close();
   }
 });
+
+// --- Someone who doesn't write code (Essentials) ----------------------------------------------
+
+test("for Essentials, the prompt is plain words and the course's story, still citing the docs", () => {
+  const course = readAssignment("07-essentials", "browser");
+  assert.ok(course.text.includes("The coordinator and the logbook"));
+  const plain = systemPrompt({ assignment: course, mode: "browser", persona: "essentials" });
+  assert.match(plain, /understand why Temporal, rather than write the code/);
+  assert.match(plain, /coordinator/);
+  assert.match(plain, /logbook/);
+  assert.match(plain, /No code/);
+  assert.match(plain, /search_temporal_docs/);
+  assert.match(plain, /Cite the sources/);
+  assert.doesNotMatch(plain, /Python/);
+  const developer = systemPrompt({ assignment: course, mode: "browser", persona: "developer" });
+  assert.match(developer, /Python/);
+  assert.equal(systemPrompt({ assignment: null, mode: "browser", persona: "nonsense" }), systemPrompt({ assignment: null, mode: "browser" }), "an unknown persona is a developer");
+});
+
+test("Essentials asks with the shared docs key, and is never sent to connect", async () => {
+  const body = (persona) => JSON.stringify({ messages: [{ role: "user", content: "Why doesn't the hotel get booked twice?" }], context: { exercise: "07-essentials", mode: "browser", persona } });
+  // No shared key: no connect step for them, only a plain no.
+  const res = await fetch(`${base}/api/helper/ask`, { method: "POST", headers: { cookie: session, "content-type": "application/json" }, body: body("essentials") });
+  assert.equal(res.status, 409);
+  assert.notEqual((await res.json()).code, "verify");
+
+  let system = "";
+  const fetchImpl = async (url, init) => {
+    if (String(url) === `${LLM}/chat/completions`) system ||= JSON.parse(init.body).messages[0].content;
+    return (await kapa.handle(String(url), init)) ?? (await model.handle(String(url), init)) ?? json({ error: "unexpected" }, 599);
+  };
+  const shared = serve({ ...baseConfig, kapaApiKey: "team-key" }, fetchImpl);
+  await new Promise((resolve) => shared.listen(0, "127.0.0.1", resolve));
+  validTokens.add("team-key");
+  try {
+    const url = `http://127.0.0.1:${shared.address().port}`;
+    const status = await (await fetch(`${url}/api/helper`, { headers: { cookie: session } })).json();
+    assert.equal(status.docs, "ready");
+    assert.equal(status.sharedDocsKey, true);
+    const events = await readEvents(await fetch(`${url}/api/helper/ask`, { method: "POST", headers: { cookie: session, "content-type": "application/json" }, body: body("essentials") }));
+    assert.equal(events.at(-1).type, "done");
+    assert.match(system, /Temporal Essentials/);
+  } finally {
+    shared.close();
+  }
+});

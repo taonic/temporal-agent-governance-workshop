@@ -16,7 +16,7 @@ import { badgeContext, earnedNow } from "../web/src/badges.js";
 import { xpFor } from "../web/src/challenge.js";
 import { transaction } from "./db.mjs";
 
-export const BROWSER_EVENTS = new Set(["module_opened", "module_passed", "check_failed", "challenge_pick", "boss_result", "path_set", "solution_used"]);
+export const BROWSER_EVENTS = new Set(["module_opened", "module_passed", "check_failed", "challenge_pick", "boss_result", "path_set", "persona_set", "solution_used"]);
 // The events that can change which badges are earned.
 const BADGE_INPUTS = new Set(["module_passed", "challenge_pick", "boss_result", "solution_used"]);
 // A heartbeat counts for at most this much time on its module (one every 60s, with slack).
@@ -50,6 +50,7 @@ export function catalogOf(data) {
     }
   }
   const paths = new Map((data?.paths ?? []).map((p) => [p.id, p]));
+  const personas = new Set((data?.personas ?? []).map((p) => p.id));
   const badges = data?.badges ?? [];
   return {
     loaded: Boolean(data),
@@ -62,6 +63,9 @@ export function catalogOf(data) {
     choiceLabel: (id, choice) => choices.get(id)?.get(choice) ?? choice,
     knows: (id) => (data ? modules.has(id) : /^[A-Za-z0-9-]{1,40}$/.test(String(id ?? ""))),
     knowsPath: (id) => (data ? paths.has(id) : /^[a-z0-9-]{1,60}$/.test(String(id ?? ""))),
+    knowsPersona: (id) => (data ? personas.has(id) : /^[a-z-]{1,30}$/.test(String(id ?? ""))),
+    // The persona a path is for: a cohort's path sets its learners' persona.
+    personaOfPath: (id) => paths.get(id)?.personas?.[0] ?? null,
     xpOf(id, attempts) {
       const m = modules.get(id);
       if (m?.kind === "challenge") return xpFor(attempts[id] ?? [], right.get(id) ?? null);
@@ -70,8 +74,8 @@ export function catalogOf(data) {
   };
 }
 
-// Progress from a learner's events, in order: { completed, attempts, path, xp, solutionUsed,
-// badges, unrecorded }.
+// Progress from a learner's events, in order: { completed, attempts, path, persona, xp,
+// solutionUsed, badges, unrecorded }.
 //
 // badges: [{ id, at }], every badge earned, oldest first: those recorded (badge_earned), and
 // those the events earn, at the event that earned each. A badge counts once its criteria were
@@ -85,6 +89,7 @@ export function deriveProgress(events, catalog) {
   const recorded = new Map(); // badge id -> when it was earned
   const derived = new Map();
   let path = null;
+  let persona = null;
   for (const e of events) {
     const data = typeof e.data === "string" ? JSON.parse(e.data || "{}") : (e.data ?? {});
     if (e.type === "module_passed" && e.module_id && !completed.includes(e.module_id)) completed.push(e.module_id);
@@ -94,6 +99,7 @@ export function deriveProgress(events, catalog) {
       // As the page records them (challenge.js addPick): nothing after the right one, no repeats.
       if (!picks.includes(data.choice) && !(right && picks.includes(right))) attempts[e.module_id] = [...picks, data.choice];
     } else if (e.type === "path_set") path = data.path ?? null;
+    else if (e.type === "persona_set") persona = data.persona ?? null;
     else if (e.type === "solution_used" && e.module_id && !solutionUsed.includes(e.module_id)) solutionUsed.push(e.module_id);
     else if (e.type === "boss_result" && e.module_id) bossResults.push({ won: Boolean(data.won), hearts: Number(data.hearts) || 0 });
     else if (e.type === "badge_earned" && data.badge && !recorded.has(data.badge)) recorded.set(data.badge, data.earnedAt ?? e.at);
@@ -108,7 +114,7 @@ export function deriveProgress(events, catalog) {
   const earned = new Map([...derived, ...recorded].filter(([id]) => !catalog.badgesById || catalog.badgesById.has(id)));
   const badges = [...earned].map(([id, at]) => ({ id, at })).sort((a, b) => (a.at ?? 0) - (b.at ?? 0));
   const unrecorded = badges.filter((b) => !recorded.has(b.id)).map((b) => b.id);
-  return { completed, attempts, path, xp, solutionUsed, badges, unrecorded };
+  return { completed, attempts, path, persona, xp, solutionUsed, badges, unrecorded };
 }
 
 export class Activity {
@@ -135,6 +141,8 @@ export class Activity {
         const moduleId = e.moduleId ?? null;
         if (e.type === "path_set") {
           if (e.data?.path !== null && !this.catalog.knowsPath(e.data?.path)) continue;
+        } else if (e.type === "persona_set") {
+          if (!this.catalog.knowsPersona(e.data?.persona)) continue;
         } else if (!this.catalog.knows(moduleId)) continue;
         const data = e.data && typeof e.data === "object" ? e.data : null;
         if (data && JSON.stringify(data).length > 2000) continue;
@@ -150,12 +158,14 @@ export class Activity {
     return this.db.prepare("SELECT * FROM events WHERE user_id = ? ORDER BY at, id").all(userId);
   }
 
-  // A learner's progress. The path is the one they picked, else their cohort's. Badges earned
-  // and not yet recorded are recorded now (kept from then on).
+  // A learner's progress. The path is the one they picked, else their cohort's; the persona is
+  // the one they chose, else their cohort's path's (null: not chosen). Badges earned and not yet
+  // recorded are recorded now (kept from then on).
   progress(userId, cohortPath = null) {
     const { unrecorded, ...derived } = this.awardBadges(userId);
     const picked = this.db.prepare("SELECT 1 FROM events WHERE user_id = ? AND type = 'path_set' LIMIT 1").get(userId);
-    return { ...derived, path: picked ? derived.path : (cohortPath ?? null) };
+    const path = picked ? derived.path : (cohortPath ?? null);
+    return { ...derived, path, persona: derived.persona ?? (cohortPath ? this.catalog.personaOfPath(cohortPath) : null) };
   }
 
   // Records a badge_earned event for each badge the learner's events earn that has none yet,

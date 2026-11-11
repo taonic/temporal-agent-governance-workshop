@@ -4,9 +4,15 @@
 import { reactive, watch } from "vue";
 
 import { forgetWork, storageKey, storagePrefix } from "./forget.js";
-import course from "./generated/course-data.json";
+import fullCourse from "./generated/course-data.json";
+import { courseFor, readPersona } from "./persona.js";
 
-export { course, storageKey, storagePrefix };
+// The course as the learner's persona sees it (persona.js): what every page lists comes from it.
+// fullCourse has every persona's.
+const persona = readPersona(fullCourse);
+const course = courseFor(fullCourse, persona.id);
+
+export { course, fullCourse, storageKey, storagePrefix };
 
 export function load(key, fallback) {
   try {
@@ -52,6 +58,10 @@ function parseRoute() {
 
 export const store = reactive({
   route: parseRoute(),
+  // The learner's persona: { id, chosen, fromUrl }. Not chosen yet: the site asks (PersonaChoice).
+  persona,
+  // The persona choice, opened to switch (the account menu, the map).
+  personaPicker: false,
   theme: initialTheme(),
   toast: "",
 
@@ -88,6 +98,10 @@ export const store = reactive({
 
   // The sandbox's worker, from the poll; `pending` while a toggle waits to be confirmed.
   worker: { running: null, name: null, env: {}, pending: null },
+
+  // The Trip board (Essentials): the state essentials/board.py reports (from the poll, or the
+  // last action), the action on its way ("start-trip"…), and when the state came.
+  board: { state: null, pending: null, at: 0 },
 
   // Exercise 1's trip workflows (latest first), whether a hello-start waits in the commands
   // terminal, and the trips started from a button and not seen yet ("SFO JFK" -> the ids known
@@ -329,6 +343,42 @@ export function tripView(key, live) {
     actions: [open, { ...start, label: "Again" }],
     title: `${trip.id} ${ended}`,
   };
+}
+
+// --- The Trip board (Essentials) ----------------------------------------------------------------
+
+export function setBoard(state) {
+  if (state) store.board = { ...store.board, state, at: Date.now() };
+}
+
+// The board's latest trip (the last it lists), in the Temporal UI pane: its workflow, on a tab
+// (the Event History, unless another is asked for).
+export function openBoardTrip(tab = null) {
+  const id = store.board.state?.trips?.at(-1)?.workflow_id;
+  if (!id) return toast("Start a trip first: there's none in Temporal yet.");
+  openPane("temporal", { workflow: id, tab });
+}
+
+// One of the board's actions, for a module: the runner runs it in the sandbox and answers with
+// the board as it left it. One at a time. Quiet: no toast unless it fails (setup, on arrival).
+export async function boardAction(action, module, { quiet = false } = {}) {
+  if (store.board.pending) return false;
+  if (store.sandbox.state !== "ready") {
+    if (!quiet) toast("Start your sandbox first.");
+    return false;
+  }
+  store.board = { ...store.board, pending: action };
+  try {
+    const { board } = await api("/api/sandbox/action", { method: "POST", body: { action, module } });
+    setBoard(board);
+    for (const ms of [800, 2000]) setTimeout(() => hooks.poll?.(), ms);
+    return true;
+  } catch (err) {
+    toast(err.message, 5200);
+    return false;
+  } finally {
+    store.board = { ...store.board, pending: null };
+  }
 }
 
 // What the page says about a lost sandbox (the popup, and the card under the terminals).

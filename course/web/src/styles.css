@@ -7715,3 +7715,777 @@ a.menu-item {
 .map-tier-badge:focus-visible > g {
   filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gold) 60%, transparent));
 }
+
+/* --- The persona choice (PersonaChoice.vue): how do you want to learn? ----------------------- */
+.persona-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--off-white) 72%, transparent);
+  backdrop-filter: blur(6px);
+  overflow-y: auto;
+}
+.persona-choice {
+  width: min(760px, 100%);
+  padding: 32px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.persona-choice h2 {
+  margin: 4px 0 8px;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+}
+.persona-sub {
+  margin: 0 0 24px;
+  color: var(--muted);
+}
+.persona-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.persona-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 22px;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.persona-card:hover,
+.persona-card:focus-visible {
+  border-color: var(--temporal-uv);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--temporal-uv) 18%, transparent);
+  outline: none;
+}
+.persona-card.is-current {
+  border-color: var(--temporal-uv);
+}
+.persona-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+.persona-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.persona-blurb {
+  color: var(--muted);
+  line-height: 1.45;
+  flex: 1;
+}
+.persona-go {
+  margin-top: 6px;
+  font-weight: 600;
+  color: var(--temporal-uv);
+}
+.persona-cancel {
+  margin-top: 20px;
+}
+@media (max-width: 520px) {
+  .persona-choice {
+    padding: 22px 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .persona-card {
+    transition: none;
+  }
+  .persona-card:hover,
+  .persona-card:focus-visible {
+    transform: none;
+  }
+}
+
+.map-persona {
+  margin: 10px 0 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.map-persona .focus-link {
+  margin-left: 6px;
+}
+
+/* --- The Trip board (TripBoard.vue): Essentials' workspace ------------------------------------ */
+.exercise-shell.is-board .code-panel {
+  background: var(--off-white);
+}
+.trip-board {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px 28px;
+  color: var(--text);
+  background: var(--off-white);
+}
+.tb-offline {
+  max-width: 440px;
+  margin: 12vh auto 0;
+  padding: 26px;
+  text-align: center;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.tb-offline-title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.tb-offline p:not(.tb-offline-title) {
+  color: var(--muted);
+}
+.tb-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 18px;
+}
+.tb-heading h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.tb-heading p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.tb-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tb-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.tb-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.tb-flag.is-on .tb-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent);
+}
+.tb-flag.is-off {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 40%, var(--line));
+}
+.tb-flag.is-off .tb-dot {
+  background: var(--danger);
+}
+.tb-flag.is-warn {
+  color: var(--amber);
+  background: var(--amber-soft);
+  border-color: color-mix(in srgb, var(--amber) 35%, transparent);
+}
+.tb-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.tb-act {
+  padding: 8px 14px;
+  font: inherit;
+  font-weight: 650;
+  font-size: 0.92rem;
+  color: var(--text);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.tb-act:hover:not(:disabled) {
+  border-color: var(--temporal-uv);
+}
+.tb-act:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.tb-act.is-primary {
+  color: #ffffff;
+  background: var(--temporal-uv);
+  border-color: var(--temporal-uv);
+}
+.tb-act.is-danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line));
+}
+.tb-act.is-quiet {
+  margin-left: auto;
+  color: var(--muted);
+  border-color: transparent;
+  background: transparent;
+}
+.tb-empty {
+  padding: 26px;
+  text-align: center;
+  color: var(--muted);
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+}
+.tb-trip {
+  padding: 16px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.tb-trip-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+}
+.tb-trip-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.tb-route {
+  margin-left: 6px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.tb-runs {
+  display: grid;
+  gap: 14px;
+}
+.tb-runs.has-twin {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.tb-run {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.tb-run.is-temporal {
+  border-top: 3px solid var(--temporal-uv);
+}
+.tb-run.is-plain {
+  border-top: 3px solid var(--faint);
+}
+.tb-run h4 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+.tb-run h4 small {
+  display: block;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.tb-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tb-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 0;
+  color: var(--faint);
+}
+.tb-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.tb-step-text small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--amber);
+  overflow-wrap: anywhere;
+}
+.tb-step.is-done {
+  color: var(--text);
+}
+.tb-step.is-done .tb-mark {
+  color: #ffffff;
+  background: var(--success);
+  border-color: var(--success);
+}
+.tb-step.is-active,
+.tb-step.is-retrying {
+  color: var(--text);
+  font-weight: 650;
+}
+.tb-step.is-active .tb-mark {
+  border-color: var(--temporal-uv);
+  border-top-color: transparent;
+  animation: tb-spin 0.9s linear infinite;
+}
+.tb-step.is-retrying .tb-mark {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.tb-step.is-lost {
+  color: var(--danger);
+  text-decoration: line-through;
+}
+.tb-step.is-lost .tb-mark {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+@keyframes tb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.tb-status {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: var(--mist);
+}
+.tb-status.is-good {
+  color: var(--success);
+  background: var(--success-soft);
+}
+.tb-status.is-bad {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.tb-status.is-wait {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+.tb-status.is-busy {
+  color: var(--temporal-uv);
+  background: var(--temporal-uv-soft);
+}
+.tb-older {
+  margin-top: 10px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.tb-older ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.tb-world {
+  margin-top: 18px;
+}
+.tb-world h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+.tb-world h3 small {
+  display: block;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.tb-double {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 650;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.tb-systems {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+.tb-system {
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.tb-system-name {
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.tb-system ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.82rem;
+}
+.tb-booking {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  padding: 4px 0;
+  border-top: 1px solid var(--line);
+}
+.tb-booking:first-child {
+  border-top: 0;
+}
+.tb-booking.is-repeat {
+  color: var(--danger);
+  font-weight: 650;
+}
+.tb-who {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.tb-who.is-temporal {
+  color: var(--temporal-uv);
+  background: var(--temporal-uv-soft);
+}
+.tb-who.is-plain {
+  color: var(--muted);
+  background: var(--mist);
+}
+.tb-again {
+  margin-left: auto;
+  color: var(--danger);
+}
+.tb-none {
+  color: var(--faint);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tb-step.is-active .tb-mark {
+    animation: none;
+    border-top-color: var(--temporal-uv);
+  }
+}
+
+/* The guide's board buttons (#board/… links) and its "What engineers call it" notes. */
+.board-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+  padding: 9px 16px;
+  font: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  background: var(--temporal-uv);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.board-action::before {
+  content: "▶";
+  font-size: 0.75em;
+}
+.board-action:hover:not(:disabled) {
+  background: var(--temporal-uv-strong);
+}
+.board-action:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.eng-word {
+  margin: 14px 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid var(--success);
+  background: var(--success-soft);
+}
+.eng-word-kicker {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--success);
+}
+
+/* The Trip board's later modules: the manager's answer, a declined card and its undoing. */
+.tb-act.is-good {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 45%, var(--line));
+}
+.tb-step.is-failed,
+.tb-step.is-rejected {
+  color: var(--danger);
+  font-weight: 650;
+}
+.tb-step.is-failed .tb-mark,
+.tb-step.is-rejected .tb-mark {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.tb-step.is-asking {
+  color: var(--text);
+  font-weight: 650;
+}
+.tb-step.is-asking .tb-mark {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+.tb-step.is-failed .tb-step-text small,
+.tb-step.is-done .tb-step-text small {
+  color: var(--muted);
+}
+.tb-undo-title {
+  margin: 10px 0 2px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tb-booking.is-cancel {
+  color: var(--muted);
+  font-style: italic;
+}
+.tb-booking.is-cancelled .tb-what {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.tb-cancelled {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: var(--muted);
+}
+
+/* The Trip board's recorded walkthrough, for a visitor without a sandbox. */
+.tb-recording {
+  margin: 14px 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--temporal-uv) 35%, var(--line));
+  background: var(--temporal-uv-soft);
+}
+.tb-recording-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.tb-recording-title {
+  margin: 0;
+  font-weight: 750;
+}
+.tb-rec-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--danger);
+  vertical-align: 1px;
+}
+.tb-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.tb-scrub {
+  flex: 1;
+  min-width: 80px;
+  accent-color: var(--temporal-uv);
+}
+.tb-time {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tb-act.tb-speed {
+  margin-left: 0;
+  padding: 6px 8px;
+}
+.tb-caption {
+  margin: 8px 0 0;
+  min-height: 1.4em;
+  font-weight: 650;
+}
+
+/* Essentials' guide: "Without Temporal, this would…", the closing beat's scenarios, and a process of your own. */
+.without-temporal {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--danger) 40%, var(--line));
+  background: color-mix(in srgb, var(--danger) 6%, var(--surface));
+}
+.without-temporal p {
+  margin: 0;
+}
+.without-temporal .without-temporal-title {
+  margin-bottom: 4px;
+  font-weight: 800;
+  color: var(--danger);
+}
+.spot-it {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.spot-it summary {
+  cursor: pointer;
+}
+.spot-it[open] summary {
+  margin-bottom: 8px;
+}
+.spot-it p {
+  margin: 6px 0 0;
+}
+.own-process {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+.own-process textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--text);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  resize: vertical;
+}
+.own-process button {
+  justify-self: start;
+}
+
+/* A question with plain answers (QuestionCard): an Essentials challenge, or a module's quiz. */
+.question-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+.qc-question {
+  margin: 0;
+  font-weight: 700;
+}
+.qc-why {
+  margin: 6px 0 2px 34px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.qc-why.is-right {
+  color: var(--text);
+}
+.question-card .challenge-choice:disabled {
+  cursor: default;
+}
+.question-card .challenge-label p {
+  margin: 0;
+}
+
+/* A Trip board module's check (ModuleCheck): what the board saw, and its question. */
+.module-check {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.module-check.is-done {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--line));
+}
+.mc-head p {
+  margin: 0;
+}
+.mc-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--temporal-uv);
+}
+.mc-todo {
+  color: var(--muted);
+  font-size: 13px;
+}
+.mc-done {
+  font-weight: 750;
+  color: var(--success);
+}
+.mc-parts {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mc-part {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.mc-part > div {
+  flex: 1;
+  min-width: 0;
+}
+.mc-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--line-strong);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--muted);
+}
+.mc-part.is-done .mc-mark {
+  color: #ffffff;
+  background: var(--success);
+  border-color: var(--success);
+}
+.mc-part-title {
+  margin: 1px 0 2px;
+  font-weight: 750;
+}
+.mc-part-text,
+.mc-part-note {
+  margin: 0;
+  font-size: 13.5px;
+}
+.mc-part-note {
+  color: var(--muted);
+}
+.mc-quiz .question-card {
+  margin-top: 6px;
+}

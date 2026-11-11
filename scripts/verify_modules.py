@@ -5,7 +5,9 @@ builds on solved, and run its check: it must fail when the module has a TODO of 
 pass once that TODO is solved too. So a learner who enters a module (./quest enter) has all
 the code it needs, and nothing it doesn't. Every challenge's recordings must be there and
 current, each choice's patch must apply, and each recorded choice must have come out the way
-its `right` flag says (scripts/record_challenges.py makes them). The provided-code tests (test_base.py) must pass
+its `right` flag says (scripts/record_challenges.py makes them). Every Essentials module's
+walkthrough, what a visitor without a sandbox watches, must be there and current
+(scripts/record_walkthroughs.py makes them). The provided-code tests (test_base.py) must pass
 with every TODO open, and the scripted walkthroughs (test_walkthroughs.py) once A4 is solved,
 since they need search_flights.
 
@@ -23,6 +25,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from challenges import build as build_challenge  # noqa: E402
 from challenges import challenges  # noqa: E402
+from record_walkthroughs import module_dirs as essentials_modules  # noqa: E402
+from record_walkthroughs import stale as stale_walkthrough  # noqa: E402
 from render import blocks, masters, outputs, render, todo_modules  # noqa: E402
 
 from quests import ROOT, closure, modules  # noqa: E402
@@ -92,12 +96,22 @@ def recorded_challenges() -> list[str]:
     return problems
 
 
+def recorded_walkthroughs() -> list[str]:
+    """Each Essentials module's walkthrough: there, and made from the trip and the board as they are."""
+    return [
+        f"{module}: {why} (run scripts/record_walkthroughs.py {module})"
+        for module, folder in essentials_modules().items()
+        if (why := stale_walkthrough(module, folder))
+    ]
+
+
 async def main() -> None:
     if not (ROOT / ".dogwood/bin/dogwood").exists():
         sys.exit("the A14 check needs the dogwood CLI: run scripts/setup_dogwood.sh")
-    if problems := unique_todos() + recorded_challenges():
+    if problems := unique_todos() + recorded_challenges() + recorded_walkthroughs():
         sys.exit("\n".join(problems))
     print(f"  challenges   ok     {', '.join(challenges())}: recorded, current, and right where they say")
+    print(f"  walkthroughs ok     {', '.join(essentials_modules())}: recorded, and current")
     with_todo = todo_modules()
     cases = [("base", set(), ["tests/test_base.py"], True)]
     cases.append(("walk", set(closure(["A4"])) | {"A4"}, ["tests/test_walkthroughs.py"], True))

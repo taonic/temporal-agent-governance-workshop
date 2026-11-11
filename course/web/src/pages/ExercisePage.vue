@@ -13,8 +13,10 @@ import ExerciseInstructions from "../components/ExerciseInstructions.vue";
 import MaximizeButton from "../components/MaximizeButton.vue";
 import SandboxPanes from "../components/SandboxPanes.vue";
 import TerminalDock from "../components/TerminalDock.vue";
+import TripBoard from "../components/TripBoard.vue";
+import { actionsIn } from "../board.js";
 import Tour from "../Tour.vue";
-import { markSolutionUsed, moduleOfBeat } from "../progress.js";
+import { markSolutionUsed, moduleOfBeat, modulesById } from "../progress.js";
 import {
   api,
   applyAllowance,
@@ -26,6 +28,7 @@ import {
   resumeSandbox,
   runInTerminal,
   save,
+  setBoard,
   setTrips,
   setWorkerState,
   store,
@@ -36,6 +39,20 @@ const props = defineProps({ id: { type: String, required: true } });
 
 const exercise = computed(() => course.exercises.find((e) => e.id === props.id));
 const mode = computed(() => effectiveMode());
+// An Essentials exercise: the Trip board in place of the editor and the terminals.
+const board = computed(() => exercise.value.layout === "board");
+// The module on show, and the board actions its text uses (the board offers them too). On a
+// challenge's beat, the board stays the module's it follows: a question needs no board of its
+// own, and setting one up would start the module's over, trips and all.
+const boardModule = computed(() => {
+  if (!board.value) return null;
+  const id = store.route.module ?? exercise.value.modules[0];
+  return modulesById.get(id)?.kind === "challenge" ? modulesById.get(id).after : id;
+});
+const boardActions = computed(() => {
+  const beats = exercise.value.moduleBeats?.[boardModule.value] ?? [];
+  return actionsIn(exercise.value.modes.browser.sections.filter((s) => beats.includes(s.id)).map((s) => s.html).join("\n"));
+});
 const live = computed(() => mode.value === "browser" && store.sandbox.state === "ready");
 // Exercise 1 starts trips from buttons, which show each trip's workflow: the poll lists them.
 // Its guide starts trips, or opens the hello worker's workflows: poll for them.
@@ -251,7 +268,9 @@ async function poll() {
     try {
       const files = exercise.value.files.map((f) => f.path).join(",");
       const trips = hasTrips.value ? "&trips=1" : "";
-      const data = await api(`/api/sandbox/poll?exercise=${encodeURIComponent(props.id)}&files=${encodeURIComponent(files)}${trips}`);
+      const boardParam = board.value ? "&board=1" : "";
+      const data = await api(`/api/sandbox/poll?exercise=${encodeURIComponent(props.id)}&files=${encodeURIComponent(files)}${trips}${boardParam}`);
+      if (data.board) setBoard(data.board);
       stamps.value = data.files;
       store.llmMode = data.llmMode;
       applyAllowance(data.allowance);
@@ -274,7 +293,8 @@ async function poll() {
       if (!live.value) return;
     }
   }
-  pollTimer = setTimeout(poll, 4000);
+  // The board's steps take a few seconds each: poll it more often, to see each one tick off.
+  pollTimer = setTimeout(poll, board.value ? 2500 : 4000);
 }
 
 function celebrate() {
@@ -365,7 +385,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <main v-if="exercise" class="exercise-shell" :class="[`mode-${mode}`, { 'guide-only': store.guideOnly, 'code-maximized': codeMaximized, 'pane-maximized': paneMaximized, 'pane-shown': paneShown }]" :style="shellStyle">
+  <main v-if="exercise" class="exercise-shell" :class="[`mode-${mode}`, { 'is-board': board, 'guide-only': store.guideOnly, 'code-maximized': codeMaximized, 'pane-maximized': paneMaximized, 'pane-shown': paneShown }]" :style="shellStyle">
     <section class="workspace-panel code-panel" aria-label="Workspace">
       <div v-if="mode === 'browser'" class="workspace-tabs" role="tablist" aria-label="Workspace" data-tour="workspace-tabs" @dblclick="onTabsDblclick">
         <button
@@ -380,7 +400,7 @@ onBeforeUnmount(() => {
           :title="needsSandbox(view.key) && !live ? 'Start your sandbox first' : view.title"
           @click="showView(view.key)"
         >
-          {{ view.label }}
+          {{ view.key === "code" && board ? "Trip board" : view.label }}
         </button>
         <div class="workspace-actions" @dblclick.stop>
           <button v-if="paneMaximized && store.workspaceView === 'console' && live" class="icon-btn workspace-tour" type="button" title="A tour of the Agent UI" @click="agentTourOpen = true">Tour</button>
@@ -391,14 +411,16 @@ onBeforeUnmount(() => {
           </template>
           <MaximizeButton
             :maximized="codeMaximized"
-            :what="store.workspaceView === 'code' ? 'the workspace' : `the ${VIEWS.find((v) => v.key === store.workspaceView).label}`"
+            :what="store.workspaceView === 'code' ? (board ? 'the Trip board' : 'the workspace') : `the ${VIEWS.find((v) => v.key === store.workspaceView).label}`"
             :to="store.workspaceView === 'code' ? 'the whole workspace' : 'the whole screen'"
             @toggle="codeMaximized = !codeMaximized"
           />
         </div>
       </div>
       <div class="workspace-views">
+        <TripBoard v-if="board" v-show="store.workspaceView === 'code'" :exercise="exercise" :module="boardModule" :actions="boardActions" :live="live" />
         <CodeEditor
+          v-else
           v-show="mode === 'local' || store.workspaceView === 'code'"
           v-model:maximized="codeMaximized"
           :exercise="exercise"
@@ -420,7 +442,7 @@ onBeforeUnmount(() => {
         <!-- Mounted while the sandbox is up and only hidden behind Code, so its frames stay loaded. -->
         <SandboxPanes v-if="live" ref="panes" :live="live" />
       </div>
-      <template v-if="mode === 'browser'">
+      <template v-if="mode === 'browser' && !board">
         <div class="dock-resizer" role="separator" aria-orientation="horizontal" aria-label="Resize the terminals" @pointerdown="resizeDock" />
         <TerminalDock ref="dock" :exercise="exercise" :live="live" />
       </template>

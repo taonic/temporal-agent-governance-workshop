@@ -5,6 +5,8 @@
 #   flawless    a boss beaten without losing a heart
 #   explorer    a module passed in every branch
 #   pass        the module named by `module`
+# `personas`: who sees it (none: everyone). Essentials has one branch and no solutions, so No
+# Peeking, Explorer and Cross-Team are the Developer persona's.
 # Tier badges are named in each branch.md, under its tier; boss badges are its classTitle.
 - id: clean-run
   name: Clean Run
@@ -12,6 +14,7 @@
   rule: clean-run
   criteria: Every challenge in a branch right on the first try
 - id: no-peeking
+  personas: [developer]
   name: No Peeking
   icon: closed-eye
   rule: no-peeking
@@ -22,11 +25,13 @@
   rule: flawless
   criteria: Beat a boss without losing a heart
 - id: explorer
+  personas: [developer]
   name: Explorer
   icon: compass
   rule: explorer
   criteria: Pass a module in every branch
 - id: cross-team
+  personas: [developer]
   name: Cross-Team
   icon: link
   rule: pass
