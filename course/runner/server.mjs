@@ -11,7 +11,7 @@ import path from "node:path";
 
 import { WebSocketServer } from "ws";
 
-import { Accounts, DEFAULT_ALLOWANCE_MINUTES } from "./accounts.mjs";
+import { Accounts, DEFAULT_ALLOWANCE_MINUTES, E2E_EMAIL } from "./accounts.mjs";
 import { Activity } from "./activity.mjs";
 import { createAdmin } from "./admin.mjs";
 import { clearedSessionCookie, learnerFromRequest, sessionCookie, sessionToken } from "./auth.mjs";
@@ -247,7 +247,10 @@ const routes = {
     const session = sessionOf(req);
     if (!session) throw Object.assign(new Error("Sign in first."), { status: 401 });
     const { requested } = accounts.setProfile(session.id, await readJson(req));
-    if (requested) {
+    // The admins hear of a request by email; not of the e2e tests' (e2e+…@temporalquest.dev),
+    // which file one on every run, and approve it themselves.
+    if (requested && E2E_EMAIL.test(session.email)) log(`access request from e2e learner ${session.id}: no email`);
+    else if (requested) {
       log(`access request from learner ${session.id}`);
       await mailer.accessRequested(config.adminEmails, requested, origins(req).site).catch((err) => log(`access request email failed: ${err.message}`));
     }
