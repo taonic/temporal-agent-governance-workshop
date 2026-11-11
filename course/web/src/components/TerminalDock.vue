@@ -154,16 +154,34 @@ function disconnect(name) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// Commands typed in order. A worker command first interrupts whatever runs there. The terminal
-// goes to its bottom first: the command and what it prints are what you're there to see, and
-// xterm keeps following the output from there (typed through the socket, not its keyboard, the
-// command wouldn't scroll it by itself).
+// Whether the shell's prompt is back: the line the cursor is on ends with "$" (bash's,
+// "workshop:/workshop$"), so what's typed next goes to the shell.
+function atPrompt(name) {
+  const buffer = terms[name]?.term.buffer.active;
+  if (!buffer) return true;
+  return (buffer.getLine(buffer.baseY + buffer.cursorY)?.translateToString(true) ?? "").trimEnd().endsWith("$");
+}
+
+// After a Ctrl-C, until the prompt is back (at most `ms`): what's typed while the program is still
+// exiting can be thrown away with it (uv resets the terminal as it goes, discarding the input
+// waiting), and the worker takes a while to shut down on a busy sandbox.
+async function untilPrompt(name, ms = 15_000) {
+  const end = Date.now() + ms;
+  await sleep(300);
+  while (!atPrompt(name) && Date.now() < end) await sleep(150);
+  await sleep(150);
+}
+
+// Commands typed in order. A worker command first interrupts whatever runs there, and waits for
+// the prompt. The terminal goes to its bottom first: the command and what it prints are what
+// you're there to see, and xterm keeps following the output from there (typed through the socket,
+// not its keyboard, the command wouldn't scroll it by itself).
 async function type(name, commands, { interrupt }) {
   active.value = name;
   terms[name]?.term.scrollToBottom();
   if (interrupt) {
     send(name, "\x03");
-    await sleep(900);
+    await untilPrompt(name);
   }
   terms[name]?.term.scrollToBottom();
   for (const command of commands) send(name, `${command}\r`);
