@@ -12,6 +12,9 @@ export const SIGNIN_KEY = process.env.E2E_SIGNIN_KEY || "";
 export const ADMIN_EMAIL = (process.env.E2E_ADMIN_EMAIL || "e2e+admin@temporalquest.dev").toLowerCase();
 // The sandbox tier's learner, the same every run (the teardown deletes it).
 export const SANDBOX_EMAIL = "e2e+sandbox@temporalquest.dev";
+// Each exercise's walkthrough's learner (walkthroughs.spec.mjs), the same every run: each walks in
+// a sandbox of its own, all at once, and is deleted after.
+export const WALK_EMAIL = (exercise) => `e2e+walk-${exercise}@temporalquest.dev`;
 // Set to 1 to keep the sandbox tier off even with the key (during an event, say).
 export const SKIP_SANDBOX = /^(1|true|yes)$/i.test(process.env.E2E_SKIP_SANDBOX || "");
 // The sandbox tier's learner (its cookies), kept for the run: a test after a failure, in a new

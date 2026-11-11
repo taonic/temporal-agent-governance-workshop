@@ -21,7 +21,9 @@ export default defineConfig({
   fullyParallel: true,
   // One retry for the network's sake. The sandbox tier opts out: a retry would build a second sandbox.
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  // Enough for the walkthroughs to run side by side (walkthroughs.spec.mjs), each in its own
+  // sandbox, beside the sandbox tier and the quick tests. They mostly wait on their sandboxes.
+  workers: process.env.CI ? 10 : undefined,
   forbidOnly: Boolean(process.env.CI),
   reporter: [
     ["list"],

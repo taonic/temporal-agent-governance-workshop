@@ -1,15 +1,13 @@
-// @sandbox: a learner's whole run, in one real Daytona sandbox: sign in through the page,
-// start the sandbox, use both terminals, open the Temporal UI and the Agent UI, then every
-// exercise the way its instructions say (walkthroughs.mjs), each ending with its ✓ Check. The
-// sandbox is deleted at the end, pass or fail (global-teardown.mjs). Skips without
-// E2E_SIGNIN_KEY, or with E2E_SKIP_SANDBOX=1. Its learner (SANDBOX_EMAIL) is put on the
-// allowlist by the tests' admin, and deleted by the teardown.
+// @sandbox: a learner's run, in one real Daytona sandbox: sign in through the page, start the
+// sandbox, use both terminals, a live challenge, the Temporal UI and the Agent UI, and Essentials'
+// E2 on its Trip board. The exercises' walkthroughs run beside it, each in a sandbox of its own
+// (walkthroughs.spec.mjs). The sandbox is deleted at the end, pass or fail (global-teardown.mjs).
+// Skips without E2E_SIGNIN_KEY, or with E2E_SKIP_SANDBOX=1. Its learner (SANDBOX_EMAIL) is put on
+// the allowlist by the tests' admin, and deleted by the teardown.
 //
 // The tests run in order, as one learner, but one failing doesn't stop the rest: Playwright
 // starts a new worker for the next test, which signs in as the same learner (its cookies are
-// kept in LEARNER_STATE) and so finds the same sandbox. Each walkthrough starts with the guide's
-// Start over, which gives it a new sandbox with that exercise as it starts, so it doesn't
-// depend on the one before having passed.
+// kept in LEARNER_STATE) and so finds the same sandbox.
 import fs from "node:fs";
 
 import { LEARNER_STATE, SANDBOX_EMAIL, SIGNIN_KEY, SKIP_SANDBOX, e2eCode } from "../env.mjs";
@@ -175,17 +173,7 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     expect(exercises, "add a walkthrough to walkthroughs.mjs for each new exercise, and remove the ones that are gone").toEqual(Object.keys(WALKTHROUGHS));
   });
 
-  for (const [id, walk] of Object.entries(WALKTHROUGHS)) {
-    test(`${id}, as its instructions say`, async ({}, testInfo) => {
-      test.setTimeout(30 * MINUTE);
-      const learner = new Learner(page, testInfo);
-      await learner.openExercise(id);
-      await walk(learner);
-    });
-  }
-
-  // After the walkthroughs: opening a later exercise catches up the earlier ones (the poll runs
-  // ./quest catch-up), which, just before exercise 1, could race its Start over.
+  // Opening a later exercise catches up the earlier ones (the poll runs ./quest catch-up).
   test("the Agent UI opens in its pane", async () => {
     test.setTimeout(3 * MINUTE);
     const first = (await coursePages(page)).find((p) => p.hash.startsWith("#/exercise/") && !p.hash.endsWith("/01-hello-temporal"));

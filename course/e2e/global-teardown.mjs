@@ -6,12 +6,18 @@ import fs from "node:fs";
 
 import { request } from "@playwright/test";
 
-import { BASE_URL, LEARNER_STATE, SANDBOX_EMAIL, SIGNIN_KEY } from "./env.mjs";
+import { BASE_URL, LEARNER_STATE, SANDBOX_EMAIL, SIGNIN_KEY, WALK_EMAIL } from "./env.mjs";
 import { deleteLearner } from "./tests/accounts.mjs";
+import { WALKTHROUGHS } from "./tests/walkthroughs.mjs";
 
 export async function deleteLearnerSandbox() {
-  // Deleting the learner deletes their sandbox too, wherever the run got to.
-  if (SIGNIN_KEY) await deleteLearner(SANDBOX_EMAIL).catch((err) => console.log(`deleting the sandbox learner: ${err.message}`));
+  // Deleting a learner deletes their sandbox too, wherever the run got to: the sandbox tier's, and
+  // each walkthrough's (walkthroughs.spec.mjs deletes its own, unless the run died first).
+  if (SIGNIN_KEY) {
+    for (const email of [SANDBOX_EMAIL, ...Object.keys(WALKTHROUGHS).map(WALK_EMAIL)]) {
+      await deleteLearner(email).catch((err) => console.log(`deleting ${email}: ${err.message}`));
+    }
+  }
   if (!fs.existsSync(LEARNER_STATE)) return;
   const api = await request.newContext({ baseURL: BASE_URL, storageState: LEARNER_STATE });
   try {
