@@ -8919,6 +8919,7 @@ a.menu-item {
 .sketch-map {
   --ink: #1f2a6b;
   --pencil: #5b6170;
+  --faded: #b3b8c2;
   --red-ink: #c2410c;
   --tick: #2f9e6f;
   --marker: #7c3aed;
@@ -8964,7 +8965,7 @@ a.menu-item {
 
 .sketch-route {
   fill: none;
-  stroke: var(--pencil);
+  stroke: var(--faded);
   stroke-width: 2.2;
   stroke-dasharray: 7 6;
   stroke-linecap: round;
@@ -9005,6 +9006,25 @@ a.menu-item {
 .sketch-stop.is-locked,
 .sketch-stop.is-soon {
   opacity: 0.8;
+}
+
+/* Stops still ahead are pencilled in grey: only what's done (and where you are) is inked. */
+.sketch-stop:not(.is-done):not(.is-next) .sketch-stamp {
+  fill: #f3f2ee;
+  stroke: var(--faded);
+}
+
+.sketch-stop:not(.is-done):not(.is-next) .sketch-emoji {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.sketch-stop:not(.is-done):not(.is-next) .sketch-name {
+  fill: #9097a3;
+}
+
+.sketch-stop:not(.is-done):not(.is-next) .sketch-note {
+  fill: #b3b8c2;
 }
 
 .sketch-stop:focus-visible .sketch-stamp {
