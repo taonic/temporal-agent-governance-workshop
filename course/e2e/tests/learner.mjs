@@ -130,14 +130,29 @@ export class Learner {
 
   // Waits for what's running in a terminal to finish, and returns its exit status: a marker
   // typed after it, which the shell only runs once the command before it is done. The marker it
-  // waits for is built by the shell ($((…)), $?), so the typed line never matches it.
+  // waits for is built by the shell ($((…)), $?), so the typed line never matches it. Typed while
+  // the command starts, the marker can be swallowed by it (a program that reads or flushes the
+  // terminal's input): once the shell's prompt is back with no marker, it's typed again ($? is
+  // still the command's, since nothing ran in between).
   async settle(name, { timeout = 2 * MINUTE } = {}) {
     const id = Math.floor(Math.random() * 1e6);
-    await this.type(name, `echo e2e-$((${id}+1))-exit-$?`);
-    const rows = this.terminalText(name);
+    const line = `echo e2e-$((${id}+1))-exit-$?`;
     const marker = new RegExp(`e2e-${id + 1}-exit-(\\d+)`);
-    await expect(rows).toContainText(marker, { timeout });
-    return Number((await rows.textContent()).match(marker)[1]);
+    const deadline = Date.now() + timeout;
+    await this.type(name, line);
+    let typedAt = Date.now();
+    for (;;) {
+      const text = await this.terminalLines(name);
+      const found = text.match(marker);
+      if (found) return Number(found[1]);
+      const last = text.trimEnd().split("\n").at(-1)?.trim() ?? "";
+      if (last.endsWith("$") && Date.now() - typedAt > 5 * SECOND) {
+        await this.type(name, line);
+        typedAt = Date.now();
+      }
+      if (Date.now() > deadline) throw new Error(`the ${name} terminal's command didn't finish within ${timeout / SECOND}s`);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
   }
 
   // --- The guide ----------------------------------------------------------------------------
