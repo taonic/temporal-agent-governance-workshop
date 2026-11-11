@@ -13,7 +13,7 @@ const props = defineProps({
 });
 const emit = defineEmits(["done"]);
 
-const ROLES = ["Developer", "Architect", "Engineering manager", "Platform/SRE", "Data/ML", "Product owner", "Other"];
+const ROLES = ["Developer", "Architect", "Engineering manager", "Platform/SRE", "Data/ML", "Product owner", "Sales manager", "Marketing", "Other"];
 
 const email = ref("");
 const code = ref("");
