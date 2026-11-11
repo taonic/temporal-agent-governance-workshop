@@ -102,13 +102,14 @@ jobs:
       E2E_ADMIN_EMAIL: ${{ vars.E2E_ADMIN_EMAIL }}
       E2E_SKIP_SANDBOX: ${{ vars.E2E_SKIP_SANDBOX }}
     steps:
-      - name: Note the start
-        run: echo "STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
-
       # After a deploy, the tests as they were in what was deployed.
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # After the checkout: the job's steps run in course/e2e, which it makes.
+      - name: Note the start
+        run: echo "STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
 
       - uses: actions/setup-node@v4
         with:

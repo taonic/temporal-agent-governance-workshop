@@ -94,6 +94,14 @@ export class Learner {
       }, pages);
   }
 
+  // Waits for a terminal to have printed `text`, scrollback included: output that went by above the
+  // rows on screen (a traceback after it, say) counts. Whitespace aside, so a line wrapped across
+  // rows still matches.
+  async sawInTerminal(name, text, message, { timeout = 30 * SECOND } = {}) {
+    const want = text.replace(/\s+/g, "");
+    await expect.poll(async () => (await this.terminalLines(name)).replace(/\s+/g, "").includes(want), { message, timeout }).toBe(true);
+  }
+
   // The last ▶'s output with the terminal's rows run together: a line longer than the terminal
   // is wrapped across rows, so a phrase in it is only whole this way.
   get flatOutput() {

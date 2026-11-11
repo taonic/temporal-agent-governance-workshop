@@ -206,20 +206,27 @@ test.describe("a learner's sandbox, start to finish", { tag: "@sandbox" }, () =>
     await expect(page.locator(".sandbox-pill")).toHaveText(/Sandbox ready/, { timeout: 3 * MINUTE });
     const board = page.locator(".trip-board");
     await expect(board.locator(".tb-flag", { hasText: "A mistake in the hotel step" }), "the board never set E2 up").toBeVisible({ timeout: 2 * MINUTE });
-    await board.getByRole("button", { name: "▶ Start a trip" }).click();
+    // The board's actions are the guide's buttons, a step at a time: on to the step that has one.
+    const nextBeat = async () => {
+      await page.locator(".guide-bubble").click({ position: { x: 4, y: 4 } });
+      await page.locator(".guide-replies .guide-reply:not(.is-back)").last().click();
+    };
+    const act = async (action) => {
+      const button = page.locator(`.guide-panel .board-action[data-board-action="${action}"]`).last();
+      for (let i = 0; i < 8 && !(await button.isVisible()); i++) await nextBeat();
+      await button.click();
+    };
+    await act("start-trip");
     const temporal = board.locator(".tb-run.is-temporal");
     const plain = board.locator(".tb-run.is-plain");
     await expect(plain.locator(".tb-status"), "the plain twin should crash at the hotel").toContainText("the trip is lost", { timeout: 2 * MINUTE });
     await expect(temporal.locator(".tb-step.is-retrying"), "the Temporal trip should wait at the hotel").toContainText("Booking the hotel", { timeout: MINUTE });
-    await board.getByRole("button", { name: "🛠 Ship the fix" }).click();
+    await act("ship-fix");
     await expect(temporal.locator(".tb-status"), "the same trip should finish after the fix").toContainText("each one once", { timeout: 2 * MINUTE });
     await expect(plain.locator(".tb-status")).toContainText("the trip is lost");
     await expect(board.locator(".tb-double")).toHaveCount(0);
     // Its check: seen on the board; then its question, and the module is done.
-    for (let i = 0; i < 8 && !(await page.locator(".module-check").count()); i++) {
-      await page.locator(".guide-bubble").click({ position: { x: 4, y: 4 } });
-      await page.locator(".guide-replies .guide-reply:not(.is-back)").last().click();
-    }
+    for (let i = 0; i < 8 && !(await page.locator(".module-check").count()); i++) await nextBeat();
     const check = page.locator(".module-check");
     await expect(check.locator(".mc-part").first()).toHaveClass(/is-done/, { timeout: 30_000 });
     await check.locator(".challenge-choice", { hasText: "carried on from the hotel step" }).click();

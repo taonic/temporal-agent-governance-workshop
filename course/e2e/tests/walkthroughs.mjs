@@ -398,13 +398,13 @@ export const WALKTHROUGHS = {
 
     await l.step("Undo a booking");
     expect(await l.runButton("uv run hello-book SFO JFK 0000"), "a declined card should fail the booking").not.toBe(0);
-    await expect(l.terminalText("worker"), "the booking reserved no hotel before the card").toContainText("Reserved hotel HT-JFK", { timeout: 30 * SECOND });
+    await l.sawInTerminal("worker", "Reserved hotel HT-JFK", "the booking reserved no hotel before the card");
     await l.openFile("hello/saga.py");
     await l.insert();
     await l.restartWorker();
     expect(await l.runButton("uv run hello-book SFO JFK 0000"), "a declined card should still fail the booking").not.toBe(0);
-    await expect(l.terminalText("worker"), "the saga didn't cancel the hotel").toContainText("Cancelled hotel HT-JFK", { timeout: 30 * SECOND });
-    await expect(l.terminalText("worker"), "the saga didn't cancel the flight").toContainText("Cancelled flight FL-SFOJFK", { timeout: 30 * SECOND });
+    await l.sawInTerminal("worker", "Cancelled hotel HT-JFK", "the saga didn't cancel the hotel");
+    await l.sawInTerminal("worker", "Cancelled flight FL-SFOJFK", "the saga didn't cancel the flight");
     expect(await l.runButton("uv run hello-book SFO JFK 4242"), "a good card should book the trip").toBe(0);
 
     await l.step("Break a running hold");

@@ -15,11 +15,14 @@ import { badgeContext, earnedNow, isComingSoon, missingFor as badgeMissingFor } 
 import { addPick, xpFor } from "./challenge.js";
 import { QUESTION_XP, quizXp } from "./race/rules.js";
 import { keepPersona } from "./persona.js";
-import { api, course, load, save, store } from "./store.js";
+import { api, course, fullCourse, load, save, store } from "./store.js";
 
 export const LEVEL_XP = 50;
 
 export const modulesById = new Map(course.modules.map((m) => [m.id, m]));
+// Every persona's modules: progress is the learner's whatever they learn as, so what they did as
+// another persona is kept, and counts (its XP), though this persona's map doesn't show it.
+const anyModuleById = new Map(fullCourse.modules.map((m) => [m.id, m]));
 export const branchesById = new Map(course.branches.map((b) => [b.id, b]));
 // Every module in map order: branch by branch, each in its own order, its boss last.
 export const mapOrder = course.branches.flatMap((b) => [...b.modules, ...(b.boss ? [b.boss] : [])]);
@@ -42,7 +45,7 @@ function initialPath() {
 }
 
 export const progress = reactive({
-  completed: load("modules", []).filter((id) => modulesById.has(id)),
+  completed: load("modules", []).filter((id) => anyModuleById.has(id)),
   // Each challenge's picks, in order: { FC1: ["A", "C"] }. Its XP comes from them.
   attempts: load("attempts", {}),
   path: initialPath(),
@@ -111,7 +114,7 @@ async function syncFromServer() {
     const unsent = mine ? progress.completed.filter((id) => !server.completed.includes(id)) : [];
     for (const id of unsent) track("module_passed", id);
     syncing = true;
-    progress.completed = [...server.completed, ...unsent].filter((id) => modulesById.has(id));
+    progress.completed = [...server.completed, ...unsent].filter((id) => anyModuleById.has(id));
     progress.attempts = mine ? { ...progress.attempts, ...server.attempts } : server.attempts;
     progress.solutionUsed = [...new Set([...(mine ? progress.solutionUsed : []), ...(server.solutionUsed ?? [])])];
     const kept = Object.fromEntries((server.badges ?? []).filter((b) => badgesById.has(b.id)).map((b) => [b.id, b.at ?? Date.now()]));
@@ -154,7 +157,7 @@ export const activePath = computed(() => course.paths.find((p) => p.id === progr
 
 // A module's XP, or a challenge's for the picks it took (20, 10, then 2).
 export function xpOf(id) {
-  const m = modulesById.get(id);
+  const m = anyModuleById.get(id);
   if (m?.kind !== "challenge") return m?.xp ?? 0;
   return xpFor(progress.attempts[id] ?? [], rightChoice(id));
 }
@@ -318,7 +321,7 @@ export function finishBoss(id, won, hearts) {
 
 // The right choice of a challenge, from the exercise that has it.
 function rightChoice(id) {
-  const exercise = course.exercises.find((ex) => ex.challenges?.[id]);
+  const exercise = fullCourse.exercises.find((ex) => ex.challenges?.[id]);
   return exercise?.challenges[id].choices.find((c) => c.right)?.id ?? null;
 }
 

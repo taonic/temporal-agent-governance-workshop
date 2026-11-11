@@ -51,11 +51,17 @@ export const test = base.extend({
 });
 
 // The home page as a learner who has started sees it: a new one lands on the first-run view
-// (one next step), and asks for the whole map.
+// (one next step), and asks for the whole map. A learner with progress may land on the map
+// itself, once their progress has come from the server: the first-run view can go while it's
+// being clicked, so this takes whichever comes, until the map shows.
 export async function wholeMap(page) {
   await page.goto("/#/");
-  await page.getByRole("button", { name: /Show the whole map/ }).click();
-  await expect(page.locator(".map-stage")).toBeVisible();
+  const stage = page.locator(".map-stage");
+  const everything = page.getByRole("button", { name: /Show the whole map/ });
+  await expect(async () => {
+    if (!(await stage.isVisible())) await everything.click({ timeout: 3000 });
+    await expect(stage).toBeVisible({ timeout: 3000 });
+  }).toPass({ timeout: 30_000 });
 }
 
 // The course's exercises, as the map's playable nodes name them (each module says which

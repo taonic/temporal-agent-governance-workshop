@@ -27,7 +27,7 @@ files:
 
 ## 3. Call the concierge's workflow
 
-Find the other `TODO(ch03)`, in `reserve_table`, and replace it:
+Back in `travel_agent/agent/concierge.py`, find the other `TODO(ch03)`, in `reserve_table`, and replace it:
 
 ```python travel_agent/agent/concierge.py
 # The same client, another operation. Behind this one is a plain workflow, not an agent: the
