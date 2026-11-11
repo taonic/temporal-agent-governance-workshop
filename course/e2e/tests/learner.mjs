@@ -97,9 +97,15 @@ export class Learner {
   // Waits for a terminal to have printed `text`, scrollback included: output that went by above the
   // rows on screen (a traceback after it, say) counts. Whitespace aside, so a line wrapped across
   // rows still matches.
-  async sawInTerminal(name, text, message, { timeout = 30 * SECOND } = {}) {
+  // With `moreThan`, it waits for one more than that many (countInTerminal, before the command).
+  async sawInTerminal(name, text, message, { timeout = 30 * SECOND, moreThan = 0 } = {}) {
+    await expect.poll(() => this.countInTerminal(name, text), { message, timeout }).toBeGreaterThan(moreThan);
+  }
+
+  // How many times a terminal has printed `text`, scrollback included, whitespace aside.
+  async countInTerminal(name, text) {
     const want = text.replace(/\s+/g, "");
-    await expect.poll(async () => (await this.terminalLines(name)).replace(/\s+/g, "").includes(want), { message, timeout }).toBe(true);
+    return (await this.terminalLines(name)).replace(/\s+/g, "").split(want).length - 1;
   }
 
   // The last ▶'s output with the terminal's rows run together: a line longer than the terminal

@@ -416,7 +416,7 @@ export const WALKTHROUGHS = {
     await l.insert();
     await l.restartWorker();
     expect(await l.runButton("uv run hello-hold 15A 20"), "hello-hold didn't start 15A").toBe(0);
-    await expect(l.terminalText("worker"), "the new hold sent no email").toContainText("Emailed the traveller: seat 15A", { timeout: 30 * SECOND });
+    await l.sawInTerminal("worker", "Emailed the traveller: seat 15A", "the new hold sent no email");
     // 14C's two minutes, and a moment for its timer's task to fail on the new code.
     await sleep(Math.max(0, heldAt + 2 * MINUTE + 10 * SECOND - Date.now()));
     await l.openInTemporal("button[data-workflow-open]");
@@ -432,8 +432,9 @@ export const WALKTHROUGHS = {
     // 14C is still on show in the Temporal UI: its failed task is retried, and it completes.
     await untilStatus(l, "hold-14c-", "Completed", "14C didn't complete on the patched code");
     await l.view("Code");
+    const emailed = await l.countInTerminal("worker", "Emailed the traveller: seat 15A");
     expect(await l.runButton("uv run hello-hold 15A 20"), "hello-hold didn't start 15A").toBe(0);
-    await expect(l.terminalText("worker"), "a new hold on the patched code sent no email").toContainText("Emailed the traveller: seat 15A", { timeout: 30 * SECOND });
+    await l.sawInTerminal("worker", "Emailed the traveller: seat 15A", "a new hold on the patched code sent no email", { moreThan: emailed });
 
     await l.step("Replay it first");
     await l.openFile("hello/replay.py");
