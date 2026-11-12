@@ -9,7 +9,7 @@ learner's browser ──▶ Fly app: temporal-quest  (one machine, one Node proc
                         :443  the site, /api, the model passthrough (/llm/v1)
                         :8081 the Temporal UI proxy
                               │
-                              ├──▶ Daytona: one sandbox per learner (2 vCPU / 4 GB, from a snapshot)
+                              ├──▶ Daytona: one sandbox per learner (1 vCPU / 2 GB, from a snapshot)
                               └──▶ Gemini: the agents' model and Ask Temporal
 ```
 
@@ -125,7 +125,7 @@ The app's own secrets (`GEMINI_API_KEY`, `RESEND_API_KEY`, ...) stay in Fly; CI 
 
 **A week before**
 
-- **Daytona quota.** 40 sandboxes × 2 vCPU × 4 GB is 80 vCPU and 160 GB at peak. Check the org's limits; the shared GPU endpoint, if you run it, uses the same quota. Lower `MAX_SANDBOXES` in `fly.toml` (and deploy) to fit the room.
+- **Daytona quota.** 40 sandboxes × 1 vCPU × 2 GB is 40 vCPU and 80 GB at peak. Check the org's limits; the shared GPU endpoint, if you run it, uses the same quota. Lower `MAX_SANDBOXES` in `fly.toml` (and deploy) to fit the room.
 - **Gemini budget.** Set a cap on the Google project and check its balance. An empty prepaid balance answers 402, which stops both the agents and Ask Temporal. The runner's rate limits (20 calls a minute per sandbox, 300 overall) slow a runaway loop; only the cap stops it.
 
 **The day before**

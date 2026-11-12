@@ -62,7 +62,8 @@ export function keptCurrent(root = repoRoot) {
 
 // What the snapshot depends on. Its name carries a hash of these, so the runner can tell
 // whether the snapshot it would use matches the dependencies it was deployed with.
-const SNAPSHOT_INPUTS = ["pyproject.toml", "uv.lock", "scripts/setup_dogwood.sh", "course/snapshot/Dockerfile", "course/snapshot/lsp_bridge.py"];
+// build.mjs is among them for its RESOURCES: a snapshot fixes its sandboxes' size.
+const SNAPSHOT_INPUTS = ["pyproject.toml", "uv.lock", "scripts/setup_dogwood.sh", "course/snapshot/Dockerfile", "course/snapshot/lsp_bridge.py", "course/snapshot/build.mjs"];
 
 export function snapshotName(root = repoRoot) {
   const hash = crypto.createHash("sha256");

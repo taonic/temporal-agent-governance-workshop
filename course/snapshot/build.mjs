@@ -18,8 +18,11 @@ import { repoRoot, snapshotName, workshopFiles } from "../runner/repo-files.mjs"
 
 // Per-sandbox resources (a snapshot fixes them for every sandbox made from it): the Temporal
 // dev server, three or four Python processes, the verifier, and the second Temporal that
-// the pytest checks start.
-const RESOURCES = { cpu: 2, memory: 4, disk: 5 };
+// the pytest checks start. Measured (2026-11-12): the stack's start, a solve and a ✓ Check took
+// ~12 s on 2 vCPUs and ~13 s pinned to one, peaking at 1.6 vCPU for a second or two and under
+// 700 MiB; a sandbox in use averages a few percent of one vCPU (the model runs elsewhere).
+// It's in the snapshot's name (repo-files.mjs), so changing it builds a new snapshot.
+const RESOURCES = { cpu: 1, memory: 2, disk: 5 };
 
 function stageContext() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "governance-snapshot-"));

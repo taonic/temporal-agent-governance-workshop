@@ -60,7 +60,7 @@ Editing a module, the README, `starter/` or `authoring/` regenerates the content
 
 **The model from a local runner.** Sandboxes call the model through the runner's `/llm/v1`, which they can't reach on `localhost`. Put a tunnel in front of the runner and tell it: `npm run runner:tunnel` starts ngrok, runs the runner with `PUBLIC_URL` set to the tunnel, and stops ngrok when the runner exits (by hand: `ngrok http 8787`, then `PUBLIC_URL=https://<id>.ngrok-free.app npm run runner`). Restart the sandbox afterwards so its `.env` gets the URL. Without one, switch the sandbox to the scripted model (the sandbox menu in the top bar).
 
-**The snapshot.** Sandboxes start from a Daytona snapshot named after a hash of its inputs (`pyproject.toml`, `uv.lock`, `scripts/setup_dogwood.sh`, `snapshot/Dockerfile`, `snapshot/lsp_bridge.py`). When any of them changes, build the new one: `npm run snapshot` (it compiles Dogwood, so a few minutes). `node snapshot/build.mjs --name` prints the name the runner will ask for; `--local` builds the image with local Docker instead.
+**The snapshot.** Sandboxes start from a Daytona snapshot named after a hash of its inputs (`pyproject.toml`, `uv.lock`, `scripts/setup_dogwood.sh`, `snapshot/Dockerfile`, `snapshot/lsp_bridge.py`, and `snapshot/build.mjs`, whose `RESOURCES` size each sandbox: 1 vCPU, 2 GiB, 5 GiB disk). When any of them changes, build the new one: `npm run snapshot` (it compiles Dogwood, so a few minutes). `node snapshot/build.mjs --name` prints the name the runner will ask for; `--local` builds the image with local Docker instead.
 
 ## Writing for both modes
 

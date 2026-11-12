@@ -16,7 +16,7 @@ One [Fly.io](https://fly.io) app, `temporal-quest`, runs the site and its runner
 | `E2E_SIGNIN_KEY` | the e2e tests' sign-in: their addresses (`e2e+…@temporalquest.dev`) get no email, and sign in with a code derived from this key. The same value as the repository secret of that name |
 | `KAPA_API_KEY` | optional. An API key for Temporal's Kapa project: Ask Temporal searches the docs with it for everyone, and nobody has to verify with GitHub or Google. Without it, each learner connects their own (free) Kapa sign-in once |
 
-Settings in `fly.toml` (`[env]`): `PUBLIC_URL` (where sandboxes reach the model passthrough), `MAX_SANDBOXES` (40), `LLM_MODEL`, `DATABASE_PATH` (`/data/quest.db`, on the volume). `MAIL_FROM` (`Temporal Quest <signin@temporalquest.dev>`) is the sender. Others, with their defaults, are in `runner/config.mjs`: `SANDBOX_AUTO_STOP_MINUTES` (30), `SANDBOX_TTL_MINUTES` (1440), `LLM_RATE_PER_SANDBOX` (20 a minute), `LLM_RATE_GLOBAL` (300 a minute), `SANDBOX_SNAPSHOT` (to pin one).
+Settings in `fly.toml` (`[env]`): `PUBLIC_URL` (where sandboxes reach the model passthrough), `MAX_SANDBOXES` (100; 40 if unset), `LLM_MODEL`, `DATABASE_PATH` (`/data/quest.db`, on the volume). `MAIL_FROM` (`Temporal Quest <signin@temporalquest.dev>`) is the sender. Others, with their defaults, are in `runner/config.mjs`: `SANDBOX_AUTO_STOP_MINUTES` (30), `SANDBOX_TTL_MINUTES` (1440), `LLM_RATE_PER_SANDBOX` (20 a minute), `LLM_RATE_GLOBAL` (300 a minute), `SANDBOX_SNAPSHOT` (to pin one).
 
 Ask Temporal's, also in `runner/config.mjs`: `HELPER_MODEL` (defaults to `LLM_MODEL`), `HELPER_REASONING_EFFORT` (`low`; empty to leave it out), `HELPER_RATE_PER_LEARNER` (6 questions a minute), `HELPER_RATE_GLOBAL` (120 a minute), `KAPA_RATE_GLOBAL` (50 searches a minute: Kapa allows 60 a minute across all its users, and 600 a day per user), `KAPA_MCP_URL` (`https://temporal.mcp.kapa.ai/`). The helper needs `GEMINI_API_KEY` and a session, not Daytona, so learners working locally can use it too.
 
@@ -80,7 +80,7 @@ gh workflow run e2e.yml -f tier=all -f email=always
 
 ## Before an event
 
-- **Daytona quota.** 40 sandboxes × 2 vCPU × 4 GB is 80 vCPU and 160 GB at peak. Check the org's limits (the GPU endpoint, if it's up, shares them), and lower `MAX_SANDBOXES` in `fly.toml` if needed (then deploy).
+- **Daytona quota.** Each sandbox is 1 vCPU, 2 GiB and 5 GiB of disk (`RESOURCES` in `snapshot/build.mjs`), so `MAX_SANDBOXES` of them is that many vCPU and twice as many GiB at peak (100: 100 vCPU, 200 GiB). Check the org's limits (the GPU endpoint, if it's up, shares them), and lower `MAX_SANDBOXES` in `fly.toml` if needed (then deploy).
 - **Gemini spend.** Set a budget cap on the Google project that owns `GEMINI_API_KEY`, and check it has credit (an empty prepaid balance answers 402, and both the agents and Ask Temporal stop). The runner's rate limits slow a runaway loop; the cap stops it.
 - **Ask Temporal.** Open the site, press ⌘K, connect the docs (or set `KAPA_API_KEY`), and ask one question: it should search, cite and link. With a room of learners on their own Kapa sign-ins, the 60-a-minute team limit is the one to watch; a busy search says so in the answer instead of failing it.
 - **A cohort.** In `/admin`, a cohort for the event: its path, an end date a day or two after, and its learners' emails (or their company's domain). Anyone not on the list can still ask, from the sign-in.
