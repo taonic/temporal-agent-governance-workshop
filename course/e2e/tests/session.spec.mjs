@@ -122,7 +122,7 @@ test.describe("an access request", { tag: "@auth" }, () => {
       const session = await (await api.post("/api/auth/profile", { data: { name: "Asking Learner", role: "Architect" } })).json();
       expect(session).toMatchObject({ authenticated: false, user: { allowed: false, request: { status: "pending" } } });
       expect((await api.get("/api/progress")).status()).toBe(403);
-      const { requests } = await (await admin.api.get("/api/admin/requests")).json();
+      const { requests } = await (await admin.api.get("/api/admin/requests?internal=1")).json();
       const request = requests.find((r) => r.email === email);
       expect(request).toMatchObject({ status: "pending", name: "Asking Learner", role: "Architect", domain: "temporalquest.dev" });
       expect((await admin.api.post("/api/admin/requests/decide", { data: { id: request.id, approve: true, scope: "email" } })).status()).toBe(200);
@@ -176,12 +176,12 @@ test.describe("the admin", { tag: "@auth" }, () => {
       await learner.api.post("/api/events", { data: { events: [{ type: "module_opened", moduleId: "F1" }, { type: "module_passed", moduleId: "F1" }, { type: "module_opened", moduleId: "F2" }] } });
       await learner.api.post("/api/heartbeat", { data: { moduleId: "F2" } });
       const id = await learnerId(learner.email);
-      const { learners } = await (await admin.api.get("/api/admin/learners")).json();
+      const { learners } = await (await admin.api.get("/api/admin/learners?internal=1")).json();
       expect(learners.find((l) => l.id === id)).toMatchObject({ completed: 1, where: { moduleId: "F2", active: true } });
       const journey = await (await admin.api.get(`/api/admin/learner?id=${id}`)).json();
       expect(journey.passed.map((m) => m.id)).toEqual(["F1"]);
       expect(journey.timeline.some((e) => e.type === "module_opened" && e.moduleId === "F2")).toBe(true);
-      const csv = await (await admin.api.get("/api/admin/learners.csv")).text();
+      const csv = await (await admin.api.get("/api/admin/learners.csv?internal=1")).text();
       expect(csv).toContain(learner.email);
       await admin.api.post("/api/admin/learner", { data: { id, status: "blocked" } });
       expect((await (await learner.api.get("/api/session")).json()).authenticated).toBe(false);

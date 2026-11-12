@@ -495,6 +495,53 @@ test("admins see each learner's persona, how many learn as each, and can list on
   assert.ok(journey.personaChanges[1].at > journey.personaChanges[0].at);
 });
 
+test("admins don't see internal users (the site's own domain, the secret admin) unless they ask", async () => {
+  const secretEmail = "hidden-admin@example.org";
+  const { accounts, activity } = setup({ admins: ["boss@temporal.io", "e2e+walk@temporalquest.dev", "dev@temporal.io"], adminSecretEmail: secretEmail });
+  const tester = signIn(accounts, "e2e+walk@temporalquest.dev");
+  const dev = signIn(accounts, "dev@temporal.io");
+  const secret = accounts.secretAdmin(secretEmail);
+  activity.recordFromBrowser(tester.id, [{ type: "module_opened", moduleId: "F1" }]);
+  activity.recordFromBrowser(dev.id, [{ type: "module_opened", moduleId: "F1" }]);
+  accounts.addEntries(accounts.cohorts()[0].id, "someone@acme.com", secretEmail); // by the secret admin
+  accounts.addEntries(accounts.cohorts()[0].id, "other@acme.com", "boss@temporal.io");
+  const users = { [tester.id]: tester, [dev.id]: dev };
+  const admin = createAdmin({
+    accounts,
+    activity,
+    feedback: { list: () => [{ id: 1, email: tester.email }, { id: 2, email: dev.email }] },
+    manager: { config: { maxSandboxes: 10 }, listAll: async () => Object.keys(users).map((learner) => ({ id: `sb-${learner}`, learner })) },
+    sessionOf: () => ({ admin: true, email: "boss@temporal.io" }),
+  });
+  const get = (route, query = "") => admin.routes[route]({}, {}, new URL(`http://x/?${query}`));
+
+  assert.equal(accounts.isInternal("E2E+walk@TemporalQuest.dev"), true);
+  assert.equal(accounts.isInternal(secretEmail), true);
+  assert.equal(accounts.isInternal("dev@temporal.io"), false);
+
+  const shown = await get("GET /api/admin/learners");
+  assert.deepEqual(shown.learners.map((l) => l.email), ["dev@temporal.io"]);
+  assert.equal(shown.summary.learners, 1);
+  const all = await get("GET /api/admin/learners", "internal=1");
+  assert.deepEqual(all.learners.map((l) => l.email).sort(), ["dev@temporal.io", "e2e+walk@temporalquest.dev", secretEmail]);
+  assert.equal(all.learners.find((l) => l.id === secret.id).internal, true);
+
+  const feed = await get("GET /api/admin/activity");
+  assert.ok(feed.events.every((e) => e.userId !== tester.id && e.data?.by !== secretEmail), "their events, and what the secret admin did, are left out");
+  assert.ok(feed.events.some((e) => e.userId === dev.id));
+  assert.ok(feed.events.some((e) => e.type === "allowlist_added" && e.data.by === "boss@temporal.io"));
+  const fullFeed = await get("GET /api/admin/activity", "internal=1");
+  assert.ok(fullFeed.events.some((e) => e.userId === tester.id));
+  assert.ok(fullFeed.events.some((e) => e.data?.by === secretEmail));
+
+  assert.deepEqual((await get("GET /api/admin/feedback")).feedback.map((f) => f.id), [2]);
+  assert.equal((await get("GET /api/admin/feedback", "internal=1")).feedback.length, 2);
+  const sandboxes = await get("GET /api/admin/sandboxes");
+  assert.deepEqual(sandboxes.sandboxes.map((s) => s.learner), [dev.id]);
+  assert.equal(sandboxes.hidden, 1, "the hidden ones still count against the most");
+  assert.equal((await get("GET /api/admin/sandboxes", "internal=1")).sandboxes.length, 2);
+});
+
 test("the sign-in form offers the roles the runner accepts, product owners among them", () => {
   const form = fs.readFileSync(new URL("../web/src/components/AccessForm.vue", import.meta.url), "utf8").match(/^const ROLES = (\[.*\]);$/m)[1];
   assert.deepEqual(JSON.parse(form), ROLES);

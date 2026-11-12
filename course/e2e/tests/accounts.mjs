@@ -60,10 +60,11 @@ export async function allow(email) {
   return cohortId;
 }
 
-// The learner's id, as the admin sees it, or null.
+// The learner's id, as the admin sees it, or null. The tests' learners are internal (on the
+// site's own domain): /admin lists them only when asked to (?internal=1).
 export async function learnerId(email) {
   const { api } = await adminApi();
-  const { learners } = await (await api.get("/api/admin/learners")).json();
+  const { learners } = await (await api.get("/api/admin/learners?internal=1")).json();
   return learners.find((l) => l.email === email)?.id ?? null;
 }
 

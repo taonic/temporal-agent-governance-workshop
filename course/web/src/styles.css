@@ -6921,6 +6921,16 @@ a.menu-item {
   font-size: 26px;
 }
 
+.admin-internal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;

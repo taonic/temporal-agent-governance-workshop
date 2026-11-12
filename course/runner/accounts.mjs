@@ -16,6 +16,8 @@ const CODE_TRIES = 5;
 const EMAIL = /^[^\s@]{1,64}@[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 const DOMAIN = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 export const E2E_EMAIL = /^e2e\+[a-z0-9._-]+@temporalquest\.dev$/;
+// The site's own domain: its addresses are ours (the e2e tests', the sender), not learners'.
+export const INTERNAL_DOMAIN = "temporalquest.dev";
 
 // Free-mail providers: an address on one is a person's, not their company's.
 export const PERSONAL_DOMAINS = new Set([
@@ -90,6 +92,21 @@ export class Accounts {
 
   isAdmin(email) {
     return this.adminEmails.has(email) || this.#isSecretAdmin(email);
+  }
+
+  // Ours, not a learner's: an address on INTERNAL_DOMAIN (the e2e tests') or the secret admin's.
+  // /admin leaves them out unless asked (admin.mjs).
+  isInternal(email) {
+    const clean = String(email ?? "").trim().toLowerCase();
+    return domainOf(clean) === INTERNAL_DOMAIN || this.#isSecretAdmin(clean);
+  }
+
+  // The same, in SQL: a clause true when `column` is NOT internal (or NULL), and its arguments.
+  notInternalSql(column) {
+    return {
+      sql: `(COALESCE(${column}, '') NOT LIKE ? AND COALESCE(${column}, '') <> ?)`,
+      args: [`%@${INTERNAL_DOMAIN}`, this.adminSecretEmail || "\u0000"],
+    };
   }
 
   // The secret admin address (ADMIN_SECRET_EMAIL): compared in constant time, since it's a secret.

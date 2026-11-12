@@ -5,7 +5,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import AdminRaces from "../race/AdminRaces.vue";
-import { api, fullCourse as course, navigate, store, toast } from "../store.js";
+import { api, fullCourse as course, navigate, store, storageKey, toast } from "../store.js";
 
 const TABS = [
   { id: "learners", label: "Learners" },
@@ -22,6 +22,25 @@ const overview = ref({ cohorts: [], pendingRequests: 0, paths: [], roles: [] });
 const cohortFilter = ref("");
 // Learners as one persona only ("developer", "essentials"), or everyone.
 const personaFilter = ref("");
+// Internal users (the e2e tests', the secret admin) are left out unless this is on; remembered
+// in this browser.
+const SHOW_INTERNAL = storageKey("admin-show-internal");
+const showInternal = ref(readShowInternal());
+function readShowInternal() {
+  try {
+    return localStorage.getItem(SHOW_INTERNAL) === "1";
+  } catch {
+    return false;
+  }
+}
+watch(showInternal, (on) => {
+  try {
+    if (on) localStorage.setItem(SHOW_INTERNAL, "1");
+    else localStorage.removeItem(SHOW_INTERNAL);
+  } catch {
+    // not remembered
+  }
+});
 const personaName = (id) => course.personas?.find((p) => p.id === id)?.label ?? id ?? "—";
 const error = ref("");
 
@@ -116,7 +135,7 @@ const feed = ref([]);
 const feedTypes = ref([]);
 const feedType = ref("");
 const feedUser = ref("");
-const sandboxes = ref({ max: 0, sandboxes: [] });
+const sandboxes = ref({ max: 0, sandboxes: [], hidden: 0 });
 const feedbackList = ref([]);
 const feedbackKind = ref("");
 const journey = ref(null);
@@ -125,11 +144,12 @@ const cohortId = ref(null);
 const entries = ref([]);
 
 async function loadOverview() {
-  overview.value = await api("/api/admin/overview");
+  overview.value = await api(`/api/admin/overview${q({})}`);
 }
 
+// The query string, with ?internal=1 when internal users are shown.
 const q = (params) => {
-  const s = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== "" && v !== null && v !== undefined)).toString();
+  const s = new URLSearchParams(Object.entries({ ...params, internal: showInternal.value ? 1 : "" }).filter(([, v]) => v !== "" && v !== null && v !== undefined)).toString();
   return s ? `?${s}` : "";
 };
 
@@ -146,15 +166,15 @@ async function load() {
       if (!cohortId.value && overview.value.cohorts.length) cohortId.value = overview.value.cohorts[0].id;
       if (cohortId.value) entries.value = (await api(`/api/admin/allowlist${q({ cohort: cohortId.value })}`)).entries;
     } else if (tab.value === "requests") {
-      requests.value = (await api("/api/admin/requests")).requests;
+      requests.value = (await api(`/api/admin/requests${q({})}`)).requests;
     } else if (tab.value === "activity") {
       const data = await api(`/api/admin/activity${q({ cohort: cohortFilter.value, type: feedType.value, user: feedUser.value })}`);
       feed.value = data.events;
       feedTypes.value = data.types;
     } else if (tab.value === "feedback") {
-      feedbackList.value = (await api("/api/admin/feedback")).feedback;
+      feedbackList.value = (await api(`/api/admin/feedback${q({})}`)).feedback;
     } else if (tab.value === "sandboxes") {
-      sandboxes.value = await api("/api/admin/sandboxes");
+      sandboxes.value = await api(`/api/admin/sandboxes${q({})}`);
     }
   } catch (err) {
     error.value = err.message;
@@ -167,7 +187,7 @@ onMounted(() => {
   timer = setInterval(() => document.visibilityState === "visible" && !editing.value && load(), 10_000);
 });
 onBeforeUnmount(() => clearInterval(timer));
-watch([tab, cohortFilter, personaFilter, feedType, feedUser, selectedLearner, cohortId], load);
+watch([tab, cohortFilter, personaFilter, feedType, feedUser, selectedLearner, cohortId, showInternal], load);
 
 async function loadMoreFeed() {
   const last = feed.value.at(-1);
@@ -313,6 +333,9 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
           {{ t.label }}<span v-if="t.id === 'requests' && overview.pendingRequests" class="admin-count">{{ overview.pendingRequests }}</span>
         </a>
       </nav>
+      <label class="admin-internal" title="The e2e tests' learners (@temporalquest.dev) and the secret admin">
+        <input v-model="showInternal" type="checkbox"> Show internal
+      </label>
     </header>
     <p v-if="error" class="form-error">{{ error }}</p>
 
@@ -439,6 +462,7 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
             <tr v-for="l in sortedLearners" :key="l.id" :class="{ 'is-stuck': l.where?.stuck, 'is-blocked': l.status === 'blocked' }" tabindex="0" @click="openLearner(l.id)" @keydown.enter="openLearner(l.id)">
               <td>
                 <strong>{{ l.name || "—" }}</strong><br><span class="admin-muted">{{ l.email }}</span>
+                <span v-if="l.internal" class="admin-badge">internal</span>
                 <span v-if="l.status === 'blocked'" class="admin-badge is-bad">blocked</span>
                 <span v-else-if="!l.allowed" class="admin-badge">not allowed</span>
               </td>
@@ -552,7 +576,7 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
     <section v-else-if="tab === 'requests'" class="admin-section">
       <div class="admin-toolbar">
         <span class="admin-muted">{{ pending.length }} pending</span>
-        <a class="button button-secondary" href="/api/admin/requests.csv" download>Export CSV</a>
+        <a class="button button-secondary" :href="`/api/admin/requests.csv${q({})}`" download>Export CSV</a>
       </div>
       <div class="admin-card table-scroll">
         <table class="admin-table">
@@ -627,7 +651,7 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
           <option value="none">No kind given</option>
         </select>
         <span class="admin-muted">{{ shownFeedback.length }} of {{ feedbackList.length }}</span>
-        <a class="button button-secondary" href="/api/admin/feedback.csv" download>Export CSV</a>
+        <a class="button button-secondary" :href="`/api/admin/feedback.csv${q({})}`" download>Export CSV</a>
       </div>
       <div class="admin-card">
         <ol class="admin-feedback">
@@ -655,7 +679,9 @@ const cohortName = (id) => overview.value.cohorts.find((c) => c.id === id)?.name
     <!-- Sandboxes -->
     <AdminRaces v-else-if="tab === 'events'" />
     <section v-else-if="tab === 'sandboxes'" class="admin-section">
-      <p class="admin-muted">{{ sandboxes.sandboxes.length }} sandboxes, at most {{ sandboxes.max }} running.</p>
+      <p class="admin-muted">
+        {{ sandboxes.sandboxes.length }} sandboxes{{ sandboxes.hidden ? `, and ${sandboxes.hidden} internal not shown` : "" }}, at most {{ sandboxes.max }} running.
+      </p>
       <div class="admin-card table-scroll">
         <table class="admin-table">
           <thead><tr><th>Learner</th><th>State</th><th>Exercise</th><th>Last seen</th><th>Created</th></tr></thead>

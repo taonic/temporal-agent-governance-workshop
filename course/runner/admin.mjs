@@ -16,6 +16,10 @@ export function toCsv(rows) {
 
 const iso = (ms) => (ms ? new Date(ms).toISOString() : "");
 
+// Internal users (the e2e tests', the secret admin: accounts.isInternal) are left out of what
+// /admin lists, counts and exports, unless it asks for them (?internal=1, "Show internal").
+const withInternal = (url) => url?.searchParams.get("internal") === "1";
+
 export function createAdmin({ accounts, activity, feedback, manager, mailer, readJson, sessionOf, siteOrigin, log = () => {} }) {
   const catalog = activity.catalog;
 
@@ -28,8 +32,8 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
 
   // Each learner's row: who, where they are, how far they've got, and as whom (their persona: a
   // developer, or Essentials'). `persona` keeps only the learners learning as that one.
-  function learnerRows({ cohortId, persona = null } = {}) {
-    return usersAs({ cohortId, persona }).map(({ user, access, progress }) => {
+  function learnerRows({ cohortId, persona = null, internal = false } = {}) {
+    return usersAs({ cohortId, persona, internal }).map(({ user, access, progress }) => {
       return {
         id: user.id,
         email: user.email,
@@ -40,6 +44,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         allowed: access.allowed,
         cohort: access.cohort ? { id: access.cohort.id, name: access.cohort.name } : null,
         admin: accounts.isAdmin(user.email),
+        internal: accounts.isInternal(user.email),
         createdAt: user.created_at,
         lastSeenAt: user.last_seen_at,
         completed: progress.completed.length,
@@ -53,10 +58,12 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
     });
   }
 
-  // A cohort's users (or everyone's), each with their progress; only those on `persona`, if given.
-  function usersAs({ cohortId, persona = null } = {}) {
+  // A cohort's users (or everyone's), each with their progress; only those on `persona`, if given,
+  // and the internal ones only if `internal`.
+  function usersAs({ cohortId, persona = null, internal = false } = {}) {
     return accounts
       .users({ cohortId })
+      .filter(({ user }) => internal || !accounts.isInternal(user.email))
       .map((u) => ({ ...u, progress: activity.progress(u.user.id, u.access.cohort?.path) }))
       .filter((u) => !persona || u.progress.persona === persona);
   }
@@ -64,8 +71,8 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
   // How a cohort is doing: how many learn as each persona, passes per module (along its path, or
   // every playable module), and per challenge the first-try right rate and the most-picked wrong
   // choice. With `persona`, of only the learners on it.
-  function summary({ cohortId, persona = null } = {}) {
-    const everyone = usersAs({ cohortId });
+  function summary({ cohortId, persona = null, internal = false } = {}) {
+    const everyone = usersAs({ cohortId, internal });
     const personas = {};
     for (const { progress } of everyone) personas[progress.persona] = (personas[progress.persona] ?? 0) + 1;
     const users = persona ? everyone.filter((u) => u.progress.persona === persona) : everyone;
@@ -146,6 +153,7 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         allowed: access.allowed,
         cohort: access.cohort ? { id: access.cohort.id, name: access.cohort.name } : null,
         admin: accounts.isAdmin(user.email),
+        internal: accounts.isInternal(user.email),
       },
       xp: progress.xp,
       path: progress.path,
@@ -193,6 +201,14 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
     if (userId) add("e.user_id = ?", userId);
     if (type) add("e.type = ?", type);
     if (before) add("e.id < ?", before);
+    // An internal user's events, and what an internal admin did (or a code an internal address
+    // asked for), stay out.
+    if (!withInternal(url)) {
+      for (const column of ["u.email", "json_extract(e.data, '$.by')", "json_extract(e.data, '$.email')"]) {
+        const { sql, args: values } = accounts.notInternalSql(column);
+        add(sql, ...values);
+      }
+    }
     const rows = accounts.db
       .prepare(
         `SELECT e.*, u.email, u.name FROM events e LEFT JOIN users u ON u.id = e.user_id
@@ -204,6 +220,9 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
       types: accounts.db.prepare("SELECT DISTINCT type FROM events ORDER BY type").all().map((r) => r.type),
     };
   }
+
+  const requestsFor = (url, opts) => accounts.requests(opts).filter((r) => withInternal(url) || !accounts.isInternal(r.email));
+  const feedbackFor = (url, opts) => feedback.list(opts).filter((f) => withInternal(url) || !accounts.isInternal(f.email));
 
   function csv(res, name, rows) {
     res.writeHead(200, {
@@ -225,11 +244,11 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
   return {
     requireAdmin,
     routes: {
-      "GET /api/admin/overview": async (req) => {
+      "GET /api/admin/overview": async (req, _res, url) => {
         requireAdmin(req);
         return {
           cohorts: accounts.cohorts(),
-          pendingRequests: accounts.requests({ status: "pending" }).length,
+          pendingRequests: requestsFor(url, { status: "pending" }).length,
           paths: [...catalog.paths.values()].map((p) => ({ id: p.id, title: p.title })),
           roles: ROLES,
         };
@@ -258,9 +277,9 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         return { ok: true };
       },
 
-      "GET /api/admin/requests": async (req) => {
+      "GET /api/admin/requests": async (req, _res, url) => {
         requireAdmin(req);
-        return { requests: accounts.requests() };
+        return { requests: requestsFor(url) };
       },
 
       "POST /api/admin/requests/decide": async (req) => {
@@ -271,11 +290,11 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         return { ok: true };
       },
 
-      "GET /api/admin/requests.csv": async (req, res) => {
+      "GET /api/admin/requests.csv": async (req, res, url) => {
         requireAdmin(req);
         csv(res, "access-requests.csv", [
           ["name", "email", "role", "company", "status", "scope", "reason", "requested", "decided by", "decided"],
-          ...accounts.requests().map((r) => [r.name, r.email, r.role, r.company, r.status, r.scope, r.reason, iso(r.createdAt), r.decidedBy, iso(r.decidedAt)]),
+          ...requestsFor(url).map((r) => [r.name, r.email, r.role, r.company, r.status, r.scope, r.reason, iso(r.createdAt), r.decidedBy, iso(r.decidedAt)]),
         ]);
       },
 
@@ -283,12 +302,13 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         requireAdmin(req);
         const cohortId = url.searchParams.get("cohort") || null;
         const persona = url.searchParams.get("persona") || null;
-        return { learners: learnerRows({ cohortId, persona }), summary: summary({ cohortId, persona }) };
+        const internal = withInternal(url);
+        return { learners: learnerRows({ cohortId, persona, internal }), summary: summary({ cohortId, persona, internal }) };
       },
 
       "GET /api/admin/learners.csv": async (req, res, url) => {
         requireAdmin(req);
-        const rows = learnerRows({ cohortId: url.searchParams.get("cohort") || null, persona: url.searchParams.get("persona") || null });
+        const rows = learnerRows({ cohortId: url.searchParams.get("cohort") || null, persona: url.searchParams.get("persona") || null, internal: withInternal(url) });
         csv(res, "learners.csv", [
           ["name", "email", "role", "company", "cohort", "persona", "modules passed", "xp", "last active"],
           ...rows.map((r) => [r.name, r.email, r.role, r.company, r.cohort?.name, r.persona, r.completed, r.xp, iso(r.where?.lastAt ?? r.lastSeenAt)]),
@@ -321,29 +341,28 @@ export function createAdmin({ accounts, activity, feedback, manager, mailer, rea
         return feed(url);
       },
 
-      "GET /api/admin/feedback": async (req) => {
+      "GET /api/admin/feedback": async (req, _res, url) => {
         requireAdmin(req);
-        return { feedback: feedback.list() };
+        return { feedback: feedbackFor(url) };
       },
 
-      "GET /api/admin/feedback.csv": async (req, res) => {
+      "GET /api/admin/feedback.csv": async (req, res, url) => {
         requireAdmin(req);
         csv(res, "feedback.csv", [
           ["sent", "name", "email", "role", "company", "kind", "where", "module", "step", "url", "message", "emailed"],
-          ...feedback.list({ limit: 100_000 }).map((f) => [iso(f.createdAt), f.name, f.email, f.role, f.company, f.kind, f.where, f.moduleId, f.beatId, f.context?.url, f.message, iso(f.emailedAt)]),
+          ...feedbackFor(url, { limit: 100_000 }).map((f) => [iso(f.createdAt), f.name, f.email, f.role, f.company, f.kind, f.where, f.moduleId, f.beatId, f.context?.url, f.message, iso(f.emailedAt)]),
         ]);
       },
 
-      "GET /api/admin/sandboxes": async (req) => {
+      "GET /api/admin/sandboxes": async (req, _res, url) => {
         requireAdmin(req);
-        const sandboxes = await manager.listAll();
-        return {
-          max: manager.config.maxSandboxes,
-          sandboxes: sandboxes.map((s) => {
-            const user = accounts.user(s.learner);
-            return { ...s, email: user?.email ?? null, name: user?.name ?? null };
-          }),
-        };
+        const all = (await manager.listAll()).map((s) => {
+          const user = accounts.user(s.learner);
+          return { ...s, email: user?.email ?? null, name: user?.name ?? null };
+        });
+        const sandboxes = withInternal(url) ? all : all.filter((s) => !s.email || !accounts.isInternal(s.email));
+        // The hidden ones still take a place under `max`: say how many there are.
+        return { max: manager.config.maxSandboxes, sandboxes, hidden: all.length - sandboxes.length };
       },
     },
   };
