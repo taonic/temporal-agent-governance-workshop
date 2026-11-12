@@ -413,6 +413,21 @@ export function sandboxStartView() {
   return { state: "idle", label: "Start my sandbox", disabled: false };
 }
 
+// Whether the learner's sandbox is on its way (found, created, woken, its services starting):
+// the page waits for it, rather than offering what needs it.
+export const sandboxStarting = () => sandboxStartView().state === "busy";
+
+// While it starts: the stage, and about how long the rest takes.
+const SANDBOX_STAGES = {
+  finding: { stage: "Finding your sandbox", expect: "A moment…" },
+  creating: { stage: "Creating your sandbox", expect: "About a minute, the first time." },
+  waking: { stage: "Waking your sandbox", expect: "Usually under half a minute." },
+  stopped: { stage: "Waking your sandbox", expect: "Usually under half a minute." },
+  starting: { stage: "Waking your sandbox", expect: "Usually under half a minute." },
+  bootstrapping: { stage: "Starting its services", expect: "Almost there: a few seconds." },
+};
+export const sandboxStage = () => SANDBOX_STAGES[store.sandbox.state] ?? SANDBOX_STAGES.finding;
+
 // How a toggle shows the worker, wherever it appears.
 export function workerToggleView(live) {
   const { running, name, pending } = store.worker;

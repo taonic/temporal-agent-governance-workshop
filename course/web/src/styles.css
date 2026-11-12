@@ -1328,6 +1328,15 @@ body.is-resizing iframe {
   color: var(--muted);
 }
 
+/* Waiting (for the sandbox, say): plainly not for pressing. */
+.guide-reply:disabled,
+.guide-reply:disabled:hover {
+  border-color: var(--line-strong);
+  background: var(--paper);
+  color: var(--muted);
+  cursor: wait;
+}
+
 /* ← Back, alone on the left; the replies stay together on the right. */
 .guide-reply.is-back {
   margin-right: auto;
@@ -7982,6 +7991,36 @@ a.menu-item {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 14px;
+}
+.tb-waiting-spin {
+  display: inline-block;
+  width: 26px;
+  height: 26px;
+  margin-bottom: 12px;
+  border: 3px solid var(--line);
+  border-top-color: var(--temporal-uv);
+  border-radius: 50%;
+  animation: tb-spin 0.9s linear infinite;
+}
+@keyframes tb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tb-waiting-spin {
+    animation-duration: 3s;
+  }
+}
+.tb-offline .tb-waiting-stage {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-weight: 600;
+}
+.tb-waiting-time {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 .tb-offline-title {
   margin: 0 0 6px;

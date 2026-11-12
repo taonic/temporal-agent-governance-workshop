@@ -102,6 +102,22 @@ test.describe("Essentials, signed in", { tag: "@auth" }, () => {
     await expect(page.locator(".xp-pill")).toContainText("0 XP");
   });
 
+  test("while the sandbox starts, the board waits for it, and so do the guide's steps", async ({ page }) => {
+    await page.route((url) => url.pathname.startsWith("/api/sandbox"), (route) => route.fulfill({ json: { state: "creating", message: "" } }));
+    await page.goto(essentials("#/module/E3"));
+    await expect(page.getByRole("status").filter({ hasText: "Getting your sandbox ready" })).toContainText("Creating your sandbox");
+    await expect(page.getByRole("group", { name: "A recording of this module" })).toHaveCount(0);
+    // Reading on is fine; a step, done in the sandbox, waits for it.
+    const reply = page.locator(".guide-replies .guide-reply:not(.is-back)").last();
+    for (let i = 0; i < 6 && !(await reply.isDisabled()); i++) {
+      await settleGuide(page);
+      await reply.click();
+    }
+    await expect(reply).toBeDisabled();
+    await expect(reply).toHaveText("Waiting for your sandbox…");
+    await expect(page.locator("button[data-board-action]").first()).toHaveAttribute("title", /Waiting for your sandbox/);
+  });
+
   test("a question challenge plays without a sandbox: misses struck with why, a hint, then every answer", async ({ page }) => {
     await page.goto(essentials("#/module/EC1"));
     await settleGuide(page);

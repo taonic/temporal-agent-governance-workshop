@@ -8,13 +8,15 @@
 // It reads the state essentials/board.py reports, through the sandbox poll (ExercisePage), and
 // sets the module's board up on arrival (anew for another module; as it is for the same one).
 //
-// Without a sandbox (not started, or not ready yet), it plays the module's recorded walkthrough instead (scripts/
+// While the learner's sandbox starts, it says so and waits (nothing to press: the board comes up
+// when the sandbox does). Without one (signed out, out of time, or it failed), it plays the
+// module's recorded walkthrough instead (scripts/
 // record_walkthroughs.py): the board's states as the guide's steps left them, second by second,
 // with a note at each action. A recording is only watched: it never passes a module's check.
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 
 import { boardView } from "../board.js";
-import { boardAction, openPane, sandboxStartView, startSandbox, store } from "../store.js";
+import { boardAction, openPane, sandboxStage, sandboxStartView, sandboxStarting, startSandbox, store } from "../store.js";
 
 const props = defineProps({
   exercise: { type: Object, required: true },
@@ -28,13 +30,19 @@ const tick = ref(Date.now());
 const ticker = setInterval(() => (tick.value = Date.now()), 1000);
 onBeforeUnmount(() => clearInterval(ticker));
 
+// --- While the sandbox starts ------------------------------------------------------------------
+const starting = computed(() => !props.live && sandboxStarting());
+const startedAt = ref(0);
+watch(starting, (on) => (startedAt.value = on ? Date.now() : 0), { immediate: true });
+const waited = computed(() => (startedAt.value ? Math.max(0, Math.round((tick.value - startedAt.value) / 1000)) : 0));
+
 // --- The recorded walkthrough (no sandbox) ---------------------------------------------------
 const recording = ref(null); // { module, frames: [{ t, note?, state }] }
 const at = ref(0); // the frame on show
 const playing = ref(false);
 const speed = ref(1);
 let timer = 0;
-const watching = computed(() => !props.live && recording.value?.module === props.module);
+const watching = computed(() => !props.live && !starting.value && recording.value?.module === props.module);
 const frame = computed(() => (watching.value ? recording.value.frames[at.value] : null));
 // What happened last, up to the frame on show: the caption.
 const caption = computed(() => (watching.value ? recording.value.frames.slice(0, at.value + 1).findLast((f) => f.note)?.note ?? "" : ""));
@@ -124,7 +132,14 @@ const MARK = { done: "✓", active: "", retrying: "↻", todo: "", lost: "✕", 
 
 <template>
   <section class="trip-board" :class="{ 'is-recording': watching }" aria-label="Trip board">
-    <div v-if="!live && !watching" class="tb-offline">
+    <div v-if="starting" class="tb-offline tb-waiting" role="status" aria-live="polite">
+      <span class="tb-waiting-spin" aria-hidden="true" />
+      <p class="tb-offline-title">Getting your sandbox ready</p>
+      <p class="tb-waiting-stage">{{ sandboxStage().stage }}… <span class="tb-waiting-time">{{ waited }}s</span></p>
+      <p>{{ sandboxStage().expect }} The board comes up on its own: nothing to press. Read the guide while you wait.</p>
+    </div>
+
+    <div v-else-if="!live && !watching" class="tb-offline">
       <p class="tb-offline-title">The Trip board runs in your sandbox</p>
       <p>Your own small cloud machine, with Temporal on it. It takes a minute or two the first time.</p>
       <button class="button button-primary" type="button" :disabled="sandboxStartView().disabled" @click="startSandbox()">{{ sandboxStartView().label }}</button>

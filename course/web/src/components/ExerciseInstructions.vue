@@ -38,6 +38,7 @@ import {
   restartWorker,
   runWorkerCommand,
   sandboxStartView,
+  sandboxStarting,
   startSandbox,
   stopWorker,
   toggleWorker,
@@ -268,6 +269,7 @@ const offersCodeTour = computed(() => {
 });
 
 function advance({ codeTour = offersCodeTour.value } = {}) {
+  if (waitingForSandbox.value) return;
   if (beat.value.kind === "step") tick(beat.value.id);
   const finishingOnboarding = beat.value.id === "start-workspace";
   if (finishingOnboarding) save("onboarded", true);
@@ -462,8 +464,13 @@ const lead = computed(() => {
   return n === 1 ? "Let's get going." : NEXT_UP[(n - 2) % NEXT_UP.length];
 });
 
+// While the sandbox starts, a step (something to do in it) waits for it: it can't be done yet.
+// Reading on is fine everywhere else (the intro, the background, a challenge).
+const waitingForSandbox = computed(() => beat.value.kind === "step" && !props.live && sandboxStarting());
+
 const nextLabel = computed(() => {
   const b = beat.value;
+  if (waitingForSandbox.value) return "Waiting for your sandbox…";
   const following = beats.value[at.value + 1];
   if (b.id === "start-ask") return askReady.value ? "Next →" : "Skip for now →";
   if (b.id === "start-workspace") return "Skip the tour →";
@@ -675,7 +682,9 @@ function paintBoardActions() {
     button.classList.toggle("is-now", Boolean(after) && !pulled && !tooSoon && props.live);
     if (shipped || down || underWay || (answer && !asking) || pulled || tooSoon) button.disabled = true;
     button.title = !props.live
-      ? "Start your sandbox first"
+      ? sandboxStarting()
+        ? "Waiting for your sandbox: it's starting"
+        : "Start your sandbox first"
       : underWay
         ? "The trip is still under way: start another once it's finished"
         : answer && !asking && !gave
@@ -685,7 +694,7 @@ function paintBoardActions() {
             : "";
   }
 }
-watch([() => store.board, () => props.live, page, beat], () => nextTick(paintBoardActions), { immediate: true, deep: true });
+watch([() => store.board, () => props.live, () => store.sandbox.state, page, beat], () => nextTick(paintBoardActions), { immediate: true, deep: true });
 
 // The trip buttons the build put in place of `uv run hello-start …`: each trip's workflow.
 function paintTrips() {
@@ -775,7 +784,7 @@ function onClick(event) {
   } else if (target.matches("button[data-ask-own]")) {
     askOwnProcess(target.closest("[data-own-process]"));
   } else if (target.matches("button[data-board-action]")) {
-    if (!props.live) return toast("Start your sandbox first.");
+    if (!props.live) return toast(sandboxStarting() ? "Your sandbox is still starting: a moment." : "Start your sandbox first.");
     store.workspaceView = "code";
     boardAction(target.dataset.boardAction, currentModule.value);
   } else if (target.matches("button[data-worker-toggle]")) {
@@ -948,11 +957,11 @@ function onClick(event) {
         <template v-if="!isLast">
           <!-- The quiet choice first: the primary one is always rightmost. -->
           <button v-if="offersCodeTour" class="guide-reply is-quiet" type="button" @click="advance({ codeTour: false })">Skip the code tour</button>
-          <button class="guide-reply" :class="{ 'is-primary': beat.id === 'start-ask' ? askReady : beat.id !== 'start-workspace', 'is-quiet': beat.id === 'start-workspace' }" type="button" @click="advance()">{{ nextLabel }}</button>
+          <button class="guide-reply" :class="{ 'is-primary': beat.id === 'start-ask' ? askReady : beat.id !== 'start-workspace', 'is-quiet': beat.id === 'start-workspace' }" type="button" :disabled="waitingForSandbox" :title="waitingForSandbox ? 'This step runs in your sandbox: it comes up on its own in a moment' : undefined" @click="advance()">{{ nextLabel }}</button>
           <button v-if="beat.id === 'start-workspace'" class="guide-reply is-primary" type="button" @click="showAround">✦ Show me around</button>
         </template>
         <template v-else-if="!showPassed">
-          <button v-if="beat.kind === 'step' && !ticked[beat.id]" class="guide-reply" type="button" @click="tick(beat.id)">Mark this step done</button>
+          <button v-if="beat.kind === 'step' && !ticked[beat.id]" class="guide-reply" type="button" :disabled="waitingForSandbox" @click="tick(beat.id)">{{ waitingForSandbox ? "Waiting for your sandbox…" : "Mark this step done" }}</button>
           <a v-if="next" class="guide-reply is-primary" :href="moduleHref(next.id)" @click="finish()">On to {{ moduleName(next) }} →</a>
           <a v-else class="guide-reply is-primary" href="#/" @click="finish()">Back to the map →</a>
         </template>
