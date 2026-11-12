@@ -4,16 +4,19 @@
 // end; the route is inked green as far as the learner has come. Each stop is a stamp with its
 // module's emoji (a challenge a sticky note with ❓, the boss a crown), its title in hand and a
 // scribbled note. Done stops get a tick; the next is circled in marker, "you are here". A click
-// (or Enter) selects a stop, as on the other maps.
+// (or Enter) selects a stop, as on the other maps, and puts its way in under it, on the page:
+// Start (Do it again, once done; for a locked stop, what comes first), so the eye needn't go to
+// the panel beside the map. A second click (or Enter) on the selected stop takes it.
 //
 // The paper is paper in either theme: cream, ruled, with a margin and binder holes.
 import "@fontsource/caveat/latin-500.css";
 import "@fontsource/caveat/latin-700.css";
 import { computed } from "vue";
 
-import { STATE_LABEL, isPlayable, modulesById, stateOf, trunk } from "../progress.js";
+import { STATE_LABEL, firstStepTo, isPlayable, moduleHref, modulesById, stateOf, trunk } from "../progress.js";
+import { navigate } from "../store.js";
 
-defineProps({ selected: { type: String, default: null } });
+const props = defineProps({ selected: { type: String, default: null } });
 const emit = defineEmits(["select"]);
 
 const PER_ROW = 4;
@@ -21,7 +24,8 @@ const W = 960;
 const X0 = 95;
 const X1 = 830;
 const ROW0 = 70;
-const ROW_H = 190;
+// Room under each line's notes for the selected stop's Start, above the route's way back.
+const ROW_H = 225;
 // A stamp's lean, so the page looks drawn by hand (the same each time).
 const LEAN = [-4, 3, -2, 5, -3, 2, 4, -5];
 
@@ -79,11 +83,30 @@ const segments = computed(() => {
   return out;
 });
 
+// The selected stop's way in, under its note: where it goes (the panel's Start does the same),
+// what it says, and where it sits. None for a stop that's coming soon.
+const go = computed(() => {
+  const s = stops.value.find((stop) => stop.m.id === props.selected);
+  if (!s || s.soon) return null;
+  const first = s.state === "locked" ? firstStepTo(s.m) : null;
+  const text = s.state === "done" ? "Do it again ↻" : first ? "Start what's first ▸" : "Start ▸";
+  const aria = s.state === "done" ? `Do ${s.m.title} again` : first ? `Start with ${first.title}, before ${s.m.title}` : `Start ${s.m.title}`;
+  const width = Math.round(text.length * 8.6 + 30);
+  return { id: s.m.id, href: moduleHref((first ?? s.m).id), text, aria, title: first ? `First: ${first.title}` : null, x: s.x, y: s.y + 78 + s.lines.length * 22, width };
+});
+
+// A click on a stop selects it; on the stop already selected, it takes its way in.
+function pick(s) {
+  if (props.selected === s.m.id && go.value) navigate(go.value.href);
+  else emit("select", s.m.id);
+}
+
 const label = (s) => `${s.kind === "challenge" ? "Challenge: " : s.kind === "boss" ? "Boss: " : ""}${s.m.title}. ${s.soon ? "Coming soon" : STATE_LABEL[s.state]}`;
 const crown = (x, y) => `M ${x - 34} ${y + 22} L ${x - 38} ${y - 18} L ${x - 16} ${y - 2} L ${x} ${y - 30} L ${x + 16} ${y - 2} L ${x + 38} ${y - 18} L ${x + 34} ${y + 22} Z`;
 const modules = computed(() => steps.value.filter((m) => m.kind === "module").length);
 const questions = computed(() => steps.value.filter((m) => m.kind === "challenge").length);
-const height = computed(() => ROW0 + (Math.ceil(stops.value.length / PER_ROW) - 1) * ROW_H + 120);
+// To the last line's notes, and the Start under them.
+const height = computed(() => ROW0 + (Math.ceil(stops.value.length / PER_ROW) - 1) * ROW_H + 150);
 </script>
 
 <template>
@@ -100,11 +123,11 @@ const height = computed(() => ROW0 + (Math.ceil(stops.value.length / PER_ROW) - 
         role="button"
         tabindex="0"
         :data-module="s.m.id"
-        :aria-label="label(s)"
+        :aria-label="selected === s.m.id && go ? `${label(s)}. Press again to open` : label(s)"
         :aria-pressed="selected === s.m.id"
-        @click="emit('select', s.m.id)"
-        @keydown.enter.prevent="emit('select', s.m.id)"
-        @keydown.space.prevent="emit('select', s.m.id)"
+        @click="pick(s)"
+        @keydown.enter.prevent="pick(s)"
+        @keydown.space.prevent="pick(s)"
       >
         <g :transform="`rotate(${s.lean} ${s.x} ${s.y})`">
           <ellipse v-if="selected === s.m.id" class="sketch-pick" :cx="s.x" :cy="s.y" rx="44" ry="40" />
@@ -121,6 +144,15 @@ const height = computed(() => ROW0 + (Math.ceil(stops.value.length / PER_ROW) - 
           <text class="sketch-here-note" :x="s.x + 18" :y="s.y - 46">you are here ✍️</text>
         </template>
       </g>
+
+      <!-- Over the stops and the route (a label on the page), not inside its stop's button. -->
+      <a v-if="go" :key="go.id" class="sketch-go" :href="go.href" :aria-label="go.aria" :data-go="go.id">
+        <title v-if="go.title">{{ go.title }}</title>
+        <g :transform="`rotate(-2 ${go.x} ${go.y})`">
+          <rect class="sketch-go-box" :x="go.x - go.width / 2" :y="go.y - 18" :width="go.width" height="26" rx="9" />
+          <text class="sketch-go-text" :x="go.x" :y="go.y + 1" text-anchor="middle">{{ go.text }}</text>
+        </g>
+      </a>
     </svg>
   </section>
 </template>

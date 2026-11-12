@@ -9129,6 +9129,49 @@ a.menu-item {
   font: 700 20px Caveat, cursive;
 }
 
+/* The selected stop's way in, written under it in marker. */
+.sketch-go {
+  cursor: pointer;
+  animation: sketch-go-in 0.18s ease-out;
+}
+
+.sketch-go-box {
+  fill: #fbf7ee;
+  stroke: var(--marker);
+  stroke-width: 2;
+}
+
+.sketch-go-text {
+  fill: var(--marker);
+  font: 700 20px Caveat, cursive;
+}
+
+.sketch-go:hover .sketch-go-box,
+.sketch-go:focus-visible .sketch-go-box {
+  fill: var(--marker);
+}
+
+.sketch-go:hover .sketch-go-text,
+.sketch-go:focus-visible .sketch-go-text {
+  fill: #fff;
+}
+
+.sketch-go:focus-visible {
+  outline: none;
+}
+
+@keyframes sketch-go-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sketch-go {
+    animation: none;
+  }
+}
+
 /* --- A boss fight (BossPage.vue) ------------------------------------------------------------ */
 
 .boss-page {

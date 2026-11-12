@@ -59,6 +59,10 @@ test.describe("Essentials, signed out", { tag: "@public" }, () => {
     await page.locator('.sketch-stop[data-module="E7"]').click();
     await expect(page.locator(".map-detail-selected .node-detail-title")).toHaveText("Wait for the manager");
     await expect(page.locator(".map-page")).not.toContainText(/\bEC?\d\b/);
+    // Its way in is under it, on the page (locked: what comes first), and a second click takes it.
+    await expect(page.locator(".sketch-go")).toHaveAttribute("href", "#/module/E2");
+    await page.locator('.sketch-stop[data-module="E7"] .sketch-stamp').click();
+    await expect(page).toHaveURL(/#\/module\/E2$/);
     // And it's kept: the next visit asks nothing.
     await page.goto("/?persona-choice");
     await expect(page.locator(".map-persona")).toContainText("Why Temporal?");
