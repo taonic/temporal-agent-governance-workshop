@@ -162,14 +162,25 @@ function atPrompt(name) {
   return (buffer.getLine(buffer.baseY + buffer.cursorY)?.translateToString(true) ?? "").trimEnd().endsWith("$");
 }
 
-// After a Ctrl-C, until the prompt is back (at most `ms`): what's typed while the program is still
-// exiting can be thrown away with it (uv resets the terminal as it goes, discarding the input
-// waiting), and the worker takes a while to shut down on a busy sandbox.
-async function untilPrompt(name, ms = 15_000) {
+// After a Ctrl-C, until the prompt is back (at most `ms`), and whether it is: what's typed while
+// the program is still exiting can be thrown away with it (uv resets the terminal as it goes,
+// discarding the input waiting), and the worker takes a while to shut down on a busy sandbox.
+async function untilPrompt(name, ms) {
   const end = Date.now() + ms;
   await sleep(300);
   while (!atPrompt(name) && Date.now() < end) await sleep(150);
   await sleep(150);
+  return atPrompt(name);
+}
+
+// Ctrl-C, and a second one if the prompt isn't back after a while: a Python worker can hang in
+// its graceful shutdown (it logs "Beginning worker shutdown" and stops there), and a second
+// Ctrl-C makes it exit, as anyone at the keyboard would press it.
+async function interruptProgram(name) {
+  send(name, "\x03");
+  if (await untilPrompt(name, 8_000)) return;
+  send(name, "\x03");
+  await untilPrompt(name, 10_000);
 }
 
 // Commands typed in order. A worker command first interrupts whatever runs there, and waits for
@@ -179,10 +190,7 @@ async function untilPrompt(name, ms = 15_000) {
 async function type(name, commands, { interrupt }) {
   active.value = name;
   terms[name]?.term.scrollToBottom();
-  if (interrupt) {
-    send(name, "\x03");
-    await untilPrompt(name);
-  }
+  if (interrupt) await interruptProgram(name);
   terms[name]?.term.scrollToBottom();
   for (const command of commands) send(name, `${command}\r`);
   terms[name]?.term.focus();

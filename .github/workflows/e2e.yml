@@ -6,7 +6,9 @@
 #     site changed since the deploy before (it starts a real sandbox and checks each exercise's
 #     solution in it), the quick ones otherwise. It emails only a failure, and not one a newer
 #     deploy may have caused by restarting the site mid-run (that deploy gets its own run);
-#   - when the tests themselves change on main, and by hand (Actions → E2E → Run workflow).
+#   - when the tests themselves change on main, and nothing deployed with them (a push that deploys
+#     too is tested after its deploy: run now, new tests would meet the site from before them);
+#     and by hand (Actions → E2E → Run workflow).
 #
 # Repository secrets: E2E_SIGNIN_KEY (the app's; without it the @auth and @sandbox tiers skip),
 # for the email RESEND_API_KEY, and optionally E2E_ADMIN_EMAIL (the app's ADMIN_SECRET_EMAIL: the
@@ -68,6 +70,7 @@ jobs:
           DEPLOYED: ${{ github.event.workflow_run.head_sha }}
           DEPLOY_RUN: ${{ github.event.workflow_run.id }}
           DEPLOY_EVENT: ${{ github.event.workflow_run.event }}
+          PUSHED_FROM: ${{ github.event.before }}
         run: |
           case "$GITHUB_EVENT_NAME" in
             schedule) tier=all ;;
@@ -83,13 +86,23 @@ jobs:
                 '^(quests|starter|tests|hello|codemode|travel_agent|policies|scripts|authoring)/|^(pyproject.toml|uv.lock|agents.toml|.env.example|quest)$|^course/(runner|snapshot|content|web)/'; then
                 tier=all
               fi ;;
-            *) tier=auth ;; # a push to the tests: the cheap tiers
+            *)
+              # A push to the tests: the cheap tiers. Unless it deploys too (deploy.yml runs on any
+              # push with a change outside these): the run after that deploy tests it, on the site
+              # the tests were written for.
+              tier=auth
+              if ! git cat-file -e "$PUSHED_FROM^{commit}" 2>/dev/null; then
+                : # history we can't see: test now
+              elif [ -n "$(git diff --name-only "$PUSHED_FROM" "$GITHUB_SHA" | grep -vE '^(instructor|course/e2e)/')" ]; then
+                tier=none
+              fi ;;
           esac
           echo "tier=$tier" >> "$GITHUB_OUTPUT"
           echo "E2E tier: $tier" >> "$GITHUB_STEP_SUMMARY"
 
   e2e:
     needs: scope
+    if: needs.scope.outputs.tier != 'none'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     defaults:
